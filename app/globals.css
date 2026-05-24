@@ -1,0 +1,648 @@
+:root {
+  --bg: #f5f8f8;
+  --surface: #ffffff;
+  --surface-soft: #edf4f4;
+  --text: #102027;
+  --muted: #65757a;
+  --line: #d8e2e3;
+  --teal: #1d7f84;
+  --teal-dark: #0f555b;
+  --navy: #122c46;
+  --magenta: #c71fc8;
+  --success: #197a4c;
+  --warning: #9b5d00;
+  --danger: #b42318;
+  --shadow: 0 20px 50px rgba(18, 44, 70, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 24px;
+  min-height: 68px;
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--magenta);
+  color: white;
+  font-weight: 800;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 8px;
+}
+
+.topbar nav a,
+.user-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--navy);
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+.user-chip {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  background: var(--teal-dark);
+  color: white;
+}
+
+.page-intro,
+.form-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  padding: 36px 0 28px;
+}
+
+.page-intro h1,
+.form-hero h1,
+.auth-panel h1 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.page-intro p,
+.form-hero p,
+.auth-panel p {
+  max-width: 820px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.eyeline {
+  margin: 0 0 10px;
+  color: var(--teal-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.identity-panel {
+  min-width: 280px;
+  border-left: 4px solid var(--teal);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.identity-panel span,
+.identity-panel small,
+.review-list span,
+.detail-grid span,
+.search-box,
+.course-review h3,
+.attachment-review h3 {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.identity-panel strong {
+  display: block;
+  margin: 6px 0;
+  color: var(--navy);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.service-card,
+.history-section,
+.form-surface,
+.step-rail,
+.queue-panel,
+.detail-panel,
+.auth-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.service-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.service-card h2,
+.history-section h2,
+.form-section h2,
+.detail-head h2 {
+  margin: 0;
+  color: var(--navy);
+}
+
+.service-card p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.card-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--teal-dark);
+}
+
+.service-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.service-card dt,
+.service-card dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.service-card dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.service-card dd {
+  color: var(--text);
+}
+
+.card-action,
+.primary-button,
+.secondary-button,
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.card-action,
+.primary-button {
+  min-height: 46px;
+  background: var(--teal);
+  color: white;
+  padding: 0 18px;
+}
+
+.secondary-button,
+.back-link {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--navy);
+  padding: 0 14px;
+}
+
+.back-link {
+  margin-top: 12px;
+}
+
+.history-section {
+  margin-top: 22px;
+  padding: 24px;
+}
+
+.section-heading,
+.submission-row,
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.submission-list {
+  display: grid;
+  gap: 10px;
+}
+
+.submission-row {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.submission-row span {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--surface-soft);
+  color: var(--teal-dark);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 850;
+  text-transform: capitalize;
+}
+
+.status-approved {
+  background: #e5f6ee;
+  color: var(--success);
+}
+
+.status-declined {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+.status-needs_information {
+  background: #fff2d5;
+  color: var(--warning);
+}
+
+.wizard-layout,
+.admin-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+}
+
+.step-rail,
+.queue-panel {
+  align-self: start;
+  padding: 14px;
+}
+
+.step-rail {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 16px;
+}
+
+.step-rail button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+}
+
+.step-rail span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--teal-dark);
+  font-weight: 900;
+}
+
+.step-rail .active {
+  background: var(--teal-dark);
+  color: white;
+}
+
+.step-rail .active span,
+.step-rail .complete span {
+  background: white;
+}
+
+.form-surface,
+.detail-panel {
+  padding: 28px;
+}
+
+.field-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.field-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field,
+.textarea-field {
+  display: grid;
+  gap: 8px;
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.field input,
+.field select,
+.textarea-field textarea,
+.course-row input,
+.detail-head select,
+.search-box input {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  padding: 10px 12px;
+}
+
+.field.readonly input {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.course-table {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.course-head,
+.course-row,
+.course-review div {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 1.8fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.course-head {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.textarea-field textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.declaration-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.declaration-list label {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  line-height: 1.5;
+}
+
+.declaration-list input {
+  width: 20px;
+  height: 20px;
+}
+
+.upload-zone {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 190px;
+  border: 1.5px dashed var(--teal);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--teal-dark);
+  cursor: pointer;
+  padding: 24px;
+  text-align: center;
+}
+
+.upload-zone input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  margin-top: 28px;
+  padding-top: 20px;
+}
+
+.review-list,
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.review-list div,
+.detail-grid div,
+.attachment-review,
+.course-review {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.review-list strong,
+.detail-grid strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.success-message,
+.error-message {
+  border-radius: 8px;
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
+.success-message {
+  background: #e5f6ee;
+  color: var(--success);
+}
+
+.error-message {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+.auth-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-panel {
+  width: min(640px, 100%);
+  padding: 36px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.search-box input {
+  border: 0;
+  outline: 0;
+}
+
+.queue-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.queue-list button {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  padding: 14px;
+  text-align: left;
+}
+
+.queue-list .active {
+  border-color: var(--teal);
+  box-shadow: inset 4px 0 0 var(--teal);
+}
+
+.queue-list small {
+  color: var(--muted);
+}
+
+.detail-grid,
+.course-review,
+.attachment-review {
+  margin-top: 18px;
+}
+
+.course-review {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .topbar,
+  .page-intro,
+  .form-hero,
+  .wizard-layout,
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid,
+  .field-grid.three,
+  .review-list,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar nav {
+    flex-wrap: wrap;
+  }
+
+  .identity-panel {
+    min-width: 0;
+  }
+
+  .step-rail {
+    position: static;
+  }
+
+  .course-head {
+    display: none;
+  }
+
+  .course-row,
+  .course-review div {
+    grid-template-columns: 1fr;
+  }
+}

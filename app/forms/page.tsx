@@ -1,0 +1,118 @@
+import Link from "next/link";
+import { ArrowRight, Clock, FileCheck2, ShieldCheck } from "lucide-react";
+import { getCurrentUser, isStaff } from "@/lib/auth";
+import { formDefinitions } from "@/lib/forms";
+import { listStudentSubmissions } from "@/lib/repository";
+
+export default async function FormsPage() {
+  const user = getCurrentUser();
+  const submissions = user ? await listStudentSubmissions(user.studentId) : [];
+
+  if (!user) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-panel">
+          <p className="eyeline">COSTAATT Student Portal</p>
+          <h1>Valid portal SSO is required.</h1>
+          <p>
+            Students must enter this service from the authenticated student portal. For local development,
+            create a signed demo session.
+          </p>
+          <Link className="primary-button" href="/api/dev/session">
+            Use local demo session
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="app-shell">
+      <Header userName={`${user.firstName} ${user.lastName}`} staff={isStaff(user)} />
+      <section className="page-intro">
+        <div>
+          <p className="eyeline">Registry services</p>
+          <h1>Student E-Forms</h1>
+          <p>
+            Complete registration support requests in one guided workflow. Your student details are pulled from
+            the portal and attached to every submission.
+          </p>
+        </div>
+        <div className="identity-panel">
+          <span>Signed in</span>
+          <strong>{user.firstName} {user.lastName}</strong>
+          <small>{user.studentId} · {user.email}</small>
+        </div>
+      </section>
+
+      <section className="form-grid" aria-label="Available e-forms">
+        {Object.entries(formDefinitions).map(([slug, definition]) => {
+          const Icon = definition.icon;
+          return (
+            <article className="service-card" key={slug}>
+              <div className="card-icon"><Icon size={22} /></div>
+              <div>
+                <h2>{definition.shortTitle}</h2>
+                <p>{definition.description}</p>
+              </div>
+              <dl>
+                <div>
+                  <dt><Clock size={15} /> Processing</dt>
+                  <dd>{definition.estimate}</dd>
+                </div>
+                <div>
+                  <dt><FileCheck2 size={15} /> Required</dt>
+                  <dd>{definition.requiredAttachment}</dd>
+                </div>
+              </dl>
+              <Link className="card-action" href={`/forms/${slug}`}>
+                Start request <ArrowRight size={17} />
+              </Link>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="history-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyeline">Your activity</p>
+            <h2>Recent submissions</h2>
+          </div>
+          <ShieldCheck size={22} />
+        </div>
+        {submissions.length === 0 ? (
+          <p className="empty-state">No submissions yet. Start with one of the forms above.</p>
+        ) : (
+          <div className="submission-list">
+            {submissions.map((submission) => (
+              <div className="submission-row" key={submission.id}>
+                <div>
+                  <strong>{formDefinitions[submission.formType].title}</strong>
+                  <span>{new Date(submission.createdAt).toLocaleString()}</span>
+                </div>
+                <span className={`status-pill status-${submission.status}`}>{submission.status.replace("_", " ")}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
+function Header({ userName, staff }: { userName: string; staff: boolean }) {
+  return (
+    <header className="topbar">
+      <Link href="/forms" className="brand-lockup" aria-label="COSTAATT Student E-Forms home">
+        <span className="brand-mark">CS</span>
+        <span>COSTAATT Student Portal</span>
+      </Link>
+      <nav>
+        <Link href="/forms">E-Forms</Link>
+        {staff ? <Link href="/admin/submissions">Admin Review</Link> : null}
+      </nav>
+      <div className="user-chip" title={userName}>{userName.split(" ").map((part) => part[0]).join("")}</div>
+    </header>
+  );
+}

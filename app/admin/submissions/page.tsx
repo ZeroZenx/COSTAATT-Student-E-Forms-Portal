@@ -3,7 +3,7 @@ import { ChevronLeft, Download } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, isStaff } from "@/lib/auth";
-import { listRegistryQueueSubmissions } from "@/lib/repository";
+import { listAllSubmissions } from "@/lib/repository";
 import AdminSubmissions from "@/components/admin-submissions";
 
 export default async function AdminSubmissionsPage() {
@@ -23,7 +23,7 @@ export default async function AdminSubmissionsPage() {
     );
   }
 
-  const submissions = await listRegistryQueueSubmissions();
+  const submissions = await listAllSubmissions();
 
   return (
     <main className="app-shell">
@@ -33,7 +33,7 @@ export default async function AdminSubmissionsPage() {
         <div>
           <p className="eyeline">Registry workspace</p>
           <h1>Registry review queue</h1>
-          <p>Review requests ready for Registry final action, including items with missing reviewer mappings.</p>
+          <p>Search all requests, monitor reviewer routing, and complete Registry-ready decisions.</p>
         </div>
         <a className="primary-button" href="/api/admin/submissions/export"><Download size={17} /> Export CSV</a>
       </section>

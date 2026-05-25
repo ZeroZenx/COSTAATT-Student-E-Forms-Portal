@@ -1,77 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { formDefinitions } from "@/lib/forms";
-import type { ReviewerPatch, SubmissionRecord } from "@/lib/types";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { formShortLabel, formatDateTime, statusLabel } from "@/lib/display";
+import type { SubmissionRecord } from "@/lib/types";
 
-export default function AdvisorRequests({ submissions: initialSubmissions }: { submissions: SubmissionRecord[] }) {
-  const [submissions, setSubmissions] = useState(initialSubmissions);
+type Tab = "pending" | "decided" | "all";
 
-  async function update(id: string, action: ReviewerPatch["action"], comment: string) {
-    const response = await fetch(`/api/advisor/submissions/${id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action, comment })
+export default function AdvisorRequests({ submissions }: { submissions: SubmissionRecord[] }) {
+  const [tab, setTab] = useState<Tab>("pending");
+  const [query, setQuery] = useState("");
+
+  const counts = useMemo(() => ({
+    pending: submissions.filter((submission) => submission.status === "pending_advisor_review").length,
+    decided: submissions.filter((submission) => submission.status !== "pending_advisor_review").length,
+    all: submissions.length
+  }), [submissions]);
+
+  const filtered = useMemo(() => {
+    const term = query.toLowerCase().trim();
+    return submissions.filter((submission) => {
+      const matchesTab =
+        tab === "all" ||
+        (tab === "pending" && submission.status === "pending_advisor_review") ||
+        (tab === "decided" && submission.status !== "pending_advisor_review");
+      const haystack = [
+        submission.id,
+        submission.student.firstName,
+        submission.student.lastName,
+        submission.student.studentId,
+        submission.status,
+        submission.payload.courses.map((course) => `${course.crn} ${course.courseCode} ${course.courseTitle}`).join(" ")
+      ].join(" ").toLowerCase();
+      return matchesTab && (!term || haystack.includes(term));
     });
-    const result = await response.json();
-    if (response.ok) setSubmissions((current) => current.map((item) => item.id === id ? result.submission : item));
+  }, [query, submissions, tab]);
+
+  if (submissions.length === 0) {
+    return <p className="empty-state">No requests are assigned to this account.</p>;
   }
 
-  if (submissions.length === 0) return <p className="empty-state">No requests are assigned to this account.</p>;
-
   return (
-    <section className="submission-list">
-      {submissions.map((submission) => (
-        <article className="detail-panel" key={submission.id}>
-          <div className="detail-head">
+    <section className="queue-workspace">
+      <div className="decision-tabs">
+        <button className={tab === "pending" ? "active" : ""} onClick={() => setTab("pending")}>Pending <span>{counts.pending}</span></button>
+        <button className={tab === "decided" ? "active" : ""} onClick={() => setTab("decided")}>Decided <span>{counts.decided}</span></button>
+        <button className={tab === "all" ? "active" : ""} onClick={() => setTab("all")}>All <span>{counts.all}</span></button>
+      </div>
+      <label className="search-box">
+        <Search size={17} />
+        <input placeholder="Search by student, CRN, course, or status" value={query} onChange={(event) => setQuery(event.target.value)} />
+      </label>
+
+      <div className="queue-table">
+        {filtered.map((submission) => (
+          <Link className="queue-card" href={`/advisor/requests/${submission.id}`} key={submission.id}>
             <div>
               <p className="eyeline">{submission.id}</p>
-              <h2>{formDefinitions[submission.formType].title}</h2>
+              <h3>{formShortLabel(submission.formType)}</h3>
+              <p>{submission.student.firstName} {submission.student.lastName} · {submission.student.studentId}</p>
             </div>
-            <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
+            <div className="queue-meta">
+              <span>{submission.payload.courses[0]?.courseCode || "No course"}</span>
+              <span>{submission.payload.courses[0]?.courseTitle || "No course title"}</span>
+              <span>{formatDateTime(submission.createdAt)}</span>
+            </div>
+            <div className="queue-status-cell">
+              <span className={`status-pill status-${submission.status}`}>{statusLabel(submission.status)}</span>
+              {submission.reviewerComment ? <small>{submission.reviewerComment}</small> : null}
+            </div>
+          </Link>
+        ))}
+        {filtered.length === 0 ? (
+          <div className="empty-card">
+            <h3>No assigned requests match this view.</h3>
+            <p>Switch tabs or clear the search field to see more requests.</p>
           </div>
-          <p>{submission.student.firstName} {submission.student.lastName} · {submission.payload.courses[0]?.courseCode}</p>
-          <div className="course-review">
-            {submission.payload.courses.map((course, index) => (
-              <div key={`${course.crn}-${index}`}>
-                <span>{course.crn}</span>
-                <span>{course.courseCode}</span>
-                <strong>{course.courseTitle}</strong>
-              </div>
-            ))}
-          </div>
-          {submission.status === "pending_advisor_review" ? (
-            <ReviewerActions submissionId={submission.id} onUpdate={update} />
-          ) : (
-            <p className="empty-state">Reviewer decision saved: {submission.reviewerDecision || submission.status.replace(/_/g, " ")}.</p>
-          )}
-        </article>
-      ))}
-    </section>
-  );
-}
-
-function ReviewerActions({
-  submissionId,
-  onUpdate
-}: {
-  submissionId: string;
-  onUpdate: (id: string, action: ReviewerPatch["action"], comment: string) => Promise<void>;
-}) {
-  const [comment, setComment] = useState("");
-  return (
-    <>
-      <textarea
-        className="inline-comment"
-        placeholder="Reviewer comment"
-        value={comment}
-        onChange={(event) => setComment(event.target.value)}
-      />
-      <div className="wizard-actions">
-        <button className="secondary-button" onClick={() => onUpdate(submissionId, "needs_information", comment)}>Needs information</button>
-        <button className="secondary-button" onClick={() => onUpdate(submissionId, "decline", comment)}>Decline</button>
-        <button className="primary-button" onClick={() => onUpdate(submissionId, "approve", comment)}>Approve</button>
+        ) : null}
       </div>
-    </>
+    </section>
   );
 }

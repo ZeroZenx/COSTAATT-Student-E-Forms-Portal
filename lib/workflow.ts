@@ -14,7 +14,10 @@ import type {
 } from "./types";
 
 export function enrichCourseLine(course: CourseLine): CourseLine {
-  const match = lookupCourseByCrnOrCode(course.crn || course.courseCode) ||
+  const match = lookupCourseByCrnOrCode(course.crn) ||
+    lookupCourseByCrnOrCode(course.courseCode) ||
+    lookupCourseReferences("crn", course.crn)[0] ||
+    lookupCourseReferences("courseCode", course.courseCode)[0] ||
     lookupCourseReferences("courseTitle", course.courseTitle)[0];
   if (!match) {
     return {

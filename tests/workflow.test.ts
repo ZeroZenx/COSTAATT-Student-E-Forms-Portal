@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSsoToken, verifySsoToken } from "../lib/auth";
 import { lookupCourseReferences, normalizeCourseMatch } from "../lib/reference-data";
+import { reviewerPatchSchema } from "../lib/validation";
 import {
   assignmentForPayload,
   enrichCourseLine,
@@ -69,6 +70,13 @@ describe("workflow routing", () => {
 
   it("sanitizes comments before storage", () => {
     expect(sanitizeText("<script>Need help</script>")).toBe("scriptNeed help/script");
+  });
+
+  it("requires reviewer comments for decline and needs-information decisions", () => {
+    expect(reviewerPatchSchema.safeParse({ action: "decline" }).success).toBe(false);
+    expect(reviewerPatchSchema.safeParse({ action: "needs_information" }).success).toBe(false);
+    expect(reviewerPatchSchema.safeParse({ action: "approve" }).success).toBe(true);
+    expect(reviewerPatchSchema.safeParse({ action: "decline", comment: "Prerequisite not met." }).success).toBe(true);
   });
 });
 

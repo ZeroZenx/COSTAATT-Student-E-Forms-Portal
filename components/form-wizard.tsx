@@ -213,6 +213,12 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
   }
 
   async function submit() {
+    const validationMessage = validateSubmissionDraft();
+    if (validationMessage) {
+      setMessage(validationMessage);
+      return;
+    }
+
     setSubmitting(true);
     setMessage(null);
     const data = new FormData();
@@ -229,6 +235,36 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
     }
 
     setMessage(`Submitted successfully. Reference ${result.submission.id.slice(0, 8).toUpperCase()}.`);
+  }
+
+  function validateSubmissionDraft() {
+    if (!state.programme.trim()) return "Select your programme before submitting.";
+    if (!state.degree.trim()) return "Enter your certificate or degree before submitting.";
+    if (!state.semester.trim()) return "Select the semester before submitting.";
+    if (!state.advisorName.trim()) return "Select or enter your academic advisor before submitting.";
+    if (payload.courses.length === 0) return "Add at least one course before submitting.";
+
+    const incompleteCourse = state.courses.find((course) => {
+      const lookupLine = course as CourseLookupLine;
+      return (
+        lookupLine.requiresSelection ||
+        !course.crn.trim() ||
+        !course.courseCode.trim() ||
+        !course.courseTitle.trim()
+      );
+    });
+
+    if (incompleteCourse) {
+      if ((incompleteCourse as CourseLookupLine).requiresSelection) {
+        return "Select the correct CRN and section for each course before submitting.";
+      }
+      return "Each course must include a CRN, course code, and course title before submitting.";
+    }
+
+    const missingDeclarations = definition.declarations.filter((declaration) => !state.declarations.includes(declaration));
+    if (missingDeclarations.length > 0) return "Confirm all required declarations before submitting.";
+    if (!state.attachment) return `Upload ${definition.requiredAttachment} before submitting.`;
+    return "";
   }
 
   return (

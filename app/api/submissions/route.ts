@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { requireCurrentUser } from "@/lib/auth";
 import { assertFormOpen } from "@/lib/admin-settings";
 import { createSubmission } from "@/lib/repository";
@@ -30,6 +31,13 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHENTICATED") {
       return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401 });
+    }
+
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: `Please complete the required fields: ${error.issues.map((issue) => issue.message).join(" ")}` },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(

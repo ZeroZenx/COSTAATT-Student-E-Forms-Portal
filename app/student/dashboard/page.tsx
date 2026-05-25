@@ -2,7 +2,7 @@ import Link from "next/link";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
-import { formDefinitions } from "@/lib/forms";
+import { attachmentMeta, formLabel, formatDateTime, latestVisibleComment, reviewerDisplay, studentStatusLabel } from "@/lib/display";
 import { listStudentSubmissions } from "@/lib/repository";
 
 export default async function StudentDashboardPage() {
@@ -39,34 +39,42 @@ export default async function StudentDashboardPage() {
       </section>
       <section className="submission-list">
         {submissions.map((submission) => (
-          <article className="detail-panel" key={submission.id}>
+          <Link className="detail-panel request-summary-card" href={`/student/dashboard/${submission.id}`} key={submission.id}>
             <div className="detail-head">
               <div>
                 <p className="eyeline">{submission.id}</p>
-                <h2>{formDefinitions[submission.formType].title}</h2>
+                <h2>{formLabel(submission.formType)}</h2>
               </div>
-              <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
+              <span className={`status-pill status-${submission.status}`}>{studentStatusLabel(submission.status)}</span>
             </div>
-            <p>{submission.registryComment || submission.adminComment || submission.reviewerComment || "No comments yet."}</p>
+            <p>{latestVisibleComment(submission)}</p>
             <div className="detail-grid">
               <div>
                 <span>Assigned reviewer</span>
-                <strong>{submission.assignedTo?.name || "Registry triage"}</strong>
+                <strong>{reviewerDisplay(submission)}</strong>
               </div>
               <div>
                 <span>Attachment</span>
-                <strong>{submission.attachment?.fileName || "No attachment stored"}</strong>
+                <strong>{attachmentMeta(submission)}</strong>
+              </div>
+              <div>
+                <span>Latest activity</span>
+                <strong>{formatDateTime(submission.updatedAt)}</strong>
+              </div>
+              <div>
+                <span>Course</span>
+                <strong>{submission.payload.courses[0]?.courseCode || "Not provided"}</strong>
               </div>
             </div>
             <div className="timeline">
-              {(submission.workflowHistory || []).map((event) => (
+              {(submission.workflowHistory || []).slice(-2).map((event) => (
                 <div key={event.id}>
-                  <strong>{event.action}</strong>
-                  <span>{new Date(event.at).toLocaleString()} · {event.toStatus?.replace(/_/g, " ")}</span>
+                  <strong>{event.actorName}</strong>
+                  <span>{formatDateTime(event.at)} · {event.toStatus ? studentStatusLabel(event.toStatus) : "Updated"}</span>
                 </div>
               ))}
             </div>
-          </article>
+          </Link>
         ))}
         {submissions.length === 0 ? <p className="empty-state">No submissions yet.</p> : null}
       </section>

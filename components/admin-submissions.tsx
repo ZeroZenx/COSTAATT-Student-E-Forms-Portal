@@ -1,20 +1,48 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { formDefinitions, submissionStatuses } from "@/lib/forms";
-import type { SubmissionRecord, SubmissionStatus } from "@/lib/types";
+import { formShortLabel, formatDateTime, reviewerDisplay, statusLabel } from "@/lib/display";
+import type { FormType, SubmissionRecord, SubmissionStatus } from "@/lib/types";
+
+const queueCounters: SubmissionStatus[] = [
+  "pending_advisor_review",
+  "pending_registry_review",
+  "needs_information",
+  "registry_approved",
+  "registry_declined",
+  "closed"
+];
 
 export default function AdminSubmissions({ initialSubmissions }: { initialSubmissions: SubmissionRecord[] }) {
-  const [submissions, setSubmissions] = useState(initialSubmissions);
-  const [selectedId, setSelectedId] = useState(initialSubmissions[0]?.id);
   const [query, setQuery] = useState("");
-  const selected = submissions.find((submission) => submission.id === selectedId) || submissions[0];
+  const [formType, setFormType] = useState<FormType | "all">("all");
+  const [status, setStatus] = useState<SubmissionStatus | "all">("all");
+  const [reviewer, setReviewer] = useState("all");
+  const [flag, setFlag] = useState<"all" | "no_reviewer_mapping">("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  const reviewers = useMemo(() => {
+    return Array.from(new Set(initialSubmissions.map((submission) => submission.assignedTo?.email).filter(Boolean) as string[])).sort();
+  }, [initialSubmissions]);
+
+  const counters = useMemo(() => {
+    return queueCounters.map((item) => ({
+      status: item,
+      count: initialSubmissions.filter((submission) => submission.status === item).length
+    }));
+  }, [initialSubmissions]);
 
   const filtered = useMemo(() => {
     const term = query.toLowerCase().trim();
-    if (!term) return submissions;
-    return submissions.filter((submission) => {
+    const start = fromDate ? new Date(`${fromDate}T00:00:00`).getTime() : null;
+    const end = toDate ? new Date(`${toDate}T23:59:59`).getTime() : null;
+
+    return initialSubmissions.filter((submission) => {
+      const created = new Date(submission.createdAt).getTime();
       const haystack = [
         submission.id,
         formDefinitions[submission.formType].title,
@@ -23,133 +51,91 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
         submission.student.firstName,
         submission.student.lastName,
         submission.student.email,
-        submission.payload.courses.map((course) => course.courseCode).join(" ")
+        submission.assignedTo?.name,
+        submission.assignedTo?.email,
+        submission.payload.courses.map((course) => `${course.crn} ${course.courseCode} ${course.courseTitle}`).join(" ")
       ].join(" ").toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [query, submissions]);
 
-  async function patchSelected(patch: { status?: SubmissionStatus; adminComment?: string; registryComment?: string; internalNotes?: string }) {
-    if (!selected) return;
-    const response = await fetch(`/api/admin/submissions/${selected.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(patch)
+      return (
+        (!term || haystack.includes(term)) &&
+        (formType === "all" || submission.formType === formType) &&
+        (status === "all" || submission.status === status) &&
+        (reviewer === "all" || submission.assignedTo?.email === reviewer) &&
+        (flag === "all" || submission.routingFlags?.includes(flag)) &&
+        (!start || created >= start) &&
+        (!end || created <= end)
+      );
     });
-    const result = await response.json();
-    if (response.ok) {
-      setSubmissions((current) => current.map((item) => item.id === selected.id ? result.submission : item));
-    }
-  }
+  }, [flag, formType, fromDate, initialSubmissions, query, reviewer, status, toDate]);
 
   return (
-    <section className="admin-layout">
-      <div className="queue-panel">
+    <section className="queue-workspace">
+      <div className="queue-metrics">
+        {counters.map((counter) => (
+          <button
+            className={status === counter.status ? "metric-card active-metric" : "metric-card"}
+            key={counter.status}
+            onClick={() => setStatus(status === counter.status ? "all" : counter.status)}
+          >
+            <span>{statusLabel(counter.status)}</span>
+            <strong>{counter.count}</strong>
+          </button>
+        ))}
+      </div>
+
+      <div className="queue-filter-panel">
         <label className="search-box">
           <Search size={17} />
-          <input placeholder="Search by student, form, CRN, or status" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input placeholder="Search student, ID, email, CRN, course, reviewer, or status" value={query} onChange={(event) => setQuery(event.target.value)} />
         </label>
-        <div className="queue-list">
-          {filtered.map((submission) => (
-            <button className={submission.id === selected?.id ? "active" : ""} key={submission.id} onClick={() => setSelectedId(submission.id)}>
-              <strong>{formDefinitions[submission.formType].shortTitle}</strong>
-              <span>{submission.student.firstName} {submission.student.lastName}</span>
-              <small>{new Date(submission.createdAt).toLocaleString()}</small>
-              <em className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</em>
-              {submission.routingFlags?.includes("no_reviewer_mapping") ? <small>No reviewer mapping</small> : null}
-            </button>
-          ))}
-          {filtered.length === 0 ? <p className="empty-state">No submissions match this search.</p> : null}
+        <div className="queue-filters">
+          <select value={formType} onChange={(event) => setFormType(event.target.value as FormType | "all")}>
+            <option value="all">All forms</option>
+            {Object.entries(formDefinitions).map(([key, definition]) => <option key={key} value={key}>{definition.shortTitle}</option>)}
+          </select>
+          <select value={status} onChange={(event) => setStatus(event.target.value as SubmissionStatus | "all")}>
+            <option value="all">All statuses</option>
+            {submissionStatuses.map((item) => <option key={item} value={item}>{statusLabel(item)}</option>)}
+          </select>
+          <select value={reviewer} onChange={(event) => setReviewer(event.target.value)}>
+            <option value="all">All reviewers</option>
+            {reviewers.map((email) => <option key={email} value={email}>{email}</option>)}
+          </select>
+          <select value={flag} onChange={(event) => setFlag(event.target.value as "all" | "no_reviewer_mapping")}>
+            <option value="all">All routing</option>
+            <option value="no_reviewer_mapping">No reviewer mapping</option>
+          </select>
+          <input aria-label="From date" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+          <input aria-label="To date" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
         </div>
       </div>
 
-      <div className="detail-panel">
-        {selected ? (
-          <>
-            <div className="detail-head">
-              <div>
-                <p className="eyeline">{selected.id}</p>
-                <h2>{formDefinitions[selected.formType].title}</h2>
-              </div>
-              <select value={selected.status} onChange={(event) => patchSelected({ status: event.target.value as SubmissionStatus })}>
-                {submissionStatuses.map((status) => <option key={status} value={status}>{status.replace(/_/g, " ")}</option>)}
-              </select>
+      <div className="queue-table">
+        {filtered.map((submission) => (
+          <Link className="queue-card" href={`/admin/submissions/${submission.id}`} key={submission.id}>
+            <div>
+              <p className="eyeline">{submission.id}</p>
+              <h3>{formShortLabel(submission.formType)}</h3>
+              <p>{submission.student.firstName} {submission.student.lastName} · {submission.student.studentId}</p>
             </div>
-            <div className="detail-grid">
-              <Detail label="Student" value={`${selected.student.firstName} ${selected.student.lastName}`} />
-              <Detail label="Student ID" value={selected.student.studentId} />
-              <Detail label="Email" value={selected.student.email} />
-              <Detail label="Programme" value={selected.payload.programme} />
-              <Detail label="Degree" value={selected.payload.degree} />
-              <Detail label="Academic period" value={`${selected.payload.academicYear} · ${selected.payload.semester}`} />
-              <Detail label="Advisor" value={selected.payload.advisorName} />
-              <Detail label="Assigned reviewer" value={selected.assignedTo ? `${selected.assignedTo.name} (${selected.assignedTo.role})` : "Registry triage"} />
-              <Detail label="Request type" value={selected.payload.requestType} />
-              <Detail label="Reviewer decision" value={selected.reviewerDecision} />
+            <div className="queue-meta">
+              <span>{submission.payload.courses[0]?.courseCode || "No course"}</span>
+              <span>{reviewerDisplay(submission)}</span>
+              <span>{formatDateTime(submission.createdAt)}</span>
             </div>
-            {selected.routingFlags?.includes("no_reviewer_mapping") ? (
-              <p className="notice-banner">No lecturer or advisor mapping was found. This request was routed directly to Registry triage.</p>
-            ) : null}
-            <div className="course-review">
-              <h3>Courses</h3>
-              {selected.payload.courses.map((course, index) => (
-                <div key={`${course.crn}-${index}`}>
-                  <span>{course.crn}</span>
-                  <span>{course.courseCode}</span>
-                  <strong>{course.courseTitle}</strong>
-                </div>
-              ))}
+            <div className="queue-status-cell">
+              <span className={`status-pill status-${submission.status}`}>{statusLabel(submission.status)}</span>
+              {submission.routingFlags?.includes("no_reviewer_mapping") ? <small>No reviewer mapping</small> : null}
             </div>
-            <div className="attachment-review">
-              <h3>Attachment</h3>
-              {selected.attachment ? (
-                <p>
-                  <a href={`/api/admin/submissions/${selected.id}/attachment`}>
-                    {selected.attachment.fileName}
-                  </a>
-                  {" "}· {(selected.attachment.size / 1024).toFixed(1)} KB
-                </p>
-              ) : (
-                <p>No attachment stored.</p>
-              )}
-            </div>
-            <label className="textarea-field">
-              Registry comment
-              <textarea
-                defaultValue={selected.registryComment || selected.adminComment || ""}
-                onBlur={(event) => patchSelected({ registryComment: event.target.value, adminComment: event.target.value })}
-              />
-            </label>
-            <label className="textarea-field">
-              Internal notes
-              <textarea
-                defaultValue={selected.internalNotes || ""}
-                onBlur={(event) => patchSelected({ internalNotes: event.target.value })}
-              />
-            </label>
-            <div className="timeline">
-              {(selected.workflowHistory || []).map((event) => (
-                <div key={event.id}>
-                  <strong>{event.action.replace(/\./g, " ")}</strong>
-                  <span>{new Date(event.at).toLocaleString()} · {event.actorName}{event.toStatus ? ` · ${event.toStatus.replace(/_/g, " ")}` : ""}</span>
-                  {event.comment ? <p>{event.comment}</p> : null}
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="empty-state">No submissions yet.</p>
-        )}
+          </Link>
+        ))}
+        {filtered.length === 0 ? (
+          <div className="empty-card">
+            <h3>No submissions match these filters.</h3>
+            <p>Try clearing the search, changing the status, or widening the date range.</p>
+          </div>
+        ) : null}
       </div>
     </section>
-  );
-}
-
-function Detail({ label, value }: { label: string; value?: string }) {
-  return (
-    <div>
-      <span>{label}</span>
-      <strong>{value || "Not provided"}</strong>
-    </div>
   );
 }

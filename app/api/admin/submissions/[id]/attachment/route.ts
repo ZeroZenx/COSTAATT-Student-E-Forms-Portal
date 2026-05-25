@@ -3,7 +3,7 @@ import { isStaff, requireCurrentUser } from "@/lib/auth";
 import { getSubmission } from "@/lib/repository";
 import { loadAttachment } from "@/lib/storage";
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const user = requireCurrentUser();
     if (!isStaff(user)) return NextResponse.json({ error: "Staff access is required." }, { status: 403 });
@@ -11,11 +11,15 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     const submission = await getSubmission(params.id);
     if (!submission?.attachment) return NextResponse.json({ error: "Attachment not found." }, { status: 404 });
 
+    const url = new URL(request.url);
+    const download = url.searchParams.get("download") === "1";
+    const safeFileName = submission.attachment.fileName.replace(/"/g, "");
     const bytes = await loadAttachment(submission.attachment);
     return new Response(bytes, {
       headers: {
         "content-type": submission.attachment.contentType,
-        "content-disposition": `attachment; filename="${submission.attachment.fileName.replace(/"/g, "")}"`
+        "content-disposition": `${download ? "attachment" : "inline"}; filename="${safeFileName}"`,
+        "x-content-type-options": "nosniff"
       }
     });
   } catch {

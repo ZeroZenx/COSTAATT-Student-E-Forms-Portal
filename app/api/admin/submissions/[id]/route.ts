@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import { isStaff, requireCurrentUser } from "@/lib/auth";
-import { updateSubmission } from "@/lib/repository";
+import { getSubmission, updateSubmission } from "@/lib/repository";
 import { adminPatchSchema } from "@/lib/validation";
 import { sendRegistryStatusEmail } from "@/lib/email";
+
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  try {
+    const user = requireCurrentUser();
+    if (!isStaff(user)) return NextResponse.json({ error: "Staff access is required." }, { status: 403 });
+
+    const submission = await getSubmission(params.id);
+    if (!submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
+    return NextResponse.json({ submission });
+  } catch {
+    return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401 });
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {

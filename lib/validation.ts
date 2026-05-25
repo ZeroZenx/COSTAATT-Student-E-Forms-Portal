@@ -51,4 +51,12 @@ export const adminPatchSchema = z.object({
 export const reviewerPatchSchema = z.object({
   action: z.enum(["approve", "decline", "needs_information"]),
   comment: z.string().trim().max(2000).optional()
+}).superRefine((value, ctx) => {
+  if ((value.action === "decline" || value.action === "needs_information") && !value.comment) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["comment"],
+      message: "A comment is required for decline or needs-information decisions."
+    });
+  }
 });

@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser, hasAnyRole } from "@/lib/auth";
-import { updateSubmissionByReviewer } from "@/lib/repository";
+import { getSubmission, updateSubmissionByReviewer } from "@/lib/repository";
 import { reviewerPatchSchema } from "@/lib/validation";
 import { sendReviewerActionEmails } from "@/lib/email";
+import { isAssignedReviewer } from "@/lib/workflow";
+
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  const user = getCurrentUser();
+  if (!user || !hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"])) {
+    return NextResponse.json({ error: "Advisor or lecturer access is required." }, { status: 403 });
+  }
+
+  const submission = await getSubmission(params.id);
+  if (!submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
+  const isAdminReviewer = hasAnyRole(user, ["registry_admin", "system_admin"]);
+  if (!isAdminReviewer && !isAssignedReviewer(submission, user)) {
+    return NextResponse.json({ error: "This request is not assigned to your account." }, { status: 403 });
+  }
+  return NextResponse.json({ submission });
+}
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {

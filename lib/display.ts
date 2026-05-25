@@ -18,13 +18,13 @@ const statusLabels: Record<SubmissionStatus, string> = {
 
 const studentStatusLabels: Record<SubmissionStatus, string> = {
   submitted: "Submitted",
-  pending_advisor_review: "With your assigned reviewer",
+  pending_advisor_review: "Awaiting Reviewer",
   advisor_approved: "Reviewer approved",
-  advisor_declined: "Declined by reviewer",
-  needs_information: "More information needed",
+  advisor_declined: "Declined",
+  needs_information: "Needs Information",
   pending_registry_review: "With Registry",
-  registry_approved: "Approved by Registry",
-  registry_declined: "Declined by Registry",
+  registry_approved: "Approved",
+  registry_declined: "Declined",
   closed: "Closed",
   in_review: "In review",
   approved: "Approved",
@@ -39,7 +39,23 @@ const actionLabels: Record<string, string> = {
   "reviewer.approve": "Reviewer approved",
   "reviewer.decline": "Reviewer declined",
   "reviewer.needs_information": "Reviewer requested information",
+  "attachment.viewed": "Attachment viewed",
   "attachment.downloaded": "Attachment downloaded"
+};
+
+const registryActionLabels: Record<SubmissionStatus, string> = {
+  submitted: "Mark submitted",
+  pending_advisor_review: "Send to reviewer",
+  advisor_approved: "Mark reviewer approved",
+  advisor_declined: "Mark reviewer declined",
+  needs_information: "Request information",
+  pending_registry_review: "Send to Registry review",
+  registry_approved: "Approve",
+  registry_declined: "Decline",
+  closed: "Close",
+  in_review: "Mark in review",
+  approved: "Approve",
+  declined: "Decline"
 };
 
 export function statusLabel(status: SubmissionStatus) {
@@ -93,6 +109,10 @@ export function reviewerDisplay(submission: SubmissionRecord) {
 export function attachmentMeta(submission: SubmissionRecord) {
   if (!submission.attachment) return "No attachment stored";
   return `${submission.attachment.fileName} · ${(submission.attachment.size / 1024).toFixed(1)} KB`;
+}
+
+export function registryActionLabel(status: SubmissionStatus) {
+  return registryActionLabels[status] || statusLabel(status);
 }
 
 function titleize(value: string) {

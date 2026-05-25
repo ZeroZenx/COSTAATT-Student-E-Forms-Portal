@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isStaff, requireCurrentUser } from "@/lib/auth";
-import { getSubmission } from "@/lib/repository";
+import { appendSubmissionAuditEvent, getSubmission } from "@/lib/repository";
 import { loadAttachment } from "@/lib/storage";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -15,6 +15,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const download = url.searchParams.get("download") === "1";
     const safeFileName = submission.attachment.fileName.replace(/"/g, "");
     const bytes = await loadAttachment(submission.attachment);
+    await appendSubmissionAuditEvent(
+      params.id,
+      user,
+      download ? "attachment.downloaded" : "attachment.viewed",
+      request.headers.get("x-forwarded-for") || undefined,
+      {
+        fileName: submission.attachment.fileName,
+        contentType: submission.attachment.contentType,
+        size: submission.attachment.size
+      }
+    );
     return new Response(bytes, {
       headers: {
         "content-type": submission.attachment.contentType,

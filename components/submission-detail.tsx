@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CheckCircle2, Download, Eye, MessageSquare, XCircle } from "lucide-react";
 import { submissionStatuses } from "@/lib/forms";
@@ -10,11 +9,12 @@ import {
   eventStatusLabel,
   formLabel,
   formatDateTime,
+  registryActionLabel,
   reviewerDisplay,
   statusLabel,
   studentStatusLabel
 } from "@/lib/display";
-import type { ReviewerPatch, SubmissionRecord, SubmissionStatus } from "@/lib/types";
+import type { AuditEvent, ReviewerPatch, SubmissionRecord, SubmissionStatus } from "@/lib/types";
 
 type Viewer = "registry" | "reviewer" | "student";
 
@@ -30,6 +30,7 @@ export default function SubmissionDetail({
   const [submission, setSubmission] = useState(initialSubmission);
   const studentView = viewer === "student";
   const firstCourse = submission.payload.courses[0];
+  const missingReviewerMapping = Boolean(submission.routingFlags?.includes("no_reviewer_mapping"));
   const hasAnyComment = Boolean(
     submission.registryComment ||
     submission.adminComment ||
@@ -55,7 +56,13 @@ export default function SubmissionDetail({
         </div>
 
         {submission.routingFlags?.includes("no_reviewer_mapping") ? (
-          <p className="notice-banner">No lecturer or advisor mapping was found. This request is routed to Registry triage.</p>
+          <p className="notice-banner"><strong>Registry triage:</strong> No lecturer or advisor mapping was found. This request is routed directly to Registry.</p>
+        ) : null}
+
+        {!missingReviewerMapping && submission.assignedTo ? (
+          <p className="assignment-banner">
+            Assigned to {submission.assignedTo.name} ({submission.assignedTo.role}) at {submission.assignedTo.email}.
+          </p>
         ) : null}
 
         <section className="detail-section">
@@ -147,6 +154,7 @@ export default function SubmissionDetail({
         </section>
 
         <Timeline submission={submission} studentView={studentView} />
+        {viewer === "registry" ? <AuditTrail events={submission.auditTrail || []} /> : null}
       </div>
 
       {viewer === "registry" ? (
@@ -172,18 +180,20 @@ function RegistryActions({
   const [internalNotes, setInternalNotes] = useState(submission.internalNotes || "");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const registryQuickStatuses: SubmissionStatus[] = ["pending_registry_review", "needs_information", "registry_approved", "registry_declined", "closed"];
 
-  async function save() {
+  async function save(nextStatus = status) {
     setSaving(true);
     setMessage("");
     const response = await fetch(`/api/admin/submissions/${submission.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status, registryComment, adminComment: registryComment, internalNotes })
+      body: JSON.stringify({ status: nextStatus, registryComment, adminComment: registryComment, internalNotes })
     });
     const result = await response.json();
     setSaving(false);
     if (response.ok) {
+      setStatus(result.submission.status);
       onUpdate(result.submission);
       setMessage("Registry update saved.");
     } else {
@@ -193,7 +203,22 @@ function RegistryActions({
 
   return (
     <aside className="detail-actions">
+      <p className="eyeline">Action required</p>
       <h3>Registry decision</h3>
+      <p className="detail-action-summary">Choose a final Registry action or request more information. Comments are visible to the student.</p>
+      <div className="quick-action-grid">
+        {registryQuickStatuses.map((item) => (
+          <button
+            className={item === "registry_approved" ? "primary-button" : "secondary-button"}
+            disabled={saving}
+            key={item}
+            onClick={() => save(item)}
+            type="button"
+          >
+            {registryActionLabel(item)}
+          </button>
+        ))}
+      </div>
       <label className="field">
         Status
         <select value={status} onChange={(event) => setStatus(event.target.value as SubmissionStatus)}>
@@ -208,7 +233,7 @@ function RegistryActions({
         Internal notes
         <textarea value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} />
       </label>
-      <button className="primary-button" disabled={saving} onClick={save}>{saving ? "Saving..." : "Save Registry update"}</button>
+      <button className="primary-button" disabled={saving} onClick={() => save()}>{saving ? "Saving..." : "Save Registry update"}</button>
       {message ? <p className={message.includes("saved") ? "success-message" : "error-message"}>{message}</p> : null}
     </aside>
   );
@@ -257,9 +282,11 @@ function ReviewerActions({
 
   return (
     <aside className="detail-actions">
+      <p className="eyeline">Action required</p>
       <h3>Reviewer decision</h3>
       {pending ? (
         <>
+          <p className="detail-action-summary">Approve the request for Registry final review, decline it, or ask the student for more information.</p>
           <label className="textarea-field">
             Comment
             <textarea value={comment} onChange={(event) => setComment(event.target.value)} />
@@ -300,6 +327,40 @@ function Timeline({ submission, studentView }: { submission: SubmissionRecord; s
         {(submission.workflowHistory || []).length === 0 ? <p className="empty-state">No workflow activity has been recorded.</p> : null}
       </div>
     </section>
+  );
+}
+
+function AuditTrail({ events }: { events: AuditEvent[] }) {
+  return (
+    <section className="detail-section">
+      <h3>Audit trail</h3>
+      <div className="audit-list">
+        {events.map((event) => (
+          <div key={event.id}>
+            <strong>{actionLabel(event.action)}</strong>
+            <span>{formatDateTime(event.at)} · {event.actorName}</span>
+            {event.ipAddress ? <small>IP: {event.ipAddress}</small> : null}
+            {event.metadata ? <AuditMetadata metadata={event.metadata} /> : null}
+          </div>
+        ))}
+        {events.length === 0 ? <p className="empty-state">No audit activity has been recorded.</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function AuditMetadata({ metadata }: { metadata: Record<string, unknown> }) {
+  const entries = Object.entries(metadata).filter(([, value]) => value !== undefined && value !== null && value !== "");
+  if (entries.length === 0) return null;
+  return (
+    <dl>
+      {entries.map(([key, value]) => (
+        <div key={key}>
+          <dt>{key.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}</dt>
+          <dd>{Array.isArray(value) ? value.join(", ") : String(value)}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

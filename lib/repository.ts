@@ -175,7 +175,10 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
   ];
   const auditTrail = [
     ...(existing.auditTrail || []),
-    auditEvent(actor || existing.student, "submission.updated", "submission", id, ipAddress, patch)
+    auditEvent(actor || existing.student, "submission.updated", "submission", id, ipAddress, {
+      ...patch,
+      actorRoles: actor?.roles || []
+    })
   ];
 
   if (hasDatabase()) {
@@ -224,6 +227,48 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
   return records[index];
 }
 
+export async function appendSubmissionAuditEvent(
+  id: string,
+  actor: SsoUser,
+  action: string,
+  ipAddress?: string,
+  metadata?: Record<string, unknown>
+) {
+  const updatedAt = new Date().toISOString();
+  const existing = await getSubmission(id);
+  if (!existing) return null;
+  const auditTrail = [
+    ...(existing.auditTrail || []),
+    auditEvent(actor, action, "submission", id, ipAddress, {
+      ...(metadata || {}),
+      actorRoles: actor.roles || []
+    })
+  ];
+
+  if (hasDatabase()) {
+    const result = await db().query(
+      `update submissions
+       set audit_trail = $2::jsonb,
+           updated_at = $3
+       where id = $1
+       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
+      [id, JSON.stringify(auditTrail), updatedAt]
+    );
+    return result.rows[0] ? rowToRecord(result.rows[0]) : null;
+  }
+
+  const records = await readLocal();
+  const index = records.findIndex((record) => record.id === id);
+  if (index === -1) return null;
+  records[index] = {
+    ...records[index],
+    auditTrail,
+    updatedAt
+  };
+  await writeLocal(records);
+  return records[index];
+}
+
 export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatch, actor: SsoUser, ipAddress?: string) {
   const updatedAt = new Date().toISOString();
   const existing = await getSubmission(id);
@@ -240,7 +285,10 @@ export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatc
   ];
   const auditTrail = [
     ...(existing.auditTrail || []),
-    auditEvent(actor, `reviewer.${patch.action}`, "submission", id, ipAddress, { comment })
+    auditEvent(actor, `reviewer.${patch.action}`, "submission", id, ipAddress, {
+      comment,
+      actorRoles: actor.roles || []
+    })
   ];
 
   if (hasDatabase()) {

@@ -287,6 +287,22 @@ Recommended manual smoke tests:
 8. Configure SMTP or keep `EMAIL_DELIVERY_MODE=log` until mail routing is verified.
 9. Run smoke tests against production-like roles.
 
+## Production Readiness Checklist
+- **SSO:** Configure `SSO_SHARED_SECRET` or `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and only trust SSO headers from the portal/reverse proxy.
+- **Roles:** Test separate identities for `student`, `advisor`, `lecturer`, `registry_staff`, `registry_admin`, and `system_admin`.
+- **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions persist after restart.
+- **S3:** Configure bucket credentials, verify PDF/image upload, inline staff preview, forced download with `?download=1`, and denied unauthenticated access.
+- **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.
+- **Local dev:** Run `npm run dev:5001`, visit `/api/dev/session`, then smoke-test `/forms`, `/student/dashboard`, `/advisor/requests`, and `/admin/submissions`.
+- **Build checks:** Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before deployment.
+- **Audit:** Confirm status updates, reviewer decisions, and attachment view/download events appear in the Registry audit trail.
+
+## Role-Based Smoke Tests
+- **Student:** Open `/forms`, submit a mapped CRN with an attachment, verify confirmation includes the assigned reviewer, then check `/student/dashboard`.
+- **Advisor/Lecturer:** Open `/advisor/requests`, verify only assigned requests appear, approve one request, and confirm it moves to Registry review.
+- **Registry staff:** Open `/admin/submissions`, filter by status/routing, preview an attachment inline, download it, and update a request status/comment.
+- **Registry admin/System admin:** Open `/admin/reference-data` and `/admin/settings/forms`, verify management pages are gated and form open/closed settings are available.
+
 ## Current Limitations
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.

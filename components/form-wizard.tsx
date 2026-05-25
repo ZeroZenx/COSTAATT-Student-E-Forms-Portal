@@ -234,7 +234,10 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
       return;
     }
 
-    setMessage(`Submitted successfully. Reference ${result.submission.id.slice(0, 8).toUpperCase()}.`);
+    const assigned = result.submission.assignedTo
+      ? `Assigned to ${result.submission.assignedTo.name} (${result.submission.assignedTo.role}).`
+      : "Routed to Registry triage because no reviewer mapping was found.";
+    setMessage(`Submitted successfully. Reference ${result.submission.id.slice(0, 8).toUpperCase()}. ${assigned}`);
   }
 
   function validateSubmissionDraft() {

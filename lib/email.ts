@@ -27,6 +27,10 @@ function registryEmail() {
   return process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt";
 }
 
+export function emailDeliveryMode() {
+  return process.env.EMAIL_DELIVERY_MODE === "smtp" ? "smtp" : "log";
+}
+
 function portalLink(submission: SubmissionRecord, path = `/forms?submission=${submission.id}`) {
   const baseUrl = process.env.PORTAL_BASE_URL || "http://localhost:5001";
   return `${baseUrl.replace(/\/$/, "")}${path}`;
@@ -204,7 +208,7 @@ async function sendAll(messages: EmailMessage[]) {
 }
 
 async function sendEmailSafely(message: EmailMessage) {
-  const mode = process.env.EMAIL_DELIVERY_MODE || "log";
+  const mode = emailDeliveryMode();
   if (!message.to) {
     return logOutcome({ message, mode, outcome: "skipped", error: "Missing recipient" });
   }

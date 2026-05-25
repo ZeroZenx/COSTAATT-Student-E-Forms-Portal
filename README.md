@@ -257,6 +257,8 @@ Maximum upload size:
 - `GET /api/admin/submissions/export`
 - `POST /api/admin/sla/escalations`
 - `POST /api/admin/sla/escalations?dryRun=1`
+- `GET /api/health`
+- `GET /admin/diagnostics`
 - `GET /api/admin/reference-data`
 - `POST /api/admin/reference-data`
 - `PATCH /api/admin/reference-data/[id]`
@@ -298,8 +300,8 @@ npm run validate:env -- --production
 
 ## Deployment Guidance
 1. Provision Postgres and apply `db/schema.sql`.
-2. Provision S3-compatible object storage.
-3. Configure QuickLaunch/portal SSO forwarding.
+2. Configure QuickLaunch JWT forwarding.
+3. Decide whether first deployment uses local VM disk uploads or S3-compatible storage.
 4. Set production environment variables.
 5. Disable mock SSO in production.
 6. Deploy behind HTTPS.
@@ -310,11 +312,12 @@ npm run validate:env -- --production
 For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). Production should run the Node.js app on an internal port such as `127.0.0.1:5001` and expose the public service only through HTTPS using IIS or Caddy.
 
 ## Production Readiness Checklist
-- **SSO:** Configure `SSO_SHARED_SECRET` or `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and only trust SSO headers from the portal/reverse proxy.
+- **SSO:** Configure `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and validate the real QuickLaunch claims for student/advisor/Registry roles.
 - **Roles:** Test separate identities for `student`, `advisor`, `lecturer`, `registry_staff`, `registry_admin`, and `system_admin`.
-- **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions persist after restart.
-- **S3:** Configure bucket credentials, verify PDF/image upload, inline staff preview, forced download with `?download=1`, and denied unauthenticated access.
+- **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions, notifications, and reference data persist after restart.
+- **Uploads:** First production deployment may use local VM disk uploads. Verify PDF/image upload, inline staff preview, forced download with `?download=1`, denied unauthenticated access, and daily backup of `uploads/`.
 - **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.
+- **Health:** Confirm `/api/health` returns non-sensitive JSON and `/admin/diagnostics` shows acceptable readiness checks for Registry admins.
 - **Local dev:** Run `npm run dev:5001`, visit `/api/dev/session`, then smoke-test `/forms`, `/student/dashboard`, `/advisor/requests`, and `/admin/submissions`.
 - **Build checks:** Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before deployment.
 - **Audit:** Confirm status updates, reviewer decisions, and attachment view/download events appear in the Registry audit trail.
@@ -325,7 +328,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - **Student notifications:** Open `/student/notifications`, verify unread updates link to `/student/dashboard/[id]`, and mark one/all as read.
 - **Advisor/Lecturer:** Open `/advisor/requests`, verify only assigned requests appear, approve one request, and confirm it moves to Registry review.
 - **Registry staff:** Open `/admin/submissions`, filter by status/routing, preview an attachment inline, download it, and update a request status/comment.
-- **Registry admin/System admin:** Open `/admin/reference-data` and `/admin/settings/forms`, verify management pages are gated and form open/closed settings are available.
+- **Registry admin/System admin:** Open `/admin/reference-data`, `/admin/settings/forms`, and `/admin/diagnostics`; verify management pages are gated, form open/closed settings are available, and diagnostics match the deployment environment.
 
 ## SLA And Reporting
 - The operations dashboard uses a fixed **3 business day** SLA threshold for `pending_advisor_review`, `pending_registry_review`, and `needs_information`.
@@ -339,6 +342,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 ## Current Limitations
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
+- First production deployment is planned for local VM disk uploads; S3-compatible storage remains preferred long-term.
 - Email notifications support SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`.
 - Student notifications are created for new workflow events after the inbox build; historical submissions are not backfilled automatically.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.

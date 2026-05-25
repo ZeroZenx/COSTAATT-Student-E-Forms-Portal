@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { Pool } from "pg";
 import { courseCatalogOptions } from "./course-catalog-data";
 import {
   advisorOptions,
@@ -25,8 +26,21 @@ export type ReferenceRecord = {
   updatedAt: string;
 };
 
-const localReferencePath = path.join(process.cwd(), "data", "reference-records.json");
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+let pool: Pool | null = null;
+
+function localReferencePath() {
+  return process.env.REFERENCE_STORE_PATH || path.join(process.cwd(), "data", "reference-records.json");
+}
+
+function hasDatabase() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
+function db() {
+  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  return pool;
+}
 
 function seedRecords(): ReferenceRecord[] {
   const now = new Date().toISOString();
@@ -127,8 +141,10 @@ function uniqueBy<T>(items: T[], keyFor: (item: T) => string) {
 }
 
 async function readReferenceRecords() {
+  if (hasDatabase()) return readDbReferenceRecords();
+
   try {
-    return JSON.parse(await readFile(localReferencePath, "utf8")) as ReferenceRecord[];
+    return JSON.parse(await readFile(localReferencePath(), "utf8")) as ReferenceRecord[];
   } catch {
     const records = seedRecords();
     await writeReferenceRecords(records);
@@ -136,9 +152,41 @@ async function readReferenceRecords() {
   }
 }
 
+async function readDbReferenceRecords() {
+  const result = await db().query(
+    `select id, kind, data, active, created_at, updated_at
+     from reference_records
+     order by updated_at desc`
+  );
+  if (result.rows.length > 0) return result.rows.map(rowToReferenceRecord);
+
+  const records = seedRecords();
+  await seedDbReferenceRecords(records);
+  return records;
+}
+
+async function seedDbReferenceRecords(records: ReferenceRecord[]) {
+  for (const record of records) {
+    await db().query(
+      `insert into reference_records (id, kind, data, active, created_at, updated_at)
+       values ($1, $2, $3::jsonb, $4, $5, $6)
+       on conflict do nothing`,
+      [
+        record.id,
+        record.kind,
+        JSON.stringify(recordToDbData(record)),
+        record.active,
+        record.createdAt,
+        record.updatedAt
+      ]
+    );
+  }
+}
+
 async function writeReferenceRecords(records: ReferenceRecord[]) {
-  await mkdir(path.dirname(localReferencePath), { recursive: true });
-  await writeFile(localReferencePath, JSON.stringify(records, null, 2));
+  const storePath = localReferencePath();
+  await mkdir(path.dirname(storePath), { recursive: true });
+  await writeFile(storePath, JSON.stringify(records, null, 2));
 }
 
 export async function listReferenceRecords(kind?: ReferenceKind, search?: string) {
@@ -174,6 +222,28 @@ export async function upsertReferenceRecord(input: Partial<ReferenceRecord> & { 
     updatedAt: now
   };
 
+  if (hasDatabase()) {
+    const result = await db().query(
+      `insert into reference_records (id, kind, data, active, created_at, updated_at)
+       values ($1, $2, $3::jsonb, $4, $5, $6)
+       on conflict (id) do update set
+         kind = excluded.kind,
+         data = excluded.data,
+         active = excluded.active,
+         updated_at = excluded.updated_at
+       returning id, kind, data, active, created_at, updated_at`,
+      [
+        next.id,
+        next.kind,
+        JSON.stringify(recordToDbData(next)),
+        next.active,
+        next.createdAt,
+        next.updatedAt
+      ]
+    );
+    return rowToReferenceRecord(result.rows[0]);
+  }
+
   if (index >= 0) records[index] = next;
   else records.unshift(next);
   await writeReferenceRecords(records);
@@ -192,17 +262,65 @@ function ensureReviewerIsAssignable(input: Partial<ReferenceRecord> & { kind: Re
 }
 
 export async function getReferenceRecord(id: string) {
+  if (hasDatabase()) {
+    const result = await db().query(
+      `select id, kind, data, active, created_at, updated_at
+       from reference_records
+       where id = $1`,
+      [id]
+    );
+    return result.rows[0] ? rowToReferenceRecord(result.rows[0]) : null;
+  }
+
   return (await readReferenceRecords()).find((record) => record.id === id) || null;
 }
 
 export async function deactivateReferenceRecord(id: string, linkedToSubmission = false) {
   if (linkedToSubmission) throw new Error("Linked reference records cannot be deleted; deactivate them instead.");
+  if (hasDatabase()) {
+    const result = await db().query(
+      `update reference_records
+       set active = false,
+           updated_at = $2
+       where id = $1
+       returning id, kind, data, active, created_at, updated_at`,
+      [id, new Date().toISOString()]
+    );
+    return result.rows[0] ? rowToReferenceRecord(result.rows[0]) : null;
+  }
+
   const records = await readReferenceRecords();
   const index = records.findIndex((record) => record.id === id);
   if (index === -1) return null;
   records[index] = { ...records[index], active: false, updatedAt: new Date().toISOString() };
   await writeReferenceRecords(records);
   return records[index];
+}
+
+export async function referenceRecordCounts() {
+  const records = await readReferenceRecords();
+  return records.reduce<Record<ReferenceKind | "total" | "active" | "inactive", number>>(
+    (counts, record) => {
+      counts.total += 1;
+      counts[record.active ? "active" : "inactive"] += 1;
+      counts[record.kind] += 1;
+      return counts;
+    },
+    {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      course: 0,
+      crn: 0,
+      lecturer: 0,
+      advisor: 0,
+      programme_mapping: 0
+    }
+  );
+}
+
+export function referenceStorageMode() {
+  return hasDatabase() ? "postgres" : "json";
 }
 
 export async function lookupReferenceCourseMatches(field: CourseLookupField, value: string): Promise<CourseLookupMatch[]> {
@@ -296,4 +414,34 @@ function validateReferenceRecord(record: Partial<ReferenceRecord> & { kind: Refe
   if (record.kind === "lecturer" && record.active === false && record.data?.assigned === true) {
     throw new Error("Inactive lecturers cannot receive assignments.");
   }
+}
+
+function recordToDbData(record: ReferenceRecord) {
+  return {
+    key: record.key,
+    label: record.label,
+    email: record.email,
+    data: record.data
+  };
+}
+
+function rowToReferenceRecord(row: Record<string, unknown>): ReferenceRecord {
+  const data = row.data as {
+    key?: string;
+    label?: string;
+    email?: string;
+    data?: ReferenceRecord["data"];
+  };
+  const nestedData = data.data || {};
+  return {
+    id: String(row.id),
+    kind: row.kind as ReferenceKind,
+    key: String(data.key || nestedData.key || ""),
+    label: String(data.label || nestedData.label || ""),
+    email: data.email || undefined,
+    active: Boolean(row.active),
+    data: nestedData,
+    createdAt: new Date(row.created_at as string).toISOString(),
+    updatedAt: new Date(row.updated_at as string).toISOString()
+  };
 }

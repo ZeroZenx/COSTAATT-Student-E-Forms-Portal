@@ -66,14 +66,16 @@ if (!["log", "smtp"].includes(emailMode)) errors.push("EMAIL_DELIVERY_MODE must 
 validateUrl("PORTAL_BASE_URL", { requireHttps: production, forbidLocalhost: production });
 
 if (production) {
+  if (value("NODE_ENV") !== "production") errors.push("NODE_ENV must be set to production for production validation and startup.");
   requireVar("DATABASE_URL", "production must persist submissions in Postgres.");
   requireVar("PORTAL_BASE_URL", "production emails and direct links need the public portal URL.");
+  requireVar("QUICKLAUNCH_JWT_SECRET", "QuickLaunch JWT is the required production SSO mode for the first deployment.");
 
   const headerMode = value("TRUSTED_SSO_HEADER_MODE") || "signed-token";
   if (headerMode === "claims") {
     requireVar("TRUSTED_SSO_HEADER_NAME", "trusted claim deployments must document the proxy-owned header source.");
-  } else if (!has("SSO_SHARED_SECRET") && !has("QUICKLAUNCH_JWT_SECRET")) {
-    errors.push("Production SSO requires SSO_SHARED_SECRET, QUICKLAUNCH_JWT_SECRET, or TRUSTED_SSO_HEADER_MODE=claims behind a trusted proxy.");
+  } else if (!has("QUICKLAUNCH_JWT_SECRET")) {
+    errors.push("Production SSO requires QUICKLAUNCH_JWT_SECRET for signed QuickLaunch JWT claims.");
   }
 
   if (value("ALLOW_MOCK_SSO") === "true") errors.push("ALLOW_MOCK_SSO must not be true in production.");

@@ -62,10 +62,9 @@ SMTP_FROM=registry@costaatt.edu.tt
 REGISTRY_NOTIFICATION_EMAIL=registrar@costaatt.edu.tt
 ```
 
-Configure one trusted authentication path:
+Configure QuickLaunch JWT as the primary production authentication path:
 
 ```env
-SSO_SHARED_SECRET=production-secret-from-portal
 QUICKLAUNCH_JWT_SECRET=production-quicklaunch-secret
 TRUSTED_SSO_HEADER_NAME=x-portal-sso-token
 TRUSTED_SSO_HEADER_MODE=signed-token
@@ -84,7 +83,7 @@ S3_ACCESS_KEY_ID=production-access-key
 S3_SECRET_ACCESS_KEY=production-secret-key
 ```
 
-If S3 is not configured, uploads are stored under the app `uploads/` folder. That folder must be backed up and preserved across deployments.
+For the first production deployment, local VM disk uploads are acceptable. If S3 is not configured, uploads are stored under the app `uploads/` folder. That folder must be backed up daily, preserved across deployments, and included in restore testing.
 
 Validate the environment:
 
@@ -210,11 +209,28 @@ If NSSM is used, restart the Windows service instead of PM2.
 
 Run these after each deployment:
 
+- Health: open `/api/health` and confirm it returns non-sensitive JSON with `status` not equal to `degraded`.
 - Student: open `/forms`, submit a mapped CRN with an attachment, and confirm `/student/dashboard` shows the request.
 - Reviewer: open `/advisor/requests`, verify assigned-only visibility, and approve or decline a test request.
 - Registry: open `/admin/dashboard`, `/admin/submissions`, preview an attachment inline, download it with `?download=1`, and export CSV.
+- Registry admin: open `/admin/diagnostics` and confirm Postgres, QuickLaunch JWT, email mode, upload mode, and reference-data counts are shown correctly.
 - Security: open `/api/dev/session` and confirm it returns 404 in production.
 - Security: attempt an unauthenticated private page and confirm the staff/student access panel or rejection appears.
+
+## 10.1 Final Go-Live Gate
+
+Before opening the system to students, confirm:
+
+- `npm run validate:env -- --production` passes on the Windows VM.
+- `psql "$env:DATABASE_URL" -f db/schema.sql` has completed successfully.
+- `/api/health` is reachable through HTTPS.
+- `/admin/diagnostics` shows `postgres` reference data storage and the expected reference-data counts.
+- QuickLaunch sends `studentId`, `firstName`, `lastName`, `email`, and `roles` in a signed JWT.
+- SMTP has sent test messages to a student, reviewer, and Registry mailbox.
+- `uploads/` is included in the VM backup job if S3 is not configured.
+- IIS/Caddy proxies only to `127.0.0.1:5001`; port `5001` is not public.
+- Windows Task Scheduler dry-run for SLA escalations succeeds.
+- The tested Git commit hash is recorded for rollback.
 
 ## 11. SLA Escalation Schedule
 

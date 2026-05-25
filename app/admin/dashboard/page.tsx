@@ -60,6 +60,7 @@ export default async function RegistryDashboardPage() {
           <Link className="primary-button" href="/admin/submissions"><ListChecks size={17} /> Review queue</Link>
           <Link className="secondary-button" href="/admin/reference-data"><Settings2 size={17} /> Reference data</Link>
           <Link className="secondary-button" href="/admin/settings"><Settings2 size={17} /> Settings</Link>
+          <Link className="secondary-button" href="/admin/diagnostics"><Settings2 size={17} /> Diagnostics</Link>
           <a className="secondary-button" href="/api/admin/submissions/export"><Download size={17} /> CSV export</a>
         </div>
       </section>

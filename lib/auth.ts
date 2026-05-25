@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { cookies, headers } from "next/headers";
+import { internalRolesForEmail } from "./internal-roles";
 import type { SsoUser, UserRole } from "./types";
 
 const COOKIE_NAME = "costaatt_sso";
@@ -28,7 +29,7 @@ function signPayload(payload: string) {
 }
 
 export function createSsoToken(user: SsoUser) {
-  const body = base64url(JSON.stringify({ ...user, roles: normalizeRoles(user.roles), iat: Date.now() }));
+  const body = base64url(JSON.stringify({ ...user, roles: normalizeRoles(user.roles, user.email), iat: Date.now() }));
   return `${body}.${signPayload(body)}`;
 }
 
@@ -40,8 +41,8 @@ function decodeJson<T>(body: string): T | null {
   }
 }
 
-function normalizeRoles(roles?: string[]): UserRole[] {
-  const normalized = (roles || ["student"])
+function normalizeRoles(roles?: string[], email?: string): UserRole[] {
+  const normalized = [...(roles || []), ...internalRolesForEmail(email), "student"]
     .map((role) => roleAliases[role.toLowerCase()])
     .filter((role): role is UserRole => Boolean(role));
   return Array.from(new Set(normalized.length > 0 ? normalized : ["student"]));
@@ -60,7 +61,7 @@ function mapClaims(parsed: Record<string, unknown>): SsoUser | null {
     firstName: String(firstName),
     lastName: String(lastName),
     email: String(email),
-    roles: normalizeRoles(roles.map(String))
+    roles: normalizeRoles(roles.map(String), String(email))
   };
 }
 

@@ -225,7 +225,7 @@ Before opening the system to students, confirm:
 - `psql "$env:DATABASE_URL" -f db/schema.sql` has completed successfully.
 - `/api/health` is reachable through HTTPS.
 - `/admin/diagnostics` shows `postgres` reference data storage and the expected reference-data counts.
-- QuickLaunch sends `studentId`, `firstName`, `lastName`, `email`, and `roles` in a signed JWT.
+- QuickLaunch sends `studentId`, `firstName`, `lastName`, and `email` in a signed JWT. Registry/system roles are added internally by matching COSTAATT email addresses.
 - SMTP has sent test messages to a student, reviewer, and Registry mailbox.
 - `uploads/` is included in the VM backup job if S3 is not configured.
 - IIS/Caddy proxies only to `127.0.0.1:5001`; port `5001` is not public.

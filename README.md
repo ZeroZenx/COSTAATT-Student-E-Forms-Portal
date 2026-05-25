@@ -182,7 +182,9 @@ Mapped claims:
 - `firstName`
 - `lastName`
 - `email`
-- `roles`
+- optional `roles`
+
+QuickLaunch does not need to send Registry roles for the first deployment. The app enriches signed-in identities from an internal email-based role directory for Registry and system administrators. Reviewer access also works from assignment email matching, so advisor/lecturer direct links can open assigned requests even when QuickLaunch sends identity only.
 
 Production mode must not expose mock identities. The `/api/dev/session` route returns 404 in production.
 
@@ -265,11 +267,16 @@ Maximum upload size:
 
 ## Role Definitions
 - `student`: can submit and view their own requests.
-- `advisor`: can review assigned academic requests.
-- `lecturer`: can review assigned course requests.
+- `advisor`: can review assigned academic requests when sent by SSO; assigned-email matching also grants access to the specific request.
+- `lecturer`: can review assigned course requests when sent by SSO; assigned-email matching also grants access to the specific request.
 - `registry_staff`: can review and update Registry submissions.
 - `registry_admin`: can manage submissions and reference data.
 - `system_admin`: full administrative access.
+
+Seeded internal roles:
+- `system_admin`: Darren Headley, Deborah Romero, Varune Ramrattan.
+- `registry_admin`: Rhonda Cumberbatch, Gwyneth King.
+- `registry_staff`: Nigel Thomas, Lea-Andro Sandiford, Maltie Ragoopath, Karen Madoo, Kellyann Pope, Zalina Mollick, Kinda Riley, Kempson Banfield, Nkese Hobson.
 
 ## Testing Instructions
 ```bash
@@ -312,8 +319,8 @@ npm run validate:env -- --production
 For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). Production should run the Node.js app on an internal port such as `127.0.0.1:5001` and expose the public service only through HTTPS using IIS or Caddy.
 
 ## Production Readiness Checklist
-- **SSO:** Configure `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and validate the real QuickLaunch claims for student/advisor/Registry roles.
-- **Roles:** Test separate identities for `student`, `advisor`, `lecturer`, `registry_staff`, `registry_admin`, and `system_admin`.
+- **SSO:** Configure `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and validate the real QuickLaunch identity claims: `studentId`, `firstName`, `lastName`, and `email`.
+- **Roles:** Test Registry/system role enrichment by logging in as a seeded staff email. Test advisor/lecturer access by opening an assigned request link from an email notification.
 - **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions, notifications, and reference data persist after restart.
 - **Uploads:** First production deployment may use local VM disk uploads. Verify PDF/image upload, inline staff preview, forced download with `?download=1`, denied unauthenticated access, and daily backup of `uploads/`.
 - **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.

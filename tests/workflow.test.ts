@@ -23,7 +23,32 @@ describe("QuickLaunch-compatible local SSO", () => {
     });
 
     const user = verifySsoToken(token);
-    expect(user?.roles).toEqual(["registry_staff", "registry_admin"]);
+    expect(user?.roles).toEqual(["registry_staff", "registry_admin", "student"]);
+  });
+
+  it("adds internal Registry and system roles from email when SSO omits roles", () => {
+    const registryToken = createSsoToken({
+      studentId: "REG-RC",
+      firstName: "Rhonda",
+      lastName: "Cumberbatch",
+      email: "rcumberbatch@costaatt.edu.tt"
+    });
+    const systemToken = createSsoToken({
+      studentId: "SYS-DH",
+      firstName: "Darren",
+      lastName: "Headley",
+      email: "dheadley@costaatt.edu.tt"
+    });
+    const leaToken = createSsoToken({
+      studentId: "REG-LS",
+      firstName: "Lea-Andro",
+      lastName: "Sandiford",
+      email: "lsandiford@costaatt.edu.tt"
+    });
+
+    expect(verifySsoToken(registryToken)?.roles).toEqual(["registry_admin", "student"]);
+    expect(verifySsoToken(systemToken)?.roles).toEqual(["system_admin", "student"]);
+    expect(verifySsoToken(leaToken)?.roles).toEqual(["registry_staff", "student"]);
   });
 });
 

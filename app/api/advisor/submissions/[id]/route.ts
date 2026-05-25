@@ -8,8 +8,8 @@ import { notifyReviewerAction } from "@/lib/notifications";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   const user = getCurrentUser();
-  if (!user || !hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"])) {
-    return NextResponse.json({ error: "Advisor or lecturer access is required." }, { status: 403 });
+  if (!user) {
+    return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401 });
   }
 
   const submission = await getSubmission(params.id);
@@ -24,8 +24,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const user = getCurrentUser();
-    if (!user || !hasAnyRole(user, ["advisor", "lecturer"])) {
-      return NextResponse.json({ error: "Advisor or lecturer access is required." }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401 });
     }
 
     const patch = reviewerPatchSchema.parse(await request.json());

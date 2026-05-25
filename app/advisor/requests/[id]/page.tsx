@@ -10,15 +10,14 @@ import { isAssignedReviewer } from "@/lib/workflow";
 export default async function AdvisorRequestDetailPage({ params }: { params: { id: string } }) {
   const user = getCurrentUser();
   const { id } = params;
-  const hasReviewerRole = user && hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"]);
 
-  if (!user || !hasReviewerRole) {
+  if (!user) {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
           <BrandLogo className="auth-logo" />
           <p className="eyeline">Advisor dashboard</p>
-          <h1>Advisor or lecturer access is required.</h1>
+          <h1>Signed-in access is required.</h1>
           <p>Open assigned requests from the authenticated portal.</p>
           <Link className="primary-button" href="/forms">Return to e-forms</Link>
         </section>

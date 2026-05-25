@@ -13,6 +13,8 @@ import type { CourseLookupField, CourseLookupMatch } from "@/lib/reference-data"
 import type { CourseLine, FormType, SsoUser, SubmissionPayload } from "@/lib/types";
 
 const steps = ["Student details", "Request details", "Declarations", "Review & submit"];
+const defaultAcademicYear = "2026/2027";
+const emptyCourse: CourseLine = { crn: "", courseCode: "", courseTitle: "" };
 
 type WizardState = {
   academicYear: string;
@@ -48,19 +50,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [referenceOptions, setReferenceOptions] = useState<ReferenceOptions>({ crns: [], courseCodes: [], courseTitles: [] });
-  const [state, setState] = useState<WizardState>({
-    academicYear: "2026/2027",
-    semester: "",
-    programme: "",
-    degree: "",
-    phone: "",
-    advisorName: "",
-    advisorDate: "",
-    requestType: definition.requestTypes[0],
-    studentComment: "",
-    courses: [{ crn: "", courseCode: "", courseTitle: "" }],
-    declarations: []
-  });
+  const [state, setState] = useState<WizardState>(() => initialWizardState(definition.requestTypes[0]));
 
   const payload: SubmissionPayload = useMemo(() => ({
     formType,
@@ -102,21 +92,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
   function updateCourse(index: number, key: keyof CourseLine, value: string) {
     setState((current) => ({
       ...current,
-      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
-        ...course,
-        [key]: value,
-        advisorName: undefined,
-        advisorEmail: undefined,
-        lecturerName: undefined,
-        lecturerEmail: undefined,
-        campus: undefined,
-        section: undefined,
-        noLecturerAssigned: false,
-        lookupMatches: undefined,
-        requiresSelection: false,
-        lookupWarning: undefined,
-        locked: false
-      } : course)
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? resetCourseLookup(course, key, value) : course)
     }));
   }
 
@@ -124,23 +100,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
     setState((current) => ({
       ...current,
       advisorName: current.advisorName || match.advisorName || match.lecturerName || "",
-      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
-        ...course,
-        crn: match.crn || course.crn,
-        courseCode: match.courseCode,
-        courseTitle: match.courseTitle,
-        advisorName: match.advisorName,
-        advisorEmail: match.advisorEmail,
-        lecturerName: match.lecturerName || "",
-        lecturerEmail: match.lecturerEmail || "",
-        campus: match.campus,
-        section: match.section,
-        noLecturerAssigned: match.noReviewerMapping,
-        lookupMatches: undefined,
-        requiresSelection: false,
-        lookupWarning: undefined,
-        locked: true
-      } : course)
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? courseWithMatch(course, match) : course)
     }));
   }
 
@@ -199,7 +159,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
   function addCourse() {
     setState((current) => current.courses.length >= 5 ? current : {
       ...current,
-      courses: [...current.courses, { crn: "", courseCode: "", courseTitle: "" }]
+      courses: [...current.courses, { ...emptyCourse }]
     });
   }
 
@@ -402,6 +362,60 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
       </form>
     </section>
   );
+}
+
+function initialWizardState(requestType: string): WizardState {
+  return {
+    academicYear: defaultAcademicYear,
+    semester: "",
+    programme: "",
+    degree: "",
+    phone: "",
+    advisorName: "",
+    advisorDate: "",
+    requestType,
+    studentComment: "",
+    courses: [{ ...emptyCourse }],
+    declarations: []
+  };
+}
+
+function resetCourseLookup(course: CourseLine, key: keyof CourseLine, value: string): CourseLookupLine {
+  return {
+    ...course,
+    [key]: value,
+    advisorName: undefined,
+    advisorEmail: undefined,
+    lecturerName: undefined,
+    lecturerEmail: undefined,
+    campus: undefined,
+    section: undefined,
+    noLecturerAssigned: false,
+    lookupMatches: undefined,
+    requiresSelection: false,
+    lookupWarning: undefined,
+    locked: false
+  };
+}
+
+function courseWithMatch(course: CourseLine, match: CourseLookupMatch): CourseLookupLine {
+  return {
+    ...course,
+    crn: match.crn || course.crn,
+    courseCode: match.courseCode,
+    courseTitle: match.courseTitle,
+    advisorName: match.advisorName,
+    advisorEmail: match.advisorEmail,
+    lecturerName: match.lecturerName || "",
+    lecturerEmail: match.lecturerEmail || "",
+    campus: match.campus,
+    section: match.section,
+    noLecturerAssigned: match.noReviewerMapping,
+    lookupMatches: undefined,
+    requiresSelection: false,
+    lookupWarning: undefined,
+    locked: true
+  };
 }
 
 function Field({ label, value, onChange, type = "text", required = false, list }: { label: string; value: string; onChange: (value: string) => void; type?: string; required?: boolean; list?: string }) {

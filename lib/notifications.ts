@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { hasDatabase, query } from "./db";
+import { readJsonFile, writeJsonFile } from "./json-store";
 import { formDefinitions } from "./forms";
 import { studentStatusLabel } from "./display";
 import type { ReviewerPatch, StudentNotification, StudentNotificationType, SubmissionRecord } from "./types";
@@ -11,17 +11,11 @@ function localNotificationsPath() {
 }
 
 async function readLocal(): Promise<StudentNotification[]> {
-  try {
-    return JSON.parse(await readFile(localNotificationsPath(), "utf8")) as StudentNotification[];
-  } catch {
-    return [];
-  }
+  return readJsonFile<StudentNotification[]>(localNotificationsPath(), []);
 }
 
 async function writeLocal(notifications: StudentNotification[]) {
-  const storePath = localNotificationsPath();
-  await mkdir(path.dirname(storePath), { recursive: true });
-  await writeFile(storePath, JSON.stringify(notifications, null, 2));
+  await writeJsonFile(localNotificationsPath(), notifications);
 }
 
 export async function createStudentNotification(input: Omit<StudentNotification, "id" | "createdAt">) {

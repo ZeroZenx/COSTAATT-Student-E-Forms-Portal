@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { hasDatabase, query } from "./db";
+import { readOrSeedJsonFile, writeJsonFile } from "./json-store";
 import { courseCatalogOptions } from "./course-catalog-data";
 import {
   advisorOptions,
@@ -132,13 +132,7 @@ function uniqueBy<T>(items: T[], keyFor: (item: T) => string) {
 async function readReferenceRecords() {
   if (hasDatabase()) return readDbReferenceRecords();
 
-  try {
-    return JSON.parse(await readFile(localReferencePath(), "utf8")) as ReferenceRecord[];
-  } catch {
-    const records = seedRecords();
-    await writeReferenceRecords(records);
-    return records;
-  }
+  return readOrSeedJsonFile<ReferenceRecord[]>(localReferencePath(), seedRecords);
 }
 
 async function readDbReferenceRecords() {
@@ -173,9 +167,7 @@ async function seedDbReferenceRecords(records: ReferenceRecord[]) {
 }
 
 async function writeReferenceRecords(records: ReferenceRecord[]) {
-  const storePath = localReferencePath();
-  await mkdir(path.dirname(storePath), { recursive: true });
-  await writeFile(storePath, JSON.stringify(records, null, 2));
+  await writeJsonFile(localReferencePath(), records);
 }
 
 export async function listReferenceRecords(kind?: ReferenceKind, search?: string) {

@@ -1,7 +1,7 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { hasDatabase, query } from "./db";
+import { readJsonFile, writeJsonFile } from "./json-store";
 import type { AdminPatch, ReviewerPatch, SubmissionPayload, SubmissionRecord, SsoUser } from "./types";
 import {
   auditEvent,
@@ -19,18 +19,14 @@ import {
 } from "./workflow";
 
 const localStorePath = path.join(process.cwd(), "data", "submissions.json");
+const SUBMISSION_COLUMNS = "id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at";
 
 async function readLocal(): Promise<SubmissionRecord[]> {
-  try {
-    return JSON.parse(await readFile(localStorePath, "utf8")) as SubmissionRecord[];
-  } catch {
-    return [];
-  }
+  return readJsonFile<SubmissionRecord[]>(localStorePath, []);
 }
 
 async function writeLocal(records: SubmissionRecord[]) {
-  await mkdir(path.dirname(localStorePath), { recursive: true });
-  await writeFile(localStorePath, JSON.stringify(records, null, 2));
+  await writeJsonFile(localStorePath, records);
 }
 
 export async function createSubmission(
@@ -100,7 +96,7 @@ export async function createSubmission(
 export async function listStudentSubmissions(studentId: string) {
   if (hasDatabase()) {
     const result = await query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
+      `select ${SUBMISSION_COLUMNS}
        from submissions
        where student->>'studentId' = $1
        order by created_at desc`,
@@ -115,7 +111,7 @@ export async function listStudentSubmissions(studentId: string) {
 export async function listAllSubmissions() {
   if (hasDatabase()) {
     const result = await query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
+      `select ${SUBMISSION_COLUMNS}
        from submissions
        order by created_at desc`
     );
@@ -138,7 +134,7 @@ export async function listAssignedSubmissions(user: SsoUser) {
 export async function getSubmission(id: string) {
   if (hasDatabase()) {
     const result = await query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
+      `select ${SUBMISSION_COLUMNS}
        from submissions
        where id = $1`,
       [id]
@@ -182,7 +178,7 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
            registry_comment = coalesce($8, registry_comment),
            updated_at = $9
        where id = $1
-       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
+       returning ${SUBMISSION_COLUMNS}`,
       [
         id,
         nextStatus,
@@ -240,7 +236,7 @@ export async function appendSubmissionAuditEvent(
        set audit_trail = $2::jsonb,
            updated_at = $3
        where id = $1
-       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
+       returning ${SUBMISSION_COLUMNS}`,
       [id, JSON.stringify(auditTrail), updatedAt]
     );
     return result.rows[0] ? rowToRecord(result.rows[0]) : null;
@@ -290,7 +286,7 @@ export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatc
            audit_trail = $6::jsonb,
            updated_at = $7
        where id = $1
-       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
+       returning ${SUBMISSION_COLUMNS}`,
       [
         id,
         nextStatus,

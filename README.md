@@ -80,7 +80,10 @@ SMTP_PORT=587
 SMTP_USER=replace-me
 SMTP_PASSWORD=replace-me
 SMTP_FROM=registry@costaatt.edu.tt
+SMTP_SECURE=false
 EMAIL_DELIVERY_MODE=log
+REGISTRY_NOTIFICATION_EMAIL=registrar@costaatt.edu.tt
+PORTAL_BASE_URL=http://localhost:5001
 ```
 
 ## `.env.example`
@@ -285,7 +288,7 @@ Recommended manual smoke tests:
 ## Current Limitations
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
-- Email SMTP sending is abstracted; local mode logs emails to `data/email-log.jsonl`.
+- Email notifications support SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.
 - Workflow routing uses the mapped lecturer first, then mapped advisor. Missing mappings go to Registry triage.
 - Full advisor-plus-lecturer sequential approval is deferred; v1 uses one mapped reviewer before Registry.

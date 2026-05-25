@@ -1,3 +1,4 @@
+import rawCourseCatalog from "../db/reference-data/course-catalog.json";
 import rawCourseCatalogOptions from "../db/reference-data/course-catalog-staging.json";
 
 export type CourseCatalogOption = {
@@ -13,4 +14,7 @@ export type CourseCatalogOption = {
   source: string;
 };
 
-export const courseCatalogOptions = rawCourseCatalogOptions as CourseCatalogOption[];
+const courseCatalog = rawCourseCatalog as CourseCatalogOption[];
+const stagingCourseCatalog = rawCourseCatalogOptions as CourseCatalogOption[];
+
+export const courseCatalogOptions = [...courseCatalog, ...stagingCourseCatalog];

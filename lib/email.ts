@@ -151,7 +151,9 @@ export async function sendStatusChangedEmail(submission: SubmissionRecord) {
 }
 
 async function sendAll(messages: EmailMessage[]) {
-  await Promise.all(messages.map(sendEmailSafely));
+  for (const message of messages) {
+    await sendEmailSafely(message);
+  }
 }
 
 async function sendEmailSafely(message: EmailMessage) {

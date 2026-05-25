@@ -6,10 +6,10 @@ import { formDefinitions } from "@/lib/forms";
 import {
   advisorOptions,
   courseAdvisorOptions,
-  findAdvisorForCourse,
   findAdvisorForProgramme,
   programmeOptions
 } from "@/lib/reference-data";
+import type { CourseLookupField, CourseLookupMatch } from "@/lib/reference-data";
 import type { CourseLine, FormType, SsoUser, SubmissionPayload } from "@/lib/types";
 
 const steps = ["Student details", "Request details", "Declarations", "Review & submit"];
@@ -27,6 +27,13 @@ type WizardState = {
   courses: CourseLine[];
   declarations: string[];
   attachment?: File;
+};
+
+type CourseLookupLine = CourseLine & {
+  lookupMatches?: CourseLookupMatch[];
+  requiresSelection?: boolean;
+  lookupWarning?: string;
+  locked?: boolean;
 };
 
 export default function FormWizard({ formType, user }: { formType: FormType; user: SsoUser }) {
@@ -75,43 +82,98 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
   function updateCourse(index: number, key: keyof CourseLine, value: string) {
     setState((current) => ({
       ...current,
-      advisorName: key === "courseCode" && !current.advisorName
-        ? findAdvisorForCourse({ courseCode: value })?.advisorName || current.advisorName
-        : current.advisorName,
-      courses: current.courses.map((course, courseIndex) => courseIndex === index ? { ...course, [key]: value } : course)
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
+        ...course,
+        [key]: value,
+        advisorName: undefined,
+        advisorEmail: undefined,
+        lecturerName: undefined,
+        lecturerEmail: undefined,
+        campus: undefined,
+        section: undefined,
+        noLecturerAssigned: false,
+        lookupMatches: undefined,
+        requiresSelection: false,
+        lookupWarning: undefined,
+        locked: false
+      } : course)
     }));
   }
 
-  async function lookupCourse(index: number, value: string) {
-    updateCourse(index, "crn", value);
+  function applyCourseMatch(index: number, match: CourseLookupMatch) {
+    setState((current) => ({
+      ...current,
+      advisorName: current.advisorName || match.advisorName || match.lecturerName || "",
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
+        ...course,
+        crn: match.crn || course.crn,
+        courseCode: match.courseCode,
+        courseTitle: match.courseTitle,
+        advisorName: match.advisorName,
+        advisorEmail: match.advisorEmail,
+        lecturerName: match.lecturerName || "",
+        lecturerEmail: match.lecturerEmail || "",
+        campus: match.campus,
+        section: match.section,
+        noLecturerAssigned: match.noReviewerMapping,
+        lookupMatches: undefined,
+        requiresSelection: false,
+        lookupWarning: undefined,
+        locked: true
+      } : course)
+    }));
+  }
+
+  async function lookupCourse(index: number, field: CourseLookupField, value: string) {
+    updateCourse(index, field, value);
     if (!value.trim()) return;
-    const response = await fetch(`/api/reference/lookup?value=${encodeURIComponent(value)}`);
+    const response = await fetch(`/api/reference/lookup?field=${field}&value=${encodeURIComponent(value)}`);
     if (!response.ok) return;
-    const result = await response.json();
-    if (!result.match) {
+    const result: {
+      matches?: CourseLookupMatch[];
+      selectedMatch?: CourseLookupMatch | null;
+      requiresSelection?: boolean;
+      warning?: string;
+    } = await response.json();
+
+    if (result.requiresSelection && result.matches?.length) {
       setState((current) => ({
         ...current,
-        courses: current.courses.map((course, courseIndex) => courseIndex === index ? { ...course, noLecturerAssigned: true } : course)
+        courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
+          ...course,
+          [field]: value,
+          lookupMatches: result.matches,
+          requiresSelection: true,
+          lookupWarning: "Select the correct CRN and section for this course.",
+          locked: false
+        } : course)
       }));
       return;
     }
-    setState((current) => ({
-      ...current,
-      advisorName: current.advisorName || result.match.advisorName || result.match.lecturerName || "",
-      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
-        ...course,
-        crn: value,
-        courseCode: result.match.courseCode,
-        courseTitle: result.match.courseTitle,
-        advisorName: result.match.advisorName,
-        advisorEmail: result.match.advisorEmail,
-        lecturerName: result.match.lecturerName,
-        lecturerEmail: result.match.lecturerEmail,
-        campus: result.match.campus,
-        section: result.match.section,
-        noLecturerAssigned: result.match.lecturerName === "No lecturer assigned"
-      } : course)
-    }));
+
+    if (result.selectedMatch) {
+      applyCourseMatch(index, result.selectedMatch);
+      return;
+    }
+
+    if (!result.matches?.length) {
+      setState((current) => ({
+        ...current,
+        courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
+          ...course,
+          [field]: value,
+          noLecturerAssigned: true,
+          lookupWarning: result.warning || "No lecturer assigned",
+          locked: false
+        } : course)
+      }));
+    }
+  }
+
+  function selectCourseMatch(index: number, value: string) {
+    const current = state.courses[index] as CourseLookupLine | undefined;
+    const match = current?.lookupMatches?.find((item) => courseMatchKey(item) === value);
+    if (match) applyCourseMatch(index, match);
   }
 
   function addCourse() {
@@ -194,10 +256,28 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
               </div>
               {state.courses.map((course, index) => (
                 <div className="course-row" key={index}>
-                  <input aria-label={`CRN ${index + 1}`} value={course.crn} onChange={(event) => lookupCourse(index, event.target.value)} />
-                  <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} onChange={(event) => updateCourse(index, "courseCode", event.target.value)} />
-                  <input aria-label={`Course title ${index + 1}`} value={course.courseTitle} onChange={(event) => updateCourse(index, "courseTitle", event.target.value)} readOnly={Boolean(course.advisorName || course.lecturerName)} />
-                  <input aria-label={`Assigned lecturer or advisor ${index + 1}`} value={course.lecturerName || course.advisorName || (course.noLecturerAssigned ? "No lecturer assigned" : "")} readOnly />
+                  <input aria-label={`CRN ${index + 1}`} value={course.crn} readOnly={Boolean((course as CourseLookupLine).locked && course.crn)} onChange={(event) => lookupCourse(index, "crn", event.target.value)} />
+                  <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseCode", event.target.value)} />
+                  <input list="course-title-options" aria-label={`Course title ${index + 1}`} value={course.courseTitle} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseTitle", event.target.value)} />
+                  <input aria-label={`Assigned lecturer or advisor ${index + 1}`} value={reviewerDisplay(course)} readOnly />
+                  {(course as CourseLookupLine).requiresSelection ? (
+                    <label className="course-selector">
+                      Select CRN / section
+                      <select required defaultValue="" onChange={(event) => selectCourseMatch(index, event.target.value)}>
+                        <option value="">Choose the correct CRN and section...</option>
+                        {(course as CourseLookupLine).lookupMatches?.map((match) => (
+                          <option key={courseMatchKey(match)} value={courseMatchKey(match)}>
+                            {match.crn || "No CRN"} · {match.courseCode} · {match.courseTitle} · {match.section}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  {course.campus || course.section || (course as CourseLookupLine).lookupWarning ? (
+                    <p className="course-context">
+                      {(course as CourseLookupLine).lookupWarning || `${course.campus || "Campus not assigned"} · ${course.section || "Section not assigned"}`}
+                    </p>
+                  ) : null}
                 </div>
               ))}
               <button type="button" className="secondary-button" onClick={addCourse}>Add another course</button>
@@ -294,12 +374,32 @@ function ReferenceDataLists() {
       <datalist id="course-code-options">
         {courseAdvisorOptions.map((option) => (
           <option key={option.courseCode} value={option.courseCode}>
-            {option.advisorName}
+            {option.courseTitle || option.advisorName}
+          </option>
+        ))}
+      </datalist>
+      <datalist id="course-title-options">
+        {courseAdvisorOptions.map((option) => (
+          <option key={`${option.courseCode}-${option.crn || "course"}`} value={option.courseTitle || option.courseCode}>
+            {option.crn ? `${option.crn} · ` : ""}{option.courseCode}
           </option>
         ))}
       </datalist>
     </>
   );
+}
+
+function courseMatchKey(match: CourseLookupMatch) {
+  return `${match.crn || "no-crn"}|${match.courseCode}|${match.courseTitle}|${match.section}`;
+}
+
+function reviewerDisplay(course: CourseLine) {
+  if (course.lecturerName || course.advisorName) {
+    const name = course.lecturerName || course.advisorName;
+    const email = course.lecturerEmail || course.advisorEmail;
+    return email ? `${name} (${email})` : name || "";
+  }
+  return course.noLecturerAssigned ? "No lecturer assigned" : "";
 }
 
 function ReadOnlyField({ label, value }: { label: string; value: string }) {

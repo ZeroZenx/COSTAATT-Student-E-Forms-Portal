@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { formDefinitions } from "./forms";
-import { lookupCourseByCrnOrCode } from "./reference-data";
+import { lookupCourseByCrnOrCode, lookupCourseReferences } from "./reference-data";
 import type {
   AuditEvent,
   CourseLine,
@@ -14,7 +14,8 @@ import type {
 } from "./types";
 
 export function enrichCourseLine(course: CourseLine): CourseLine {
-  const match = lookupCourseByCrnOrCode(course.crn || course.courseCode);
+  const match = lookupCourseByCrnOrCode(course.crn || course.courseCode) ||
+    lookupCourseReferences("courseTitle", course.courseTitle)[0];
   if (!match) {
     return {
       ...course,

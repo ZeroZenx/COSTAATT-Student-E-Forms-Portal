@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSsoToken, verifySsoToken } from "../lib/auth";
+import { lookupCourseReferences, normalizeCourseMatch } from "../lib/reference-data";
 import {
   assignmentForPayload,
   enrichCourseLine,
@@ -68,5 +69,46 @@ describe("workflow routing", () => {
 
   it("sanitizes comments before storage", () => {
     expect(sanitizeText("<script>Need help</script>")).toBe("scriptNeed help/script");
+  });
+});
+
+describe("course lookup", () => {
+  it("returns normalized reviewer data for course-code lookup", () => {
+    const matches = lookupCourseReferences("courseCode", "ACCT 126");
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toMatchObject({
+      courseCode: "ACCT 126",
+      courseTitle: "ACCT 126",
+      reviewerName: "Jerome Khan",
+      reviewerEmail: "jkhan@costaatt.edu.tt",
+      reviewerRole: "advisor"
+    });
+  });
+
+  it("supports course-title lookup and lecturer priority when section data is present", () => {
+    const match = normalizeCourseMatch({
+      crn: "12345",
+      courseCode: "COMP 101",
+      courseTitle: "Introduction to Computing",
+      advisorName: "Fallback Advisor",
+      advisorEmail: "advisor@costaatt.edu.tt",
+      lecturerName: "Primary Lecturer",
+      lecturerEmail: "lecturer@costaatt.edu.tt",
+      campus: "City Campus",
+      section: "01"
+    });
+
+    expect(match).toMatchObject({
+      crn: "12345",
+      courseCode: "COMP 101",
+      courseTitle: "Introduction to Computing",
+      reviewerName: "Primary Lecturer",
+      reviewerEmail: "lecturer@costaatt.edu.tt",
+      reviewerRole: "lecturer",
+      campus: "City Campus",
+      section: "01",
+      noReviewerMapping: false
+    });
   });
 });

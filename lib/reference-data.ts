@@ -23,6 +23,18 @@ export type CourseAdvisorOption = {
   section?: string;
 };
 
+export type CourseLookupField = "crn" | "courseCode" | "courseTitle";
+
+export type CourseLookupMatch = CourseAdvisorOption & {
+  courseTitle: string;
+  reviewerName: string;
+  reviewerEmail: string;
+  reviewerRole: "lecturer" | "advisor" | "registry";
+  campus: string;
+  section: string;
+  noReviewerMapping: boolean;
+};
+
 export const advisorOptions: AdvisorOption[] = [
   {
     "name": "Absalom, Dexter",
@@ -6147,10 +6159,46 @@ export function findAdvisorForCourse(course: Pick<CourseLine, "courseCode">) {
   return courseAdvisorOptions.find((option) => option.courseCode === course.courseCode);
 }
 
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function normalizeCourseMatch(option: CourseAdvisorOption): CourseLookupMatch {
+  const reviewerName = option.lecturerName || option.advisorName || "No lecturer assigned";
+  const reviewerEmail = option.lecturerEmail || option.advisorEmail || "";
+  return {
+    ...option,
+    courseTitle: option.courseTitle || option.courseCode,
+    reviewerName,
+    reviewerEmail,
+    reviewerRole: option.lecturerEmail ? "lecturer" : option.advisorEmail ? "advisor" : "registry",
+    campus: option.campus || "Not assigned",
+    section: option.section || "Not assigned",
+    noReviewerMapping: !reviewerEmail
+  };
+}
+
+export function lookupCourseReferences(field: CourseLookupField, value: string): CourseLookupMatch[] {
+  const needle = normalize(value);
+  if (!needle) return [];
+
+  const matches = courseAdvisorOptions.filter((option) => {
+    const courseCode = normalize(option.courseCode);
+    const courseTitle = normalize(option.courseTitle || option.courseCode);
+    const crn = normalize(option.crn || "");
+
+    if (field === "crn") return crn === needle;
+    if (field === "courseCode") return courseCode === needle;
+    return courseTitle === needle;
+  });
+
+  return matches.map(normalizeCourseMatch);
+}
+
 export function lookupCourseByCrnOrCode(value: string) {
-  const needle = value.trim().toLowerCase();
+  const needle = normalize(value);
   if (!needle) return undefined;
   return courseAdvisorOptions.find((option) => {
-    return option.courseCode.toLowerCase() === needle || option.crn?.toLowerCase() === needle;
+    return normalize(option.courseCode) === needle || normalize(option.crn || "") === needle;
   });
 }

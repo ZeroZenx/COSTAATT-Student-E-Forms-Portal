@@ -6,15 +6,14 @@ export const submissionStatuses = [
   "pending_advisor_review",
   "advisor_approved",
   "advisor_declined",
-  "in_review",
   "needs_information",
   "pending_registry_review",
   "registry_approved",
   "registry_declined",
-  "approved",
-  "declined",
   "closed"
 ] as const;
+
+export const legacySubmissionStatuses = ["in_review", "approved", "declined"] as const;
 
 export const formDefinitions: Record<
   FormType,

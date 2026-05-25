@@ -1,7 +1,17 @@
 import crypto from "crypto";
 import { formDefinitions } from "./forms";
 import { lookupCourseByCrnOrCode } from "./reference-data";
-import type { AuditEvent, CourseLine, FormType, SsoUser, SubmissionPayload, SubmissionStatus, WorkflowEvent } from "./types";
+import type {
+  AuditEvent,
+  CourseLine,
+  FormType,
+  RoutingFlag,
+  SsoUser,
+  SubmissionPayload,
+  SubmissionRecord,
+  SubmissionStatus,
+  WorkflowEvent
+} from "./types";
 
 export function enrichCourseLine(course: CourseLine): CourseLine {
   const match = lookupCourseByCrnOrCode(course.crn || course.courseCode);
@@ -52,6 +62,45 @@ export function assignmentForPayload(payload: SubmissionPayload) {
     email: course.lecturerEmail || course.advisorEmail || "",
     role: course.lecturerEmail ? "lecturer" as const : "advisor" as const
   };
+}
+
+export function routingFlagsForPayload(payload: SubmissionPayload): RoutingFlag[] {
+  return payload.courses.some((course) => course.noLecturerAssigned) ? ["no_reviewer_mapping"] : [];
+}
+
+export function isAssignedReviewer(submission: SubmissionRecord, user: SsoUser) {
+  return Boolean(submission.assignedTo?.email.toLowerCase() === user.email.toLowerCase());
+}
+
+export function isRegistryReady(submission: SubmissionRecord) {
+  return (
+    submission.status === "pending_registry_review" ||
+    submission.status === "registry_approved" ||
+    submission.status === "registry_declined" ||
+    submission.status === "needs_information" ||
+    submission.status === "closed" ||
+    Boolean(submission.routingFlags?.includes("no_reviewer_mapping"))
+  );
+}
+
+export function statusForReviewerAction(action: "approve" | "decline" | "needs_information"): SubmissionStatus {
+  if (action === "approve") return "pending_registry_review";
+  if (action === "decline") return "advisor_declined";
+  return "needs_information";
+}
+
+export function decisionForReviewerAction(action: "approve" | "decline" | "needs_information") {
+  if (action === "approve") return "approved" as const;
+  if (action === "decline") return "declined" as const;
+  return "needs_information" as const;
+}
+
+export function registryDecisionForStatus(status: SubmissionStatus) {
+  if (status === "registry_approved") return "approved" as const;
+  if (status === "registry_declined") return "declined" as const;
+  if (status === "needs_information") return "needs_information" as const;
+  if (status === "closed") return "closed" as const;
+  return undefined;
 }
 
 export function workflowEvent(

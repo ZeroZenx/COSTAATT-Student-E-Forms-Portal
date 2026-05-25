@@ -91,7 +91,7 @@ export default async function FormsPage() {
                   <strong>{formDefinitions[submission.formType].title}</strong>
                   <span>{new Date(submission.createdAt).toLocaleString()}</span>
                 </div>
-                <span className={`status-pill status-${submission.status}`}>{submission.status.replace("_", " ")}</span>
+                <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
               </div>
             ))}
           </div>

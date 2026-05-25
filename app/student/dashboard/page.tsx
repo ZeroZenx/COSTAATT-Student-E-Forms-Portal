@@ -39,7 +39,17 @@ export default async function StudentDashboardPage() {
               </div>
               <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
             </div>
-            <p>{submission.adminComment || "No Registry comments yet."}</p>
+            <p>{submission.registryComment || submission.adminComment || submission.reviewerComment || "No comments yet."}</p>
+            <div className="detail-grid">
+              <div>
+                <span>Assigned reviewer</span>
+                <strong>{submission.assignedTo?.name || "Registry triage"}</strong>
+              </div>
+              <div>
+                <span>Attachment</span>
+                <strong>{submission.attachment?.fileName || "No attachment stored"}</strong>
+              </div>
+            </div>
             <div className="timeline">
               {(submission.workflowHistory || []).map((event) => (
                 <div key={event.id}>

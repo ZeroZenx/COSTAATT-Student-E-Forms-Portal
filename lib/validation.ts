@@ -42,5 +42,13 @@ export const submissionPayloadSchema = z.object({
 
 export const adminPatchSchema = z.object({
   status: z.enum(submissionStatuses).optional(),
-  adminComment: z.string().trim().max(2000).optional()
+  adminComment: z.string().trim().max(2000).optional(),
+  internalNotes: z.string().trim().max(3000).optional(),
+  registryDecision: z.enum(["approved", "declined", "needs_information", "closed"]).optional(),
+  registryComment: z.string().trim().max(2000).optional()
+});
+
+export const reviewerPatchSchema = z.object({
+  action: z.enum(["approve", "decline", "needs_information"]),
+  comment: z.string().trim().max(2000).optional()
 });

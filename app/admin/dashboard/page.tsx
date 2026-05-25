@@ -12,7 +12,7 @@ export default async function RegistryDashboardPage() {
         <section className="auth-panel">
           <p className="eyeline">Registry dashboard</p>
           <h1>Staff access is required.</h1>
-          <p>Open this dashboard from the authenticated portal with a Registry role.</p>
+          <p>Open this dashboard from the authenticated portal with a Registry role. In local development, visit /api/dev/session first to create a demo staff session.</p>
           <Link className="primary-button" href="/forms">Return to e-forms</Link>
         </section>
       </main>

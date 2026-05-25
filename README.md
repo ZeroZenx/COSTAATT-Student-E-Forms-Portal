@@ -232,6 +232,8 @@ Maximum upload size:
 - `GET /admin/dashboard`
 - `GET /advisor/requests`
 - `GET /student/dashboard`
+- `GET /api/advisor/requests`
+- `PATCH /api/advisor/submissions/[id]`
 - `GET /admin/reference-data`
 - `GET /api/admin/submissions`
 - `PATCH /api/admin/submissions/[id]`
@@ -262,8 +264,10 @@ Recommended manual smoke tests:
 - `/api/dev/session` creates local access in development
 - student can submit a request with an attachment
 - student history returns only that student’s records
-- staff can update status/comment
-- advisor dashboard shows assigned requests
+- advisor/lecturer sees only assigned requests and can approve, decline, or request information
+- reviewer approval moves the request to Registry review
+- Registry queue shows Registry-ready requests and missing-mapping triage items
+- staff can update Registry status/comment
 - invalid uploads are rejected
 - unauthenticated APIs reject access
 
@@ -283,7 +287,8 @@ Recommended manual smoke tests:
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
 - Email SMTP sending is abstracted; local mode logs emails to `data/email-log.jsonl`.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.
-- Advisor/HOD multi-stage approvals are implemented as workflow states and dashboards, with deeper notification/routing policies planned.
+- Workflow routing uses the mapped lecturer first, then mapped advisor. Missing mappings go to Registry triage.
+- Full advisor-plus-lecturer sequential approval is deferred; v1 uses one mapped reviewer before Registry.
 
 ## Future Roadmap
 - Full Prisma runtime migration.

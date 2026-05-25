@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser, hasAnyRole } from "@/lib/auth";
-import { listAllSubmissions } from "@/lib/repository";
+import { listAllSubmissions, listAssignedSubmissions } from "@/lib/repository";
 import AdvisorRequests from "@/components/advisor-requests";
 
 export default async function AdvisorRequestsPage() {
@@ -18,9 +18,9 @@ export default async function AdvisorRequestsPage() {
     );
   }
 
-  const submissions = (await listAllSubmissions()).filter((submission) => {
-    return submission.assignedTo?.email.toLowerCase() === user.email.toLowerCase() || hasAnyRole(user, ["registry_admin", "system_admin"]);
-  });
+  const submissions = hasAnyRole(user, ["registry_admin", "system_admin"])
+    ? await listAllSubmissions()
+    : await listAssignedSubmissions(user);
   return (
     <main className="app-shell">
       <section className="page-intro">

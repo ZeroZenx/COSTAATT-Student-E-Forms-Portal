@@ -313,17 +313,22 @@ textarea {
   text-transform: capitalize;
 }
 
-.status-approved {
+.status-approved,
+.status-registry_approved {
   background: #e5f6ee;
   color: var(--success);
 }
 
-.status-declined {
+.status-declined,
+.status-advisor_declined,
+.status-registry_declined {
   background: #fee4e2;
   color: var(--danger);
 }
 
-.status-needs_information {
+.status-needs_information,
+.status-pending_advisor_review,
+.status-pending_registry_review {
   background: #fff2d5;
   color: var(--warning);
 }
@@ -703,6 +708,15 @@ textarea {
   width: 100%;
   min-height: 92px;
   resize: vertical;
+}
+
+.notice-banner {
+  border: 1px solid #f0c36d;
+  border-radius: 8px;
+  background: #fff8e6;
+  color: #654100;
+  padding: 12px 14px;
+  margin: 12px 0;
 }
 
 .reference-table {

@@ -5,14 +5,15 @@ export type SubmissionStatus =
   | "pending_advisor_review"
   | "advisor_approved"
   | "advisor_declined"
-  | "in_review"
   | "needs_information"
   | "pending_registry_review"
   | "registry_approved"
   | "registry_declined"
+  | "closed"
+  // Legacy values are retained so existing records continue to load.
+  | "in_review"
   | "approved"
-  | "declined"
-  | "closed";
+  | "declined";
 
 export type UserRole =
   | "student"
@@ -42,6 +43,8 @@ export type CourseLine = {
   section?: string;
   noLecturerAssigned?: boolean;
 };
+
+export type RoutingFlag = "no_reviewer_mapping";
 
 export type SubmissionPayload = {
   formType: FormType;
@@ -98,6 +101,11 @@ export type SubmissionRecord = {
   attachment?: AttachmentRecord;
   adminComment?: string;
   internalNotes?: string;
+  routingFlags?: RoutingFlag[];
+  reviewerDecision?: "approved" | "declined" | "needs_information";
+  reviewerComment?: string;
+  registryDecision?: "approved" | "declined" | "needs_information" | "closed";
+  registryComment?: string;
   assignedTo?: {
     name: string;
     email: string;
@@ -113,4 +121,11 @@ export type AdminPatch = {
   status?: SubmissionStatus;
   adminComment?: string;
   internalNotes?: string;
+  registryDecision?: SubmissionRecord["registryDecision"];
+  registryComment?: string;
+};
+
+export type ReviewerPatch = {
+  action: "approve" | "decline" | "needs_information";
+  comment?: string;
 };

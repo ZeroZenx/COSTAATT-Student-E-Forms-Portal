@@ -2,8 +2,21 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { Pool } from "pg";
-import type { AdminPatch, SubmissionPayload, SubmissionRecord, SsoUser } from "./types";
-import { auditEvent, assignmentForPayload, enrichSubmissionPayload, initialWorkflowStatus, sanitizeText, workflowEvent } from "./workflow";
+import type { AdminPatch, ReviewerPatch, SubmissionPayload, SubmissionRecord, SsoUser } from "./types";
+import {
+  auditEvent,
+  assignmentForPayload,
+  decisionForReviewerAction,
+  enrichSubmissionPayload,
+  initialWorkflowStatus,
+  isAssignedReviewer,
+  isRegistryReady,
+  registryDecisionForStatus,
+  routingFlagsForPayload,
+  sanitizeText,
+  statusForReviewerAction,
+  workflowEvent
+} from "./workflow";
 
 let pool: Pool | null = null;
 
@@ -41,6 +54,7 @@ export async function createSubmission(
   const enrichedPayload = enrichSubmissionPayload(payload);
   const status = initialWorkflowStatus(payload.formType, enrichedPayload);
   const assignedTo = assignmentForPayload(enrichedPayload);
+  const routingFlags = routingFlagsForPayload(enrichedPayload);
   const record: SubmissionRecord = {
     id: crypto.randomUUID(),
     formType: enrichedPayload.formType,
@@ -49,6 +63,7 @@ export async function createSubmission(
     payload: enrichedPayload,
     attachment,
     assignedTo,
+    routingFlags,
     workflowHistory: [
       workflowEvent(user, "submitted", undefined, status)
     ],
@@ -59,15 +74,16 @@ export async function createSubmission(
   record.auditTrail = [
     auditEvent(user, "submission.created", "submission", record.id, ipAddress, {
       formType: record.formType,
-      assignedTo
+      assignedTo,
+      routingFlags
     })
   ];
 
   if (hasDatabase()) {
     await db().query(
       `insert into submissions
-        (id, form_type, status, student, payload, attachment, assigned_to, workflow_history, audit_trail, created_at, updated_at)
-       values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10, $11)`,
+        (id, form_type, status, student, payload, attachment, assigned_to, workflow_history, audit_trail, routing_flags, created_at, updated_at)
+       values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12)`,
       [
         record.id,
         record.formType,
@@ -78,6 +94,7 @@ export async function createSubmission(
         JSON.stringify(record.assignedTo || null),
         JSON.stringify(record.workflowHistory || []),
         JSON.stringify(record.auditTrail || []),
+        JSON.stringify(record.routingFlags || []),
         record.createdAt,
         record.updatedAt
       ]
@@ -94,7 +111,7 @@ export async function createSubmission(
 export async function listStudentSubmissions(studentId: string) {
   if (hasDatabase()) {
     const result = await db().query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, created_at, updated_at
+      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        where student->>'studentId' = $1
        order by created_at desc`,
@@ -109,7 +126,7 @@ export async function listStudentSubmissions(studentId: string) {
 export async function listAllSubmissions() {
   if (hasDatabase()) {
     const result = await db().query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, created_at, updated_at
+      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        order by created_at desc`
     );
@@ -119,10 +136,20 @@ export async function listAllSubmissions() {
   return readLocal();
 }
 
+export async function listRegistryQueueSubmissions() {
+  const submissions = await listAllSubmissions();
+  return submissions.filter(isRegistryReady);
+}
+
+export async function listAssignedSubmissions(user: SsoUser) {
+  const submissions = await listAllSubmissions();
+  return submissions.filter((submission) => isAssignedReviewer(submission, user));
+}
+
 export async function getSubmission(id: string) {
   if (hasDatabase()) {
     const result = await db().query(
-      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, created_at, updated_at
+      `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        where id = $1`,
       [id]
@@ -138,10 +165,12 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
   const existing = await getSubmission(id);
   if (!existing) return null;
   const nextStatus = patch.status || existing.status;
+  const registryDecision = patch.registryDecision || (patch.status ? registryDecisionForStatus(patch.status) : existing.registryDecision);
+  const registryComment = sanitizeText(patch.registryComment || patch.adminComment);
   const history = [
     ...(existing.workflowHistory || []),
     ...(patch.status && patch.status !== existing.status
-      ? [workflowEvent(actor || existing.student, "status.changed", existing.status, patch.status, patch.adminComment)]
+      ? [workflowEvent(actor || existing.student, "registry.status_changed", existing.status, patch.status, registryComment)]
       : [])
   ];
   const auditTrail = [
@@ -157,9 +186,11 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
            internal_notes = coalesce($4, internal_notes),
            workflow_history = $5::jsonb,
            audit_trail = $6::jsonb,
-           updated_at = $7
+           registry_decision = coalesce($7, registry_decision),
+           registry_comment = coalesce($8, registry_comment),
+           updated_at = $9
        where id = $1
-       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, created_at, updated_at`,
+       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
       [
         id,
         nextStatus,
@@ -167,6 +198,8 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
         sanitizeText(patch.internalNotes) || null,
         JSON.stringify(history),
         JSON.stringify(auditTrail),
+        registryDecision || null,
+        registryComment || null,
         updatedAt
       ]
     );
@@ -181,6 +214,67 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
     status: nextStatus,
     adminComment: sanitizeText(patch.adminComment) || records[index].adminComment,
     internalNotes: sanitizeText(patch.internalNotes) || records[index].internalNotes,
+    registryDecision: registryDecision || records[index].registryDecision,
+    registryComment: registryComment || records[index].registryComment,
+    workflowHistory: history,
+    auditTrail,
+    updatedAt
+  };
+  await writeLocal(records);
+  return records[index];
+}
+
+export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatch, actor: SsoUser, ipAddress?: string) {
+  const updatedAt = new Date().toISOString();
+  const existing = await getSubmission(id);
+  if (!existing) return null;
+  if (!isAssignedReviewer(existing, actor)) throw new Error("This request is not assigned to your account.");
+  if (existing.status !== "pending_advisor_review") throw new Error("This request is not awaiting reviewer action.");
+
+  const nextStatus = statusForReviewerAction(patch.action);
+  const comment = sanitizeText(patch.comment);
+  const reviewerDecision = decisionForReviewerAction(patch.action);
+  const history = [
+    ...(existing.workflowHistory || []),
+    workflowEvent(actor, `reviewer.${patch.action}`, existing.status, nextStatus, comment)
+  ];
+  const auditTrail = [
+    ...(existing.auditTrail || []),
+    auditEvent(actor, `reviewer.${patch.action}`, "submission", id, ipAddress, { comment })
+  ];
+
+  if (hasDatabase()) {
+    const result = await db().query(
+      `update submissions
+       set status = $2,
+           reviewer_decision = $3,
+           reviewer_comment = coalesce($4, reviewer_comment),
+           workflow_history = $5::jsonb,
+           audit_trail = $6::jsonb,
+           updated_at = $7
+       where id = $1
+       returning id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at`,
+      [
+        id,
+        nextStatus,
+        reviewerDecision,
+        comment || null,
+        JSON.stringify(history),
+        JSON.stringify(auditTrail),
+        updatedAt
+      ]
+    );
+    return result.rows[0] ? rowToRecord(result.rows[0]) : null;
+  }
+
+  const records = await readLocal();
+  const index = records.findIndex((record) => record.id === id);
+  if (index === -1) return null;
+  records[index] = {
+    ...records[index],
+    status: nextStatus,
+    reviewerDecision,
+    reviewerComment: comment || records[index].reviewerComment,
     workflowHistory: history,
     auditTrail,
     updatedAt
@@ -200,6 +294,11 @@ function rowToRecord(row: Record<string, unknown>): SubmissionRecord {
     adminComment: (row.admin_comment || undefined) as string | undefined,
     internalNotes: (row.internal_notes || undefined) as string | undefined,
     assignedTo: (row.assigned_to || undefined) as SubmissionRecord["assignedTo"],
+    routingFlags: (row.routing_flags || []) as SubmissionRecord["routingFlags"],
+    reviewerDecision: (row.reviewer_decision || undefined) as SubmissionRecord["reviewerDecision"],
+    reviewerComment: (row.reviewer_comment || undefined) as string | undefined,
+    registryDecision: (row.registry_decision || undefined) as SubmissionRecord["registryDecision"],
+    registryComment: (row.registry_comment || undefined) as string | undefined,
     workflowHistory: (row.workflow_history || []) as SubmissionRecord["workflowHistory"],
     auditTrail: (row.audit_trail || []) as SubmissionRecord["auditTrail"],
     createdAt: new Date(row.created_at as string).toISOString(),

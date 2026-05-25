@@ -29,7 +29,7 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
     });
   }, [query, submissions]);
 
-  async function patchSelected(patch: { status?: SubmissionStatus; adminComment?: string }) {
+  async function patchSelected(patch: { status?: SubmissionStatus; adminComment?: string; registryComment?: string; internalNotes?: string }) {
     if (!selected) return;
     const response = await fetch(`/api/admin/submissions/${selected.id}`, {
       method: "PATCH",
@@ -55,7 +55,8 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
               <strong>{formDefinitions[submission.formType].shortTitle}</strong>
               <span>{submission.student.firstName} {submission.student.lastName}</span>
               <small>{new Date(submission.createdAt).toLocaleString()}</small>
-              <em className={`status-pill status-${submission.status}`}>{submission.status.replace("_", " ")}</em>
+              <em className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</em>
+              {submission.routingFlags?.includes("no_reviewer_mapping") ? <small>No reviewer mapping</small> : null}
             </button>
           ))}
           {filtered.length === 0 ? <p className="empty-state">No submissions match this search.</p> : null}
@@ -71,7 +72,7 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
                 <h2>{formDefinitions[selected.formType].title}</h2>
               </div>
               <select value={selected.status} onChange={(event) => patchSelected({ status: event.target.value as SubmissionStatus })}>
-                {submissionStatuses.map((status) => <option key={status} value={status}>{status.replace("_", " ")}</option>)}
+                {submissionStatuses.map((status) => <option key={status} value={status}>{status.replace(/_/g, " ")}</option>)}
               </select>
             </div>
             <div className="detail-grid">
@@ -82,8 +83,13 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
               <Detail label="Degree" value={selected.payload.degree} />
               <Detail label="Academic period" value={`${selected.payload.academicYear} · ${selected.payload.semester}`} />
               <Detail label="Advisor" value={selected.payload.advisorName} />
+              <Detail label="Assigned reviewer" value={selected.assignedTo ? `${selected.assignedTo.name} (${selected.assignedTo.role})` : "Registry triage"} />
               <Detail label="Request type" value={selected.payload.requestType} />
+              <Detail label="Reviewer decision" value={selected.reviewerDecision} />
             </div>
+            {selected.routingFlags?.includes("no_reviewer_mapping") ? (
+              <p className="notice-banner">No lecturer or advisor mapping was found. This request was routed directly to Registry triage.</p>
+            ) : null}
             <div className="course-review">
               <h3>Courses</h3>
               {selected.payload.courses.map((course, index) => (
@@ -110,10 +116,26 @@ export default function AdminSubmissions({ initialSubmissions }: { initialSubmis
             <label className="textarea-field">
               Registry comment
               <textarea
-                defaultValue={selected.adminComment || ""}
-                onBlur={(event) => patchSelected({ adminComment: event.target.value })}
+                defaultValue={selected.registryComment || selected.adminComment || ""}
+                onBlur={(event) => patchSelected({ registryComment: event.target.value, adminComment: event.target.value })}
               />
             </label>
+            <label className="textarea-field">
+              Internal notes
+              <textarea
+                defaultValue={selected.internalNotes || ""}
+                onBlur={(event) => patchSelected({ internalNotes: event.target.value })}
+              />
+            </label>
+            <div className="timeline">
+              {(selected.workflowHistory || []).map((event) => (
+                <div key={event.id}>
+                  <strong>{event.action.replace(/\./g, " ")}</strong>
+                  <span>{new Date(event.at).toLocaleString()} · {event.actorName}{event.toStatus ? ` · ${event.toStatus.replace(/_/g, " ")}` : ""}</span>
+                  {event.comment ? <p>{event.comment}</p> : null}
+                </div>
+              ))}
+            </div>
           </>
         ) : (
           <p className="empty-state">No submissions yet.</p>

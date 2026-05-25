@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { courseCatalogOptions } from "./course-catalog-data";
 import {
   advisorOptions,
   courseAdvisorOptions,
@@ -90,7 +91,29 @@ function seedRecords(): ReferenceRecord[] {
     createdAt: now,
     updatedAt: now
   }));
-  return [...courses, ...lecturers, ...advisors, ...programmes];
+  const crns = courseCatalogOptions.map((item) => ({
+    id: crypto.randomUUID(),
+    kind: "crn" as const,
+    key: item.crn,
+    label: `${item.crn} - ${item.courseCode}`,
+    email: item.reviewerEmail || undefined,
+    active: true,
+    data: {
+      crn: item.crn,
+      courseCode: item.courseCode,
+      courseTitle: item.courseTitle,
+      department: item.department,
+      reviewerName: item.reviewerName,
+      reviewerEmail: item.reviewerEmail,
+      reviewerRole: item.reviewerRole,
+      campus: item.campus,
+      section: item.section,
+      source: item.source
+    },
+    createdAt: now,
+    updatedAt: now
+  }));
+  return [...courses, ...crns, ...lecturers, ...advisors, ...programmes];
 }
 
 function uniqueBy<T>(items: T[], keyFor: (item: T) => string) {

@@ -1,0 +1,439 @@
+crn,courseCode,courseTitle,department,reviewerName,reviewerEmail,reviewerRole,campus,section,source
+23001,NURS 250,Psycho-Pathophysiology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23002,NURS 261,Nutrition & Disease for Psych.,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23003,NURS 325,Ped. & Adolescent Care- Psych.,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23004,NURS 223,The Childbearing Family,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23005,NURS 334,Adult Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23007,NURS 223,The Childbearing Family,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23008,NURS 411,Pro. Devlpment & Mgmt,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23009,NURS 445,Critical Care Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23010,NURS 499,Senior Project- Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23011,NURS 306,Health Assessment,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23012,NURS 306,Health Assessment,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23013,NURS 211,Nursing Science,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23014,NURS 150,Intro to Professional Develop,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23015,NURS 141,Emergency Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23016,NURS 141,Emergency Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23017,NURS 260,Nutrition and Disease,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23018,NURS 165,Introduction to Nutrition,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23019,NURS 401,Gender Issues in Health Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23020,NURS 401,Gender Issues in Health Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23021,NURS 411,Pro. Devlpment & Mgmt,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23022,COMM 123,Sign Language for Health Prof,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23023,COMM 120,Critical Reading & Writing,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23024,COMM 123,Sign Language for Health Prof,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23025,NURS 306,Health Assessment,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23026,NURS 445,Critical Care Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23027,NURS 337,Nursing Informatics,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23028,NURS 150,Intro to Professional Develop,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23029,NURS 150,Intro to Professional Develop,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23030,NURS 301,Epidemiology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23031,NURS 499,Senior Project- Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23032,NURS 499,Senior Project- Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23033,NURS 201,Intro to Epidemiology & Rsrch,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23034,NURS 150,Intro to Professional Develop,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23035,NURS 411,Pro. Devlpment & Mgmt,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23036,NURS 312,Mental Health,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23037,NURS 312,Mental Health,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23038,NURS 336,Care of the Mentally Ill Adult,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23039,NURS 156,Health Promotion & Maintenance,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23040,NURS 156,Health Promotion & Maintenance,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23041,COMM 151,Communication in Nursing,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23042,NURS 115,Foundations of Nurs Practice,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23043,NURS 220,Pathophysiology I,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23044,NURS 447,Gerontology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23045,NURS 220,Pathophysiology I,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23046,NURS 312,Mental Health,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23047,NURS 320,Pathophysiology II,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23048,NURS 320,Pathophysiology II,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23049,NURS 320,Pathophysiology II,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23050,NURS 276,Psycho-Pharmachology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23051,NURS 275,Pharmacology in Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23052,NURS 116,Foundations in Psychiatry,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23053,NURS 441,Psychiatric Emergencies,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23054,NURS 165,Introduction to Nutrition,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23055,NURS 260,Nutrition and Disease,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23056,NURS 275,Pharmacology in Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23057,NURS 275,Pharmacology in Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23058,NURS 447,Gerontology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23059,NURS 447,Gerontology,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23060,NURS 337,Nursing Informatics,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23061,NURS 334,Adult Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23062,NURS 334,Adult Nursing,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23063,NURS 324,Pediatric And Adolescent Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23064,COMM 151,Communication in Nursing,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23065,NURS 156,Health Promotion & Maintenance,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23066,COMM 151,Communication in Nursing,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23067,NURS 223,The Childbearing Family,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23068,NURS 260,Nutrition and Disease,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23069,NURS 165,Introduction to Nutrition,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23070,NURS 324,Pediatric And Adolescent Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23071,NURS 115,Foundations of Nurs Practice,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23072,NURS 324,Pediatric And Adolescent Care,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23073,NURS 181,Level I Practical,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23074,NURS 372,Clinic Exp & Lvl II B Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23075,NURS 373,Clinic Exp & Lvl III Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23076,NURS 181,Level I Practical,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23077,NURS 181,Level I Practical,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23078,NURS 372,Clinic Exp & Lvl II B Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23079,NURS 372,Clinic Exp & Lvl II B Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23080,NURS 373,Clinic Exp & Lvl III Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23081,NURS 181,Level I Practical,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23082,NURS 382,Clinical Experience II,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23083,NURS 383,Clinical Experience III,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23084,NURS 181,Level I Practical,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23085,NURS 372,Clinic Exp & Lvl II B Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23086,NURS 373,Clinic Exp & Lvl III Prac Exm,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23087,DHVI 435,Health Promo for Div Popu,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23088,DHVI 450,Prof Aspects of Hlth Visiting,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23089,DHVI 420,Research for Health Care,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23090,DHVI 405,Public Hlth Approach-Hlth Visi,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23091,DHVI 415,Growth & Deve of the Individ,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23092,MIDW 202,Antepartum Assessment I,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23093,MIDW 201,Anatomy & Phys for Midwives,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23094,DHVI 550,Health Visiting Practice,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23095,MIDW 403,Advanced Skills for Midwives,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23096,MIDW 404,Senior Project- Midwifery,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23097,MIDW 402,Neonatology,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23098,MIDW 101,Introduction to Midwifery,Nursing,Jesinta Tobas,NursingDepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23099,MIDW 203,Antepartum Assessment II,Nursing,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23100,JOUR 123,Fundamentals of Reporting,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23101,JOUR 360,Copy Editing,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23102,JOUR 498,Investigative Reporting,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23103,PUBR 139,Intro. to Strategic PR,Mgmt and Entrepreneurship,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23104,PUBR 351,Applied PR Planning,Mgmt and Entrepreneurship,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23105,SPAN 100,Introduction to Spanish,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23106,SPAN 100,Introduction to Spanish,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23107,JOUR 444,Media Internship,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23108,ARTS 120,Survey of Art History,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23109,GRDE 122,Principles of Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23110,GRDE 124,Vis Thinking & Advert Concepts,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23111,GRDE 124,Vis Thinking & Advert Concepts,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23112,GRDE 130,Typography I,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23113,GRDE 499,Senior Project- Graphic Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23114,PORT 150,Brazilian Culture & Language I,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23115,SPAN 100,Introduction to Spanish,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23116,SPAN 105,Basic Spanish: All About Me,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23117,SPAN 121,Conversation in Spanish,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23118,SPAN 231,Spanish Language 2,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23119,PSYC 103,Understand Hum Beh & Diversity,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23120,PSYC 103,Understand Hum Beh & Diversity,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23121,PSYC 212,Lifespan Development,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23122,PSYC 122,Foundations of Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23123,PSYC 205,Social Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23124,PSYC 410,History of Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23125,SOBE 300,Statistics For Social Sciences,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23126,PSYC 498,Senior Thesis I,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23127,PSYC 425,Research Designs & Analysis,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23128,PSYC 462,Physiology of Behaviour,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23129,PSYC 499,Senior Thesis - Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23130,SOCI 102,Intro to the Study of Society,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23131,PSYC 468,Cognitive Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23132,SOBE 375,Intro to Career Guidance,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23133,ADVT 240,Copywriting,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23134,PSYC 230,Research Methods in Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23135,PSYC 220,Applied Psychology,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23136,SOWK 455,Practicum IV,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23137,SOWK 426,Advocacy in Social Work,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23138,SOWK 234,Social Welfare in the Caribb,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23139,MGMT 125,Principles of Management,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23140,COMM 123,Sign Language for Health Prof,Department of Digital Media and Communication,Jesinta Tobas,nursingdepartment@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23141,SOCI 250,Explor Carib. Social Problems,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23142,SOCI 102,Intro to the Study of Society,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23143,SOBE 335,Intro to Conflict Resolution,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23144,RELI 205,Comparative Religion,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23145,RELI 205,Comparative Religion,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23146,SOBE 135,Culture and Conflict,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23147,SOWK 116,Introduction to Social Work,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23148,SOWK 321,Social Work Theories and App,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23149,SOWK 236,Legal Ethical Iss in Social Wk,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23150,MKTG 125,Customer Service Fundamentals,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23151,MKTG 125,Customer Service Fundamentals,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23152,MGMT 125,Principles of Management,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23153,MGMT 205,Management Info. Systems,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23154,MGMT 205,Management Info. Systems,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23155,MGMT 210,Introduction to Project Mgmt,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23156,MGMT 420,Strategic Modeling,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23157,MKTG 205,Principles of Marketing,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23158,BUSI 203,Leadership & Ethics,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23159,BUSI 203,Leadership & Ethics,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23160,ECON 120,Principles of Microeconomics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23161,ECON 125,Principles of Macroeconomics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23162,BUSI 203,Leadership & Ethics,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23163,MGMT 210,Introduction to Project Mgmt,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23164,MGMT 210,Introduction to Project Mgmt,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23165,ENTP 499,Senior Project- Entp.,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23166,ENTP 205,Entrepreneurial Mind-set,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23167,ENTP 215,Business Modelling,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23169,ENTP 220,Caribbean Busi. Environments,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23170,MGMT 333,Business Seminar,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23171,ENTP 310,Managing Family Enterprise,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23172,ACCT 204,Financial Procedures & Budget,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23173,ACCT 204,Financial Procedures & Budget,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23174,ENTP 210,Fund. of Entrepreneurship,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23175,ENTP 306,Financing the Entp Endeavour,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23176,ENTP 310,Managing Family Enterprise,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23177,MKTG 205,Principles of Marketing,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23178,MKTG 330,International Marketing,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23179,MKTG 320,Consumer Behavior,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23180,MKTG 325,Integrated Marketing Comm,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23181,MKTG 290,Digital Marketing,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23182,ACCT 210,Cost & Management Accounting,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23183,ACCT 230,Intermediate Cost Accounting,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23184,ACCT 420,Advanced Cost & Management,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23185,ACCT 430,Adv Financial Management,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23186,ACCT 215,Intermediate Accounting I,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23187,MKTG 455,Marketing Practicum,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23188,ENTP 499,Senior Project- Entp.,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23189,ENTP 210,Fund. of Entrepreneurship,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23190,ACCT 415,Advanced Auditing,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23191,ACCT 210,Cost & Management Accounting,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23192,ACCT 126,Fundamentals of Accounting,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23193,ACCT 126,Fundamentals of Accounting,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23194,MGMT 300,Organisational Behaviour,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23195,HURM 420,Human Resource Planning,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23196,HURM 450,Integrated Strategic HR. Mgmt,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23197,HURM 310,Human Resource Management,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23199,HURM 333,Human Resource Info. Systems,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23200,ECON 110,Intro to General Economics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23201,ECON 120,Principles of Microeconomics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23202,ENTP 210,Fund. of Entrepreneurship,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23203,ENTP 210,Fund. of Entrepreneurship,Mgmt and Entrepreneurship,Jerome Khan,jkhan@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23204,ECON 110,Intro to General Economics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23205,ECON 405,Managerial Economics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23206,ECON 125,Principles of Macroeconomics,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23207,FINC 205,Financial Management,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23208,FINC 205,Financial Management,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23209,FINC 310,Corporate Finance,Mgmt and Entrepreneurship,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23210,MGMT 205,Management Info. Systems,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23211,MGMT 108,Fundamentals of Org. Behavior,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23212,MGMT 105,Intro. to Supervisory Mgmt,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23213,SOWK 122,Case wk Practice for Social Wk,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23214,SOWK 218,Grp Wk Practical for Social Wk,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23215,PSYC 261,Psychology of Adjustment,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23216,PSYC 350,"Culture, Diver & Behaviour",Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23217,PSYC 433,Psychology Seminar II,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23218,PSYC 233,Psychology Seminar I,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23219,COMM 135,Voice and Presentation,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23220,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23221,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23222,COMM 118,Communication in the Workplace,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23223,COMM 118,Communication in the Workplace,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23224,COMM 351,Social Media Communication,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23225,COMM 365,Audience and Reception,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23226,JOUR 131,Ethics in Journalism & PR,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23227,JOUR 275,Critical Anal MediaTV Coverage,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23228,JOUR 340,Mass Media in Global Cntxt,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23229,PUBR 139,Intro. to Strategic PR,Mgmt and Entrepreneurship,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23230,LAST 120,Intro - Latin American Stud,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23231,PSYC 325,Human Development,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23232,PSYC 103,Understand Hum Beh & Diversity,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23233,PSYC 106,Psyc for Health Professional,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23234,PSYC 103,Understand Hum Beh & Diversity,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23235,PSYC 103,Understand Hum Beh & Diversity,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23236,PSYC 370,Theories of Learning,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23237,COMM 104,Language & Comm Skills,Department of Digital Media and Communication,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23238,HLED 320,Legal & Ethical Issues in Hlth,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23239,MDLT 120,MLT Orientation,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23240,MDLT 120,MLT Orientation,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23241,MDLT 121,Medical Terminology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23242,SPAN 100,Introduction to Spanish,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23243,GRDE 129,Introduction to Graphic Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23244,GRDE 182,Vector Graphics,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23245,GRDE 233,3D Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23246,GRDE 253,Intro to Motion Graphics,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23247,GRDE 419,Design for the Web,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23248,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23249,COMM 119,Adv Grammar Off. Professionals,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23250,ADVT 330,Advertising Campaigns,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23251,SOWK 124,Social Wk Children & Families,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23252,SOWK 124,Social Wk Children & Families,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23253,SOWK 357,Social Wk Interv with Elderly,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23254,MDLT 125,Phlebotomy & Lab Techniques,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23255,MDLT 125,Phlebotomy & Lab Techniques,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23256,GRDE 440,Graphic Design Concepts I,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23257,ADVT 230,Principles of Advertising,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23258,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23259,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23260,COMM 108,Oral Presentation Skills,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23261,COMM 499,Senior Project-Mass Comm,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23262,GRDE 129,Introduction to Graphic Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23263,GRDE 153,Image Manipulation,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23264,GRDE 215,Digital Photography,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23265,GRDE 230,Typography II,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23266,GRDE 234,Publication Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23267,GRDE 453,Packaging & Post Production,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23268,COMM 140,Speech Writing,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23269,GRDE 245,Art History,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23270,PUBR 221,"Image, Etiquette & Protocol",Mgmt and Entrepreneurship,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23271,JOUR 281,Broadcast News Writing,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23272,JOUR 305,Data Literacy for Media Pract,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23273,ADVT 241,Digital Photo & Anima/Advertis,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23274,GRDE 123,Intro to Drawing & Painting,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23275,GRDE 234,Publication Design,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23276,SPAN 107,Spanish for Travel and Tourism,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23277,SPAN 108,Spanish for Social Settings,Department of Digital Media and Communication,Sophia Edwards Knox,SEdwards@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23278,MDLT 134,Survey of Org Chem & Biochem,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23279,MDLT 134,Survey of Org Chem & Biochem,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23280,MDLT 297,Medical Microbiology I,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23281,MDLT 299,Dev of Research Propsal,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23282,MDLT 329,Clinical Chemistry II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23283,MDLT 340,Immunology/Serology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23284,MDLT 341,Clinical Chemistry,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23285,MDLT 350,Histology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23286,MDLT 353,Hematology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23287,MDLT 353,Hematology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23288,MDLT 397,Medical Microbiology II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23289,MDLT 441,Immunohematology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23290,MDLT 441,Immunohematology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23291,MDLT 452,Hematology II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23292,MDLT 499,Simulated Praticum,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23293,PHAR 110,Orientation Pharmacy Practice,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23294,PHAR 113,Introduction to Pharmaceutics,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23295,PHAR 121,Introduction to Pharmacology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23296,PHAR 123,Pharmacy Systems & Procedures,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23297,PHAR 133,Compounding,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23298,PHAR 138,Intro Pharmacy Legis. & Ethics,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23299,RADG 101,Fund. of Radiological Sciences,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23300,RADG 101,Fund. of Radiological Sciences,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23301,RADG 222,Radiation Sciences,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23302,ITEC 115,Info Systems Project Mgmt,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23303,ITEC 120,Intro to Computer Hardware,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23304,RADG 246,Science & Instrumentation II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23305,RADG 254,Imaging Procedures II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23306,RADG 312,Imaging Correlations Sect Anat,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23307,ITEC 120,Intro to Computer Hardware,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23308,RADG 344,Science & Instrumentation IV,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23309,ITEC 121,Productivity Tools,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23310,ITEC 122,Intro to Operating Systems,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23311,RADG 351,Intro Pharma for Radiographers,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23312,ITEC 122,Intro to Operating Systems,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23313,RADG 354,Imaging Procedures IV,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23314,ITEC 124,Operating Systems Platforms,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23315,RADG 371,Prof Skills in Rad Medicine II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23316,RADG 455,Imaging Procedures V,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23317,RADG 482,Research Methodology II,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23318,PHLB 101,Introduction to Phlebotomy,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23319,PHLB 102,"Comm, Health & Safety in Phlb",Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23320,PHLB 103,Infection Prevention/First Aid,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23321,PHLB 104,"Speci, Collec, Preserv/Transp",Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23322,PHLB 105,Advanced Topics in Phlebotomy,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23323,PHLB 106,Clinical Prac for Phlebotomist,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23324,MDLT 344,Biochemistry Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23325,MDLT 345,Histopathology Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23326,MDLT 346,Hematology Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23327,MDLT 444,Immunology/Serology Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23328,MDLT 455,MDLT Simulated Practicum,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23329,MDLT 446,Bacteriology Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23330,MDLT 360,Basic Pathology,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23331,BIOL 465,Genetics & Molecular Diag,Natural and Life Sciences,Risha Kalloo,RKalloo@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23332,HLED 410,Health Policy,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23333,ITEC 133,Programming 1,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23334,ITEC 133,Programming 1,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23335,ITEC 225,Systems Analysis,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23336,ITEC 228,Systems Design,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23337,ITEC 235,Object Oriented Programming I,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23338,SOWK 245,Practicum I: Human Skills Lab,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23339,ITEC 229,Human Comp Interface Design,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23340,ITEC 229,Human Comp Interface Design,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23341,ITEC 236,Object Oriented Programming II,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23342,ITEC 243,Intro. to XML Programming,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23343,ITEC 240,Web Page Design,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23344,SOBE 384,Human Behaviour in Soc Environ,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23345,ITEC 240,Web Page Design,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23346,SOWK 323,Social Work Mang & Admin,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23347,SOWK 255,Practicum II,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23348,SOWK 319,Social Work Community Practice,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23349,ITEC 244,Internet Technology,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23350,ITEC 245,Intro. to Scripting Languages,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23351,ITEC 251,Network Management I,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23352,SOCI 102,Intro to the Study of Society,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23353,ITEC 260,Info Security Stan & Control,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23354,ITEC 260,Info Security Stan & Control,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23355,ITEC 269,Electronic Commerce,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23356,ITEC 285,Client Server Technology,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23357,ITEC 292,Data Structures,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23358,ITEC 351,Adv Routing Protocol Concepts,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23359,ITEC 360,Security Management,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23360,SOCI 102,Intro to the Study of Society,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23361,SOCI 102,Intro to the Study of Society,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23362,SOWK 326,Social Research Methods,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23363,PSYC 365,Group Dynamics,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23364,ITEC 372,Database Programming with SQL,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23365,PSYC 360,Theories of Individual Diff,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23366,COUN 100,Counselling,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23367,COUN 100,Counselling,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23368,PSYC 243,Human Sexuality,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23369,SDEV 10,Life Skills,Social and Behavioral Sciences,Nneka St Rose,NSRose@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23370,MDLT 445,Blood Bank Internship,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23371,ITEC 376,Building Internet Ready App I,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23372,ITEC 443,Lcl. & Remote Data Integration,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23373,ITEC 444,Senior Internship,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23374,ITEC 456,Wireless Networking,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23375,ITEC 457,Data Centre Construction,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23376,ITEC 474,Database Administration II,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23377,ITEC 499,Senior Project,Information Sci and Technology,Roger Chung,RChung@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23378,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23379,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23380,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23381,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23382,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23383,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23384,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23385,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23386,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23387,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23388,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23389,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23390,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23391,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23392,LIBS 130,Fundamental Research Skills,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23393,LIBS 140,Computer Applications in Lib,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23394,LIBS 145,Intro to Tech. Services in Lib,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23395,LIBS 273,Intro to Children's Literature,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23396,LIBS 300,User & Reference Services II,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23397,LIBS 477,Collection Development & Mgmt,Information Sci and Technology,Adrian Andrews,AAndrews@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23398,RCMT 153,Fund. of Electronic Rec. Mgmt.,Information Sci and Technology,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23399,RCMT 154,Intro. to Archives Mgmt.,Information Sci and Technology,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23400,RCMT 190,Practicum,Information Sci and Technology,Antoinette Stewart-Ache,asasche@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23401,MKTG 300,E-Commerce,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23402,HURM 310,Human Resource Management,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23403,MDLT 298,Medical Microbiology I - Lab,Health Science Technologies,Health Science Technologies,healthscitechnologies@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23404,HURM 310,Human Resource Management,Mgmt and Entrepreneurship,Sarah Awai,sawai-king@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23405,MUSC 156,Music Theory II,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23406,MUSC 158,Aural Skills II,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23407,MUSC 294,Hist of the Mus West Eur II,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23408,MUSC 315,Computers and Music,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23409,MUSC 329,Survey of the Music Industry,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23410,MUSP 121,Secondary Appl Instr I-Piano,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23411,MUSP 122,Secondary Appl Instr II-Piano,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23412,MUSP 131,Primary Appl Instru I-Pia,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23413,MUSP 132,Primary Appl Instru II-Pia,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23414,MUSP 253,Primary Appl Instru III-Pia,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23415,MUSP 254,Primary Appl Instru IV-Pia,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23416,MUSV 131,Primary Appl Instru I-Voic,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23417,MUSV 132,Primary Appl Instru II-Voic,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23418,MUSV 253,Primary Appl Instru III-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23419,MUSS 131,Primary Appl Instru I-Pan,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23420,MUSS 132,Primary Appl Instru II-Pan,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23421,MUSJ 151,Major Perform Ensemble I-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23422,MUSJ 152,Major Perform Ensemble II-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23423,MUSJ 264,Major Perform Ensemble IV-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23424,MUSJ 263,Major Perform Ensemble III-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23425,MUSJ 485,Major Perform Ensemble V-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23426,MUSJ 486,Major Perform Ensemble VI-Jaz,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23427,MUSV 151,Major Perform Ensemble I-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23428,MUSV 152,Major Perform Ensemble II-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23429,MUSV 263,Major Perform Ensemble III-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23430,MUSV 264,Major Perform Ensemble IV-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23431,MUSV 485,Major Perform Ensemble V-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23432,MUSV 486,Major Perform Ensemble VI-Voi,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23433,ENGL 200,Comparative Literature,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23434,ENGL 200,Comparative Literature,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23435,HIST 210,History of Trinidad & Tobago,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23436,HIST 210,History of Trinidad & Tobago,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23437,FYEC 100,First Year Experience Course,"VP, Academic Affairs",Nadine Gonzales,RMahase@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23438,FYEC 100,First Year Experience Course,"VP, Academic Affairs",Nadine Gonzales,RMahase@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23439,FILM 150,Script Writing I,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23440,FILM 261,Single Camera Production,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging
+23441,FILM 161,Critical Analysis-Film & Video,Creative Industried and Culture,Nadine Gonzales,cjack@costaatt.edu.tt,advisor,,,SharePoint Course Catalog Staging

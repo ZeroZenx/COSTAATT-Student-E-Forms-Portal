@@ -54,6 +54,11 @@ Required production settings:
 ```env
 NODE_ENV=production
 DATABASE_URL=postgres://costaatt:strong-password@postgres-host:5432/costaatt_eforms
+PG_POOL_MAX=20
+PG_IDLE_TIMEOUT_MS=30000
+PG_CONNECTION_TIMEOUT_MS=5000
+PG_MAX_USES=7500
+PG_STATEMENT_TIMEOUT_MS=15000
 PORTAL_BASE_URL=https://studentforms.costaatt.edu.tt
 EMAIL_DELIVERY_MODE=smtp
 SMTP_HOST=smtp.costaatt.edu.tt
@@ -92,6 +97,8 @@ npm run validate:env -- --production
 ```
 
 The validation must pass before the app is started for production.
+
+For 100+ concurrent users, start with `PG_POOL_MAX=20` for one Node.js process. If PM2 cluster mode is used, total possible Postgres clients are `PG_POOL_MAX × process count`, so confirm the database `max_connections` can support that plus administrative connections.
 
 ## 5. Database Setup
 
@@ -142,6 +149,14 @@ pm2 start "npm" --name costaatt-eforms -- run start -- -p 5001
 pm2 save
 pm2 startup
 ```
+
+For the first production VM, run one app process and use the shared Postgres pool settings above. After live usage is measured, PM2 cluster mode can be enabled with two processes if CPU headroom and database connection capacity are confirmed:
+
+```powershell
+pm2 start "npm" --name costaatt-eforms --instances 2 -- run start -- -p 5001
+```
+
+When using two instances, keep `PG_POOL_MAX=10` to preserve a similar total database connection ceiling.
 
 Useful commands:
 

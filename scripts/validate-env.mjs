@@ -106,6 +106,16 @@ if (has("UPLOAD_MAX_MB") && (!Number.isFinite(Number(value("UPLOAD_MAX_MB"))) ||
   errors.push("UPLOAD_MAX_MB must be a positive number.");
 }
 
+for (const numericName of ["PG_POOL_MAX", "PG_IDLE_TIMEOUT_MS", "PG_CONNECTION_TIMEOUT_MS", "PG_MAX_USES", "PG_STATEMENT_TIMEOUT_MS"]) {
+  if (has(numericName) && (!Number.isFinite(Number(value(numericName))) || Number(value(numericName)) <= 0)) {
+    errors.push(`${numericName} must be a positive number.`);
+  }
+}
+
+if (production && has("PG_POOL_MAX") && Number(value("PG_POOL_MAX")) < 10) {
+  warnings.push("PG_POOL_MAX is below 10. For 100+ users, start around 20 per app process unless the database has a lower connection limit.");
+}
+
 console.log("COSTAATT environment validation");
 console.log(`Mode: ${production ? "production" : "development"}`);
 console.log(`Loaded files: ${loadedFiles.length ? loadedFiles.join(", ") : "none"}`);

@@ -1,22 +1,12 @@
 import { stat } from "fs/promises";
 import path from "path";
-import { Pool } from "pg";
+import { databasePoolStats, hasDatabase, query } from "./db";
 import { emailDeliveryMode } from "./email";
 import { referenceRecordCounts, referenceStorageMode } from "./reference-admin";
 import { attachmentStorageMode } from "./storage";
 
 type CheckState = "ok" | "warning" | "degraded";
 
-let pool: Pool | null = null;
-
-function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
-function db() {
-  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  return pool;
-}
 
 export function ssoMode() {
   if (process.env.TRUSTED_SSO_HEADER_MODE === "claims") return "trusted-headers";
@@ -36,7 +26,7 @@ export async function databaseHealth() {
 
   try {
     const startedAt = Date.now();
-    await db().query("select 1");
+    await query("select 1");
     return {
       configured: true,
       state: "ok" as const,
@@ -105,6 +95,7 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
     generatedAt: new Date().toISOString(),
     environment: mode,
     database,
+    databasePool: databasePoolStats(),
     storage: {
       attachments: uploadMode,
       referenceData: referenceStorageMode()

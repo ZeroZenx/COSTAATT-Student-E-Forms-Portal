@@ -4,8 +4,11 @@ import path from "path";
 import crypto from "crypto";
 import type { AttachmentRecord } from "./types";
 
-const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["application/pdf", "image/png", "image/jpeg"]);
+
+function maxFileSize() {
+  return Number(process.env.UPLOAD_MAX_MB || 8) * 1024 * 1024;
+}
 
 function hasS3Config() {
   return Boolean(process.env.S3_BUCKET && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY);
@@ -29,7 +32,7 @@ function s3Client() {
 
 export async function storeAttachment(file: File): Promise<AttachmentRecord> {
   if (!file || file.size === 0) throw new Error("A course approval attachment is required.");
-  if (file.size > MAX_FILE_SIZE) throw new Error("Attachment must be 8 MB or smaller.");
+  if (file.size > maxFileSize()) throw new Error(`Attachment must be ${process.env.UPLOAD_MAX_MB || 8} MB or smaller.`);
   if (!ALLOWED_TYPES.has(file.type)) throw new Error("Attachment must be a PDF, PNG, or JPG file.");
 
   const bytes = Buffer.from(await file.arrayBuffer());

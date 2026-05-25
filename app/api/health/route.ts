@@ -9,6 +9,7 @@ export async function GET() {
     generatedAt: snapshot.generatedAt,
     environment: snapshot.environment,
     database: snapshot.database,
+    databasePool: snapshot.databasePool,
     storage: snapshot.storage,
     email: {
       mode: snapshot.email.mode,

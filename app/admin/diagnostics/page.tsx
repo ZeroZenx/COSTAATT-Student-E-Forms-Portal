@@ -44,6 +44,7 @@ export default async function AdminDiagnosticsPage() {
         <Metric label="Overall state" value={snapshot.state} alert={snapshot.state !== "ok"} />
         <Metric label="Environment" value={snapshot.environment} alert={snapshot.environment !== "production"} />
         <Metric label="Database" value={snapshot.database.state} alert={snapshot.database.state !== "ok"} />
+        <Metric label="DB pool" value={`${snapshot.databasePool.totalCount}/${snapshot.databasePool.config.max}`} alert={snapshot.databasePool.waitingCount > 0} />
         <Metric label="Reference data" value={snapshot.storage.referenceData} alert={snapshot.storage.referenceData !== "postgres"} />
         <Metric label="Uploads" value={snapshot.storage.attachments} alert={snapshot.storage.attachments !== "s3"} />
         <Metric label="Email" value={snapshot.email.mode} alert={snapshot.email.mode !== "smtp"} />
@@ -84,6 +85,18 @@ export default async function AdminDiagnosticsPage() {
             <p className="empty-state">Reference data counts could not be loaded.</p>
           )}
         </section>
+      </section>
+
+      <section className="history-section dashboard-panel">
+        <h2>Database pool</h2>
+        <div className="breakdown-list">
+          <div><span>Configured max</span><strong>{snapshot.databasePool.config.max}</strong></div>
+          <div><span>Open clients</span><strong>{snapshot.databasePool.totalCount}</strong></div>
+          <div><span>Idle clients</span><strong>{snapshot.databasePool.idleCount}</strong></div>
+          <div><span>Waiting requests</span><strong>{snapshot.databasePool.waitingCount}</strong></div>
+          <div><span>Connection timeout</span><strong>{snapshot.databasePool.config.connectionTimeoutMillis} ms</strong></div>
+          <div><span>Statement timeout</span><strong>{snapshot.databasePool.config.statementTimeout} ms</strong></div>
+        </div>
       </section>
 
       <section className="history-section dashboard-panel">

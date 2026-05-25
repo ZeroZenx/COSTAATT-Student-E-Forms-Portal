@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-import { Pool } from "pg";
+import { hasDatabase, query } from "./db";
 import type { AdminPatch, ReviewerPatch, SubmissionPayload, SubmissionRecord, SsoUser } from "./types";
 import {
   auditEvent,
@@ -17,17 +17,6 @@ import {
   statusForReviewerAction,
   workflowEvent
 } from "./workflow";
-
-let pool: Pool | null = null;
-
-function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
-function db() {
-  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  return pool;
-}
 
 const localStorePath = path.join(process.cwd(), "data", "submissions.json");
 
@@ -80,7 +69,7 @@ export async function createSubmission(
   ];
 
   if (hasDatabase()) {
-    await db().query(
+    await query(
       `insert into submissions
         (id, form_type, status, student, payload, attachment, assigned_to, workflow_history, audit_trail, routing_flags, created_at, updated_at)
        values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12)`,
@@ -110,7 +99,7 @@ export async function createSubmission(
 
 export async function listStudentSubmissions(studentId: string) {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        where student->>'studentId' = $1
@@ -125,7 +114,7 @@ export async function listStudentSubmissions(studentId: string) {
 
 export async function listAllSubmissions() {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        order by created_at desc`
@@ -148,7 +137,7 @@ export async function listAssignedSubmissions(user: SsoUser) {
 
 export async function getSubmission(id: string) {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select id, form_type, status, student, payload, attachment, admin_comment, internal_notes, assigned_to, workflow_history, audit_trail, routing_flags, reviewer_decision, reviewer_comment, registry_decision, registry_comment, created_at, updated_at
        from submissions
        where id = $1`,
@@ -182,7 +171,7 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
   ];
 
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update submissions
        set status = coalesce($2, status),
            admin_comment = coalesce($3, admin_comment),
@@ -246,7 +235,7 @@ export async function appendSubmissionAuditEvent(
   ];
 
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update submissions
        set audit_trail = $2::jsonb,
            updated_at = $3
@@ -292,7 +281,7 @@ export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatc
   ];
 
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update submissions
        set status = $2,
            reviewer_decision = $3,

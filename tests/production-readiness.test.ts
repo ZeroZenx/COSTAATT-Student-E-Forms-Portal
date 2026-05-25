@@ -74,7 +74,7 @@ describe("reference data persistence", () => {
       label: "Advisor One",
       email: "advisor@costaatt.edu.tt"
     });
-    expect(query).toHaveBeenCalledWith(expect.stringContaining("from reference_records"));
+    expect(query).toHaveBeenCalledWith(expect.stringContaining("from reference_records"), undefined);
   });
 });
 

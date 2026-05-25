@@ -1,24 +1,13 @@
 import crypto from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { Pool } from "pg";
+import { hasDatabase, query } from "./db";
 import { formDefinitions } from "./forms";
 import { studentStatusLabel } from "./display";
 import type { ReviewerPatch, StudentNotification, StudentNotificationType, SubmissionRecord } from "./types";
 
-let pool: Pool | null = null;
-
 function localNotificationsPath() {
   return process.env.NOTIFICATION_STORE_PATH || path.join(process.cwd(), "data", "student-notifications.json");
-}
-
-function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
-function db() {
-  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  return pool;
 }
 
 async function readLocal(): Promise<StudentNotification[]> {
@@ -43,7 +32,7 @@ export async function createStudentNotification(input: Omit<StudentNotification,
   };
 
   if (hasDatabase()) {
-    await db().query(
+    await query(
       `insert into student_notifications (id, student_id, submission_id, type, title, message, read_at, created_at)
        values ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
@@ -68,7 +57,7 @@ export async function createStudentNotification(input: Omit<StudentNotification,
 
 export async function listStudentNotifications(studentId: string) {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select id, student_id, submission_id, type, title, message, read_at, created_at
        from student_notifications
        where student_id = $1
@@ -85,7 +74,7 @@ export async function listStudentNotifications(studentId: string) {
 
 export async function unreadStudentNotificationCount(studentId: string) {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select count(*)::int as count
        from student_notifications
        where student_id = $1 and read_at is null`,
@@ -100,7 +89,7 @@ export async function unreadStudentNotificationCount(studentId: string) {
 export async function markStudentNotificationRead(studentId: string, id: string) {
   const readAt = new Date().toISOString();
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update student_notifications
        set read_at = coalesce(read_at, $3)
        where id = $1 and student_id = $2
@@ -121,7 +110,7 @@ export async function markStudentNotificationRead(studentId: string, id: string)
 export async function markAllStudentNotificationsRead(studentId: string) {
   const readAt = new Date().toISOString();
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update student_notifications
        set read_at = coalesce(read_at, $2)
        where student_id = $1 and read_at is null`,

@@ -322,6 +322,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - **SSO:** Configure `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and validate the real QuickLaunch identity claims: `studentId`, `firstName`, `lastName`, and `email`.
 - **Roles:** Test Registry/system role enrichment by logging in as a seeded staff email. Test advisor/lecturer access by opening an assigned request link from an email notification.
 - **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions, notifications, and reference data persist after restart.
+- **Concurrency:** Start production with one Node.js process and `PG_POOL_MAX=20`; monitor `/admin/diagnostics` for database pool waiting requests before increasing PM2 instances.
 - **Uploads:** First production deployment may use local VM disk uploads. Verify PDF/image upload, inline staff preview, forced download with `?download=1`, denied unauthenticated access, and daily backup of `uploads/`.
 - **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.
 - **Health:** Confirm `/api/health` returns non-sensitive JSON and `/admin/diagnostics` shows acceptable readiness checks for Registry admins.
@@ -350,6 +351,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
 - First production deployment is planned for local VM disk uploads; S3-compatible storage remains preferred long-term.
+- Concurrency tuning assumes a single Node.js process and a Postgres pool of 20 connections for the first launch; increase only after observing pool pressure and server CPU/RAM.
 - Email notifications support SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`.
 - Student notifications are created for new workflow events after the inbox build; historical submissions are not backfilled automatically.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.

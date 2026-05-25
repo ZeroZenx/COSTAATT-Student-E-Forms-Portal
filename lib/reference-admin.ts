@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { Pool } from "pg";
+import { hasDatabase, query } from "./db";
 import { courseCatalogOptions } from "./course-catalog-data";
 import {
   advisorOptions,
@@ -27,19 +27,8 @@ export type ReferenceRecord = {
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-let pool: Pool | null = null;
-
 function localReferencePath() {
   return process.env.REFERENCE_STORE_PATH || path.join(process.cwd(), "data", "reference-records.json");
-}
-
-function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
-function db() {
-  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  return pool;
 }
 
 function seedRecords(): ReferenceRecord[] {
@@ -153,7 +142,7 @@ async function readReferenceRecords() {
 }
 
 async function readDbReferenceRecords() {
-  const result = await db().query(
+  const result = await query(
     `select id, kind, data, active, created_at, updated_at
      from reference_records
      order by updated_at desc`
@@ -167,7 +156,7 @@ async function readDbReferenceRecords() {
 
 async function seedDbReferenceRecords(records: ReferenceRecord[]) {
   for (const record of records) {
-    await db().query(
+    await query(
       `insert into reference_records (id, kind, data, active, created_at, updated_at)
        values ($1, $2, $3::jsonb, $4, $5, $6)
        on conflict do nothing`,
@@ -223,7 +212,7 @@ export async function upsertReferenceRecord(input: Partial<ReferenceRecord> & { 
   };
 
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `insert into reference_records (id, kind, data, active, created_at, updated_at)
        values ($1, $2, $3::jsonb, $4, $5, $6)
        on conflict (id) do update set
@@ -263,7 +252,7 @@ function ensureReviewerIsAssignable(input: Partial<ReferenceRecord> & { kind: Re
 
 export async function getReferenceRecord(id: string) {
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `select id, kind, data, active, created_at, updated_at
        from reference_records
        where id = $1`,
@@ -278,7 +267,7 @@ export async function getReferenceRecord(id: string) {
 export async function deactivateReferenceRecord(id: string, linkedToSubmission = false) {
   if (linkedToSubmission) throw new Error("Linked reference records cannot be deleted; deactivate them instead.");
   if (hasDatabase()) {
-    const result = await db().query(
+    const result = await query(
       `update reference_records
        set active = false,
            updated_at = $2

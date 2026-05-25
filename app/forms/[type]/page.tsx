@@ -4,13 +4,15 @@ import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
+import { getFormAvailability } from "@/lib/admin-settings";
 import { formDefinitions, isFormType } from "@/lib/forms";
 import FormWizard from "@/components/form-wizard";
 
-export default function FormTypePage({ params }: { params: { type: string } }) {
+export default async function FormTypePage({ params }: { params: { type: string } }) {
   if (!isFormType(params.type)) notFound();
   const user = getCurrentUser();
   const definition = formDefinitions[params.type];
+  const availability = await getFormAvailability(params.type);
 
   if (!user) {
     return (
@@ -46,7 +48,16 @@ export default function FormTypePage({ params }: { params: { type: string } }) {
           <small>{user.studentId} · {user.email}</small>
         </div>
       </section>
-      <FormWizard formType={params.type} user={user} />
+      {availability.status === "closed" ? (
+        <section className="auth-panel">
+          <p className="eyeline">Form closed</p>
+          <h2>{definition.title} is currently closed.</h2>
+          <p>{availability.notice || "New submissions are not being accepted for this form at this time."}</p>
+          <Link className="primary-button" href="/forms">Return to e-forms</Link>
+        </section>
+      ) : (
+        <FormWizard formType={params.type} user={user} />
+      )}
     </main>
   );
 }

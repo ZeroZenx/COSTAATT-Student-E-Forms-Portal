@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireCurrentUser } from "@/lib/auth";
+import { assertFormOpen } from "@/lib/admin-settings";
 import { createSubmission } from "@/lib/repository";
 import { storeAttachment } from "@/lib/storage";
 import { submissionPayloadSchema } from "@/lib/validation";
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
     }
 
     const payload = submissionPayloadSchema.parse(JSON.parse(payloadText));
+    await assertFormOpen(payload.formType);
     const storedAttachment = attachment instanceof File ? await storeAttachment(attachment) : undefined;
     if (!storedAttachment) {
       return NextResponse.json({ error: "A course approval attachment is required." }, { status: 400 });

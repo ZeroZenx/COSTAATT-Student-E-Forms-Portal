@@ -33,6 +33,12 @@ export default async function ReferenceDataPage() {
           <h1>Academic reference data</h1>
           <p>Manage courses, CRNs, lecturers, advisors, and programme mappings used by routing and reporting.</p>
         </div>
+        <div className="dashboard-actions">
+          <Link className="secondary-button" href="/admin/reference-data/courses">Courses</Link>
+          <Link className="secondary-button" href="/admin/reference-data/crns">CRNs</Link>
+          <Link className="secondary-button" href="/admin/reference-data/lecturers">Lecturers</Link>
+          <Link className="secondary-button" href="/admin/reference-data/advisors">Advisors</Link>
+        </div>
       </section>
       <ReferenceDataAdmin initialRecords={records} />
     </main>

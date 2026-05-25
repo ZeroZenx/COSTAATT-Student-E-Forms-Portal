@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, UploadCloud } from "lucide-react";
 import { formDefinitions } from "@/lib/forms";
 import {
@@ -36,11 +36,18 @@ type CourseLookupLine = CourseLine & {
   locked?: boolean;
 };
 
+type ReferenceOptions = {
+  crns: CourseLookupMatch[];
+  courseCodes: CourseLookupMatch[];
+  courseTitles: CourseLookupMatch[];
+};
+
 export default function FormWizard({ formType, user }: { formType: FormType; user: SsoUser }) {
   const definition = formDefinitions[formType];
   const [step, setStep] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [referenceOptions, setReferenceOptions] = useState<ReferenceOptions>({ crns: [], courseCodes: [], courseTitles: [] });
   const [state, setState] = useState<WizardState>({
     academicYear: "2026/2027",
     semester: "",
@@ -69,6 +76,19 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
     declarations: state.declarations,
     studentComment: state.studentComment
   }), [formType, state]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/reference/options")
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (active && result) setReferenceOptions(result);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function updateProgramme(programme: string) {
     const advisor = findAdvisorForProgramme(programme);
@@ -256,7 +276,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
               </div>
               {state.courses.map((course, index) => (
                 <div className="course-row" key={index}>
-                  <input aria-label={`CRN ${index + 1}`} value={course.crn} readOnly={Boolean((course as CourseLookupLine).locked && course.crn)} onChange={(event) => lookupCourse(index, "crn", event.target.value)} />
+                  <input list="crn-options" aria-label={`CRN ${index + 1}`} value={course.crn} readOnly={Boolean((course as CourseLookupLine).locked && course.crn)} onChange={(event) => lookupCourse(index, "crn", event.target.value)} />
                   <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseCode", event.target.value)} />
                   <input list="course-title-options" aria-label={`Course title ${index + 1}`} value={course.courseTitle} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseTitle", event.target.value)} />
                   <input aria-label={`Assigned lecturer or advisor ${index + 1}`} value={reviewerDisplay(course)} readOnly />
@@ -339,7 +359,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
             </button>
           )}
         </div>
-        <ReferenceDataLists />
+        <ReferenceDataLists options={referenceOptions} />
       </form>
     </section>
   );
@@ -354,7 +374,9 @@ function Field({ label, value, onChange, type = "text", required = false, list }
   );
 }
 
-function ReferenceDataLists() {
+function ReferenceDataLists({ options }: { options: ReferenceOptions }) {
+  const codeOptions = options.courseCodes.length > 0 ? options.courseCodes : courseAdvisorOptions.map((option) => normalizeOption(option));
+  const titleOptions = options.courseTitles.length > 0 ? options.courseTitles : codeOptions;
   return (
     <>
       <datalist id="programme-options">
@@ -371,16 +393,23 @@ function ReferenceDataLists() {
           </option>
         ))}
       </datalist>
+      <datalist id="crn-options">
+        {options.crns.map((option) => (
+          <option key={courseMatchKey(option)} value={option.crn || ""}>
+            {option.courseCode} · {option.courseTitle} · {option.section}
+          </option>
+        ))}
+      </datalist>
       <datalist id="course-code-options">
-        {courseAdvisorOptions.map((option) => (
-          <option key={option.courseCode} value={option.courseCode}>
+        {codeOptions.map((option) => (
+          <option key={courseMatchKey(option)} value={option.courseCode}>
             {option.courseTitle || option.advisorName}
           </option>
         ))}
       </datalist>
       <datalist id="course-title-options">
-        {courseAdvisorOptions.map((option) => (
-          <option key={`${option.courseCode}-${option.crn || "course"}`} value={option.courseTitle || option.courseCode}>
+        {titleOptions.map((option) => (
+          <option key={courseMatchKey(option)} value={option.courseTitle || option.courseCode}>
             {option.crn ? `${option.crn} · ` : ""}{option.courseCode}
           </option>
         ))}
@@ -391,6 +420,31 @@ function ReferenceDataLists() {
 
 function courseMatchKey(match: CourseLookupMatch) {
   return `${match.crn || "no-crn"}|${match.courseCode}|${match.courseTitle}|${match.section}`;
+}
+
+function normalizeOption(option: {
+  courseCode: string;
+  advisorName: string;
+  advisorEmail: string;
+  courseTitle?: string;
+  crn?: string;
+  lecturerName?: string;
+  lecturerEmail?: string;
+  campus?: string;
+  section?: string;
+}): CourseLookupMatch {
+  const reviewerName = option.lecturerName || option.advisorName || "No lecturer assigned";
+  const reviewerEmail = option.lecturerEmail || option.advisorEmail || "";
+  return {
+    ...option,
+    courseTitle: option.courseTitle || option.courseCode,
+    reviewerName,
+    reviewerEmail,
+    reviewerRole: option.lecturerEmail ? "lecturer" : option.advisorEmail ? "advisor" : "registry",
+    campus: option.campus || "Not assigned",
+    section: option.section || "Not assigned",
+    noReviewerMapping: !reviewerEmail
+  };
 }
 
 function reviewerDisplay(course: CourseLine) {

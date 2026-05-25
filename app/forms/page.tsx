@@ -3,12 +3,14 @@ import { ArrowRight, Clock, FileCheck2, ShieldCheck } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
+import { getAdminSettings } from "@/lib/admin-settings";
 import { formDefinitions } from "@/lib/forms";
 import { listStudentSubmissions } from "@/lib/repository";
 
 export default async function FormsPage() {
   const user = getCurrentUser();
   const submissions = user ? await listStudentSubmissions(user.studentId) : [];
+  const settings = user ? await getAdminSettings() : null;
 
   if (!user) {
     return (
@@ -55,12 +57,15 @@ export default async function FormsPage() {
       <section className="form-grid" aria-label="Available e-forms">
         {Object.entries(formDefinitions).map(([slug, definition]) => {
           const Icon = definition.icon;
+          const formStatus = settings?.forms[slug as keyof typeof formDefinitions];
+          const closed = formStatus?.status === "closed";
           return (
             <article className="service-card" key={slug}>
               <div className="card-icon"><Icon size={22} /></div>
               <div>
                 <h2>{definition.shortTitle}</h2>
                 <p>{definition.description}</p>
+                {closed ? <p className="notice-banner">{formStatus.notice || "This form is currently closed."}</p> : null}
               </div>
               <dl>
                 <div>
@@ -72,9 +77,13 @@ export default async function FormsPage() {
                   <dd>{definition.requiredAttachment}</dd>
                 </div>
               </dl>
-              <Link className="card-action" href={`/forms/${slug}`}>
-                Start request <ArrowRight size={17} />
-              </Link>
+              {closed ? (
+                <span className="card-action disabled">Form closed</span>
+              ) : (
+                <Link className="card-action" href={`/forms/${slug}`}>
+                  Start request <ArrowRight size={17} />
+                </Link>
+              )}
             </article>
           );
         })}

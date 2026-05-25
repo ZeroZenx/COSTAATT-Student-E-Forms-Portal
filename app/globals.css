@@ -760,6 +760,39 @@ textarea {
   margin: 12px 0;
 }
 
+.card-action.disabled {
+  background: var(--surface-soft);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.settings-list {
+  display: grid;
+  gap: 18px;
+}
+
+.settings-card,
+.reference-editor {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.reference-editor {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-top: 16px;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .reference-table {
   display: grid;
   gap: 8px;

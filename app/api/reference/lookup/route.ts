@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireCurrentUser } from "@/lib/auth";
+import { lookupReferenceCourseMatches } from "@/lib/reference-admin";
 import {
   lookupCourseReferences,
   normalizeCourseMatch,
@@ -44,11 +45,17 @@ export async function GET(request: Request) {
     const value = url.searchParams.get("value") || "";
     const requestedField = url.searchParams.get("field");
     const rawMatches = requestedField && lookupFields.has(requestedField)
-      ? lookupCourseReferences(requestedField as CourseLookupField, value)
+      ? uniqueMatches([
+        ...lookupCourseReferences(requestedField as CourseLookupField, value),
+        ...await lookupReferenceCourseMatches(requestedField as CourseLookupField, value)
+      ])
       : uniqueMatches([
         ...lookupCourseReferences("crn", value),
         ...lookupCourseReferences("courseCode", value),
-        ...lookupCourseReferences("courseTitle", value)
+        ...lookupCourseReferences("courseTitle", value),
+        ...await lookupReferenceCourseMatches("crn", value),
+        ...await lookupReferenceCourseMatches("courseCode", value),
+        ...await lookupReferenceCourseMatches("courseTitle", value)
       ]);
     const matches = rawMatches.map((match) => normalizeCourseMatch(match));
     const selectedMatch = matches.length === 1 ? matches[0] : null;

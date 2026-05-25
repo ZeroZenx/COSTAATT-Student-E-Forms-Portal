@@ -3,8 +3,14 @@ import type { FormType } from "./types";
 
 export const submissionStatuses = [
   "submitted",
+  "pending_advisor_review",
+  "advisor_approved",
+  "advisor_declined",
   "in_review",
   "needs_information",
+  "pending_registry_review",
+  "registry_approved",
+  "registry_declined",
   "approved",
   "declined",
   "closed"

@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Submission {
+  id              String   @id @db.Uuid
+  formType        String   @map("form_type")
+  status          String
+  student         Json
+  payload         Json
+  attachment      Json?
+  adminComment    String?  @map("admin_comment")
+  internalNotes   String?  @map("internal_notes")
+  assignedTo      Json?    @map("assigned_to")
+  workflowHistory Json     @default("[]") @map("workflow_history")
+  auditTrail      Json     @default("[]") @map("audit_trail")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @map("updated_at")
+
+  @@index([status])
+  @@index([formType])
+  @@map("submissions")
+}
+
+model ReferenceRecord {
+  id        String   @id @db.Uuid
+  kind      String
+  data      Json
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@index([kind])
+  @@map("reference_records")
+}

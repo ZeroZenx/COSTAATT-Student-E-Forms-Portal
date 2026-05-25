@@ -9,9 +9,9 @@ export async function GET(request: Request) {
   const token = createSsoToken({
     studentId: "00012345",
     firstName: "Darren",
-    lastName: "Headley",
-    email: "darren.headley@student.costaatt.edu.tt",
-    roles: ["student", "registry"]
+      lastName: "Headley",
+      email: "darren.headley@student.costaatt.edu.tt",
+    roles: ["student", "advisor", "lecturer", "registry_staff", "registry_admin"]
   });
 
   const response = NextResponse.redirect(new URL("/forms", request.url));

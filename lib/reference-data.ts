@@ -15,9 +15,15 @@ export type CourseAdvisorOption = {
   courseCode: string;
   advisorName: string;
   advisorEmail: string;
+  courseTitle?: string;
+  crn?: string;
+  lecturerName?: string;
+  lecturerEmail?: string;
+  campus?: string;
+  section?: string;
 };
 
-export const advisorOptions = [
+export const advisorOptions: AdvisorOption[] = [
   {
     "name": "Absalom, Dexter",
     "email": "dabsalom@costaatt.edu.tt"
@@ -490,9 +496,9 @@ export const advisorOptions = [
     "name": "Wills, Nicole",
     "email": "nwills@costaatt.edu.tt"
   }
-] satisfies AdvisorOption[];
+];
 
-export const programmeOptions = [
+export const programmeOptions: ProgrammeOption[] = [
   {
     "programme": "10565",
     "advisorName": "Fundamentals of Accounting",
@@ -2578,9 +2584,9 @@ export const programmeOptions = [
     "advisorName": "Lalita Ramlal-Chirkoot",
     "advisorEmail": "lrchirkoot@costaatt.edu.tt"
   }
-] satisfies ProgrammeOption[];
+];
 
-export const courseAdvisorOptions = [
+export const courseAdvisorOptions: CourseAdvisorOption[] = [
   {
     "courseCode": "ACCT 126",
     "advisorName": "Jerome Khan",
@@ -6131,7 +6137,7 @@ export const courseAdvisorOptions = [
     "advisorName": "Karen Paul",
     "advisorEmail": "KPaul@costaatt.edu.tt"
   }
-] satisfies CourseAdvisorOption[];
+];
 
 export function findAdvisorForProgramme(programme: string) {
   return programmeOptions.find((option) => option.programme === programme);
@@ -6139,4 +6145,12 @@ export function findAdvisorForProgramme(programme: string) {
 
 export function findAdvisorForCourse(course: Pick<CourseLine, "courseCode">) {
   return courseAdvisorOptions.find((option) => option.courseCode === course.courseCode);
+}
+
+export function lookupCourseByCrnOrCode(value: string) {
+  const needle = value.trim().toLowerCase();
+  if (!needle) return undefined;
+  return courseAdvisorOptions.find((option) => {
+    return option.courseCode.toLowerCase() === needle || option.crn?.toLowerCase() === needle;
+  });
 }

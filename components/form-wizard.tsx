@@ -82,6 +82,38 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
     }));
   }
 
+  async function lookupCourse(index: number, value: string) {
+    updateCourse(index, "crn", value);
+    if (!value.trim()) return;
+    const response = await fetch(`/api/reference/lookup?value=${encodeURIComponent(value)}`);
+    if (!response.ok) return;
+    const result = await response.json();
+    if (!result.match) {
+      setState((current) => ({
+        ...current,
+        courses: current.courses.map((course, courseIndex) => courseIndex === index ? { ...course, noLecturerAssigned: true } : course)
+      }));
+      return;
+    }
+    setState((current) => ({
+      ...current,
+      advisorName: current.advisorName || result.match.advisorName || result.match.lecturerName || "",
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? {
+        ...course,
+        crn: value,
+        courseCode: result.match.courseCode,
+        courseTitle: result.match.courseTitle,
+        advisorName: result.match.advisorName,
+        advisorEmail: result.match.advisorEmail,
+        lecturerName: result.match.lecturerName,
+        lecturerEmail: result.match.lecturerEmail,
+        campus: result.match.campus,
+        section: result.match.section,
+        noLecturerAssigned: result.match.lecturerName === "No lecturer assigned"
+      } : course)
+    }));
+  }
+
   function addCourse() {
     setState((current) => current.courses.length >= 5 ? current : {
       ...current,
@@ -162,9 +194,10 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
               </div>
               {state.courses.map((course, index) => (
                 <div className="course-row" key={index}>
-                  <input aria-label={`CRN ${index + 1}`} value={course.crn} onChange={(event) => updateCourse(index, "crn", event.target.value)} />
+                  <input aria-label={`CRN ${index + 1}`} value={course.crn} onChange={(event) => lookupCourse(index, event.target.value)} />
                   <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} onChange={(event) => updateCourse(index, "courseCode", event.target.value)} />
-                  <input aria-label={`Course title ${index + 1}`} value={course.courseTitle} onChange={(event) => updateCourse(index, "courseTitle", event.target.value)} />
+                  <input aria-label={`Course title ${index + 1}`} value={course.courseTitle} onChange={(event) => updateCourse(index, "courseTitle", event.target.value)} readOnly={Boolean(course.advisorName || course.lecturerName)} />
+                  <input aria-label={`Assigned lecturer or advisor ${index + 1}`} value={course.lecturerName || course.advisorName || (course.noLecturerAssigned ? "No lecturer assigned" : "")} readOnly />
                 </div>
               ))}
               <button type="button" className="secondary-button" onClick={addCourse}>Add another course</button>

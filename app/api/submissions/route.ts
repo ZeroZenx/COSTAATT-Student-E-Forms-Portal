@@ -3,6 +3,7 @@ import { requireCurrentUser } from "@/lib/auth";
 import { createSubmission } from "@/lib/repository";
 import { storeAttachment } from "@/lib/storage";
 import { submissionPayloadSchema } from "@/lib/validation";
+import { sendSubmissionCreatedEmails } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +22,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A course approval attachment is required." }, { status: 400 });
     }
 
-    const record = await createSubmission(user, payload, storedAttachment);
+    const record = await createSubmission(user, payload, storedAttachment, request.headers.get("x-forwarded-for") || undefined);
+    await sendSubmissionCreatedEmails(record);
     return NextResponse.json({ submission: record }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHENTICATED") {

@@ -58,12 +58,14 @@ lib/storage.ts               S3/local attachment storage
 lib/types.ts                 Shared TypeScript types
 lib/validation.ts            Request validation schemas
 lib/workflow.ts              Routing, audit, enrichment, and workflow helpers
+scripts/validate-env.mjs     Deployment environment validation
 prisma/schema.prisma         Prisma-compatible schema reference
 tests/                       Unit and workflow tests
 ```
 
 ## Environment Variables
 ```env
+NODE_ENV=development
 SSO_SHARED_SECRET=replace-with-portal-shared-secret
 QUICKLAUNCH_JWT_SECRET=replace-with-quicklaunch-jwt-secret
 TRUSTED_SSO_HEADER_NAME=x-portal-sso-token
@@ -82,8 +84,10 @@ SMTP_PASSWORD=replace-me
 SMTP_FROM=registry@costaatt.edu.tt
 SMTP_SECURE=false
 EMAIL_DELIVERY_MODE=log
+EMAIL_LOG_PATH=data/email-log.jsonl
 REGISTRY_NOTIFICATION_EMAIL=registrar@costaatt.edu.tt
 PORTAL_BASE_URL=http://localhost:5001
+UPLOAD_MAX_MB=8
 ```
 
 ## `.env.example`
@@ -123,7 +127,7 @@ npx prisma generate
 Before switching runtime code to Prisma, keep `lib/repository.ts` behavior-compatible with the current API responses so existing submissions continue to load.
 
 ## Local Development
-Port `3000` is intentionally avoided because another app already uses it. Use port `5000`.
+Port `3000` is intentionally avoided because another app already uses it. Use port `5001` for this project.
 
 From a fresh clone:
 
@@ -132,35 +136,35 @@ git clone https://github.com/ZeroZenx/COSTAATT-Student-E-Forms-Portal.git
 cd COSTAATT-Student-E-Forms-Portal
 npm install
 cp .env.example .env.local
-npm run dev:5000
+npm run dev:5001
 ```
 
 Open:
 
-- Student forms: [http://localhost:5000/forms](http://localhost:5000/forms)
-- Admin landing: [http://localhost:5000/admin](http://localhost:5000/admin)
-- Registry admin queue: [http://localhost:5000/admin/submissions](http://localhost:5000/admin/submissions)
-- Registry dashboard: [http://localhost:5000/admin/dashboard](http://localhost:5000/admin/dashboard)
-- Advisor dashboard: [http://localhost:5000/advisor/requests](http://localhost:5000/advisor/requests)
-- Student dashboard: [http://localhost:5000/student/dashboard](http://localhost:5000/student/dashboard)
+- Student forms: [http://localhost:5001/forms](http://localhost:5001/forms)
+- Admin landing: [http://localhost:5001/admin](http://localhost:5001/admin)
+- Registry admin queue: [http://localhost:5001/admin/submissions](http://localhost:5001/admin/submissions)
+- Registry dashboard: [http://localhost:5001/admin/dashboard](http://localhost:5001/admin/dashboard)
+- Advisor dashboard: [http://localhost:5001/advisor/requests](http://localhost:5001/advisor/requests)
+- Student dashboard: [http://localhost:5001/student/dashboard](http://localhost:5001/student/dashboard)
 
 For local mock access, visit:
 
 ```text
-http://localhost:5000/api/dev/session
+http://localhost:5001/api/dev/session
 ```
 
 That route sets a development-only signed cookie and redirects to `/forms`.
 
-### macOS port 5000 note
+### Alternate local port
 
-On some Macs, Control Center or AirPlay Receiver may already reserve port `5000`. If `npm run dev:5000` reports `EADDRINUSE`, turn off AirPlay Receiver in macOS settings or use the included fallback:
+If another service is already using `5001`, the app still includes a `5000` script for local-only fallback:
 
 ```bash
-npm run dev:5001
+npm run dev:5000
 ```
 
-Then open the same routes on port `5001`, for example [http://localhost:5001/forms](http://localhost:5001/forms).
+Then open the same routes on port `5000`, for example [http://localhost:5000/forms](http://localhost:5000/forms).
 
 ## Authentication Overview
 Production access must come from the authenticated student portal or QuickLaunch. The app supports:
@@ -276,6 +280,12 @@ Recommended manual smoke tests:
 - invalid uploads are rejected
 - unauthenticated APIs reject access
 
+Validate deployment environment variables before production startup:
+
+```bash
+npm run validate:env -- --production
+```
+
 ## Deployment Guidance
 1. Provision Postgres and apply `db/schema.sql`.
 2. Provision S3-compatible object storage.
@@ -287,6 +297,8 @@ Recommended manual smoke tests:
 8. Configure SMTP or keep `EMAIL_DELIVERY_MODE=log` until mail routing is verified.
 9. Run smoke tests against production-like roles.
 
+For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). Production should run the Node.js app on an internal port such as `127.0.0.1:5001` and expose the public service only through HTTPS using IIS or Caddy.
+
 ## Production Readiness Checklist
 - **SSO:** Configure `SSO_SHARED_SECRET` or `QUICKLAUNCH_JWT_SECRET`, disable unauthenticated entry, and only trust SSO headers from the portal/reverse proxy.
 - **Roles:** Test separate identities for `student`, `advisor`, `lecturer`, `registry_staff`, `registry_admin`, and `system_admin`.
@@ -296,6 +308,7 @@ Recommended manual smoke tests:
 - **Local dev:** Run `npm run dev:5001`, visit `/api/dev/session`, then smoke-test `/forms`, `/student/dashboard`, `/advisor/requests`, and `/admin/submissions`.
 - **Build checks:** Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before deployment.
 - **Audit:** Confirm status updates, reviewer decisions, and attachment view/download events appear in the Registry audit trail.
+- **Windows host:** Run `npm run validate:env -- --production`, confirm `/api/dev/session` returns 404, and keep Node.js behind IIS/Caddy rather than exposing port `5001`.
 
 ## Role-Based Smoke Tests
 - **Student:** Open `/forms`, submit a mapped CRN with an attachment, verify confirmation includes the assigned reviewer, then check `/student/dashboard`.

@@ -6,8 +6,9 @@
     "dev": "next dev",
     "dev:5000": "next dev -p 5000",
     "dev:5001": "next dev -p 5001",
-    "build": "next build",
+    "build": "node scripts/clean-next.mjs && next build",
     "start": "next start",
+    "validate:env": "node scripts/validate-env.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

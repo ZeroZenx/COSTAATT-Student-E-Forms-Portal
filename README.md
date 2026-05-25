@@ -303,6 +303,13 @@ Recommended manual smoke tests:
 - **Registry staff:** Open `/admin/submissions`, filter by status/routing, preview an attachment inline, download it, and update a request status/comment.
 - **Registry admin/System admin:** Open `/admin/reference-data` and `/admin/settings/forms`, verify management pages are gated and form open/closed settings are available.
 
+## SLA And Reporting
+- The operations dashboard uses a fixed **3 business day** SLA threshold for `pending_advisor_review`, `pending_registry_review`, and `needs_information`.
+- Business days currently exclude Saturday and Sunday only; public holiday calendars are a future enhancement.
+- `/admin/dashboard` shows total volume, pending reviewer work, pending Registry work, missing reviewer mappings, overdue requests, form-type breakdowns, aging buckets, and direct links to action queues.
+- `/advisor/requests` shows pending, overdue, decided, and all assigned requests with age/SLA badges.
+- `/api/admin/submissions/export` includes operational reporting fields: form, status label, student/programme, course/CRN/title, assigned reviewer, routing flags, created/updated dates, age in business days, SLA state, decisions, and latest comment.
+
 ## Current Limitations
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
@@ -316,7 +323,7 @@ Recommended manual smoke tests:
 - CSV import wizard with column mapping and validation preview.
 - Dedicated secure short-lived attachment URLs.
 - Rich audit search and export.
-- Overdue SLA rules and escalation emails.
+- SLA escalation emails.
 - Advisor/HOD delegated approval queues.
 - Student notifications inside the portal.
 - Production monitoring and structured logging.

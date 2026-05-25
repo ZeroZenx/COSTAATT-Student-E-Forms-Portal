@@ -1040,6 +1040,90 @@ textarea {
   margin-top: 8px;
 }
 
+.metric-alert {
+  border-color: #f0c36d;
+  background: #fff8e6;
+}
+
+.dashboard-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.dashboard-panel {
+  margin-top: 0;
+}
+
+.breakdown-list,
+.operations-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.breakdown-list div,
+.operations-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.breakdown-list div,
+.operations-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.breakdown-list span,
+.operations-row span,
+.operations-row small {
+  color: var(--muted);
+}
+
+.operations-row strong,
+.operations-row span,
+.operations-row small {
+  display: block;
+}
+
+.operations-status {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  text-align: right;
+}
+
+.sla-pill {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: var(--surface-soft);
+  color: var(--teal-dark);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.sla-overdue {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+.sla-due_soon {
+  background: #fff2d5;
+  color: var(--warning);
+}
+
+.sla-final {
+  background: #e5f6ee;
+  color: var(--success);
+}
+
 .reference-layout {
   display: grid;
   grid-template-columns: 250px 1fr;
@@ -1185,8 +1269,10 @@ textarea {
   .reference-layout,
   .reference-head,
   .reference-row,
+  .dashboard-two-column,
   .queue-filters,
   .queue-card,
+  .operations-row,
   .detail-shell,
   .two-column-section,
   .dense-course-review div,
@@ -1195,6 +1281,11 @@ textarea {
   }
 
   .queue-status-cell {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .operations-status {
     justify-items: start;
     text-align: left;
   }

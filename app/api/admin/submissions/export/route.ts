@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { formDefinitions } from "@/lib/forms";
 import { isStaff, requireCurrentUser } from "@/lib/auth";
 import { listAllSubmissions } from "@/lib/repository";
+import { csvOperationalRows } from "@/lib/dashboard";
 
 function csvEscape(value: unknown) {
   const text = String(value ?? "");
@@ -14,18 +14,29 @@ export async function GET() {
     if (!isStaff(user)) return NextResponse.json({ error: "Staff access is required." }, { status: 403 });
     const submissions = await listAllSubmissions();
     const rows = [
-      ["ID", "Form", "Status", "Student ID", "Student Name", "Email", "Academic Year", "Semester", "Created"],
-      ...submissions.map((submission) => [
-        submission.id,
-        formDefinitions[submission.formType].title,
-        submission.status,
-        submission.student.studentId,
-        `${submission.student.firstName} ${submission.student.lastName}`,
-        submission.student.email,
-        submission.payload.academicYear,
-        submission.payload.semester,
-        submission.createdAt
-      ])
+      [
+        "ID",
+        "Form",
+        "Status",
+        "Student ID",
+        "Student Name",
+        "Email",
+        "Programme",
+        "Course Code",
+        "CRN",
+        "Course Title",
+        "Assigned Reviewer",
+        "Reviewer Email",
+        "Routing Flags",
+        "Created",
+        "Updated",
+        "Age Business Days",
+        "SLA State",
+        "Reviewer Decision",
+        "Registry Decision",
+        "Latest Comment"
+      ],
+      ...csvOperationalRows(submissions)
     ];
     const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
     return new Response(csv, {

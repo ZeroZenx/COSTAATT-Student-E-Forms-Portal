@@ -3,6 +3,7 @@ import { isStaff, requireCurrentUser } from "@/lib/auth";
 import { getSubmission, updateSubmission } from "@/lib/repository";
 import { adminPatchSchema } from "@/lib/validation";
 import { sendRegistryStatusEmail } from "@/lib/email";
+import { notifyRegistryStatusChange } from "@/lib/notifications";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
@@ -25,7 +26,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const patch = adminPatchSchema.parse(await request.json());
     const submission = await updateSubmission(params.id, patch, user, request.headers.get("x-forwarded-for") || undefined);
     if (!submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
-    if (patch.status) await sendRegistryStatusEmail(submission);
+    if (patch.status) {
+      await notifyRegistryStatusChange(submission);
+      await sendRegistryStatusEmail(submission);
+    }
     return NextResponse.json({ submission });
   } catch (error) {
     return NextResponse.json(

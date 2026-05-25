@@ -117,6 +117,28 @@ export type SubmissionRecord = {
   updatedAt: string;
 };
 
+export type StudentNotificationType =
+  | "submission_created"
+  | "reviewer_approved"
+  | "reviewer_declined"
+  | "reviewer_needs_information"
+  | "registry_approved"
+  | "registry_declined"
+  | "registry_needs_information"
+  | "registry_closed"
+  | "registry_status_changed";
+
+export type StudentNotification = {
+  id: string;
+  studentId: string;
+  submissionId: string;
+  type: StudentNotificationType;
+  title: string;
+  message: string;
+  readAt?: string;
+  createdAt: string;
+};
+
 export type AdminPatch = {
   status?: SubmissionStatus;
   adminComment?: string;

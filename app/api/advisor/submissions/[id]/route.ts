@@ -4,6 +4,7 @@ import { getSubmission, updateSubmissionByReviewer } from "@/lib/repository";
 import { reviewerPatchSchema } from "@/lib/validation";
 import { sendReviewerActionEmails } from "@/lib/email";
 import { isAssignedReviewer } from "@/lib/workflow";
+import { notifyReviewerAction } from "@/lib/notifications";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   const user = getCurrentUser();
@@ -35,6 +36,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       request.headers.get("x-forwarded-for") || undefined
     );
     if (!submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
+    await notifyReviewerAction(submission, patch.action);
     await sendReviewerActionEmails(submission, patch.action);
     return NextResponse.json({ submission });
   } catch (error) {

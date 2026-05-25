@@ -17,6 +17,7 @@ The app is designed to sit behind the existing COSTAATT student portal and Quick
 - CRN/course lookup endpoint with reviewer auto-population.
 - Advisor/lecturer dashboard for assigned requests.
 - Student dashboard with submission history and timeline tracking.
+- Student notification inbox with unread counts and direct request links.
 - Registry dashboard with counters, pending work, CSV export, and reference-data access.
 - Reference-data management for courses, CRNs, lecturers, advisors, and programme mappings.
 - Local email logging mode and production SMTP configuration placeholders.
@@ -110,6 +111,7 @@ psql "$DATABASE_URL" -f db/schema.sql
 
 The schema includes:
 - `submissions`
+- `student_notifications`
 - `reference_records`
 - indexes for student ID, status, form type, and assigned reviewer email
 - workflow history and audit trail JSON fields
@@ -200,7 +202,7 @@ Production mode must not expose mock identities. The `/api/dev/session` route re
 5. CRN/course lookup auto-populates mapped reviewer data where available.
 6. Student confirms declarations and uploads the Course Approval Form.
 7. Submission is routed to advisor/lecturer or Registry review.
-8. Student tracks status and comments from the student dashboard.
+8. Student tracks status, comments, and notifications from the student dashboard and notification inbox.
 
 ## Staff Workflow
 Registry staff can:
@@ -242,6 +244,10 @@ Maximum upload size:
 - `GET /admin/dashboard`
 - `GET /advisor/requests`
 - `GET /student/dashboard`
+- `GET /student/notifications`
+- `GET /api/notifications/me`
+- `PATCH /api/notifications/me`
+- `PATCH /api/notifications/me/[id]`
 - `GET /api/advisor/requests`
 - `PATCH /api/advisor/submissions/[id]`
 - `GET /admin/reference-data`
@@ -276,6 +282,7 @@ Recommended manual smoke tests:
 - `/api/dev/session` creates local access in development
 - student can submit a request with an attachment
 - student history returns only that student’s records
+- student notifications return only that student’s updates and support mark-as-read
 - advisor/lecturer sees only assigned requests and can approve, decline, or request information
 - reviewer approval moves the request to Registry review
 - Registry queue shows Registry-ready requests and missing-mapping triage items
@@ -315,6 +322,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 
 ## Role-Based Smoke Tests
 - **Student:** Open `/forms`, submit a mapped CRN with an attachment, verify confirmation includes the assigned reviewer, then check `/student/dashboard`.
+- **Student notifications:** Open `/student/notifications`, verify unread updates link to `/student/dashboard/[id]`, and mark one/all as read.
 - **Advisor/Lecturer:** Open `/advisor/requests`, verify only assigned requests appear, approve one request, and confirm it moves to Registry review.
 - **Registry staff:** Open `/admin/submissions`, filter by status/routing, preview an attachment inline, download it, and update a request status/comment.
 - **Registry admin/System admin:** Open `/admin/reference-data` and `/admin/settings/forms`, verify management pages are gated and form open/closed settings are available.
@@ -332,6 +340,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
 - Email notifications support SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`.
+- Student notifications are created for new workflow events after the inbox build; historical submissions are not backfilled automatically.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.
 - Workflow routing uses the mapped lecturer first, then mapped advisor. Missing mappings go to Registry triage.
 - Full advisor-plus-lecturer sequential approval is deferred; v1 uses one mapped reviewer before Registry.

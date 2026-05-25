@@ -31,6 +31,22 @@ create index if not exists submissions_form_type_idx on submissions (form_type);
 create index if not exists submissions_assigned_to_email_idx on submissions ((assigned_to->>'email'));
 create index if not exists submissions_routing_flags_idx on submissions using gin (routing_flags);
 
+create table if not exists student_notifications (
+  id uuid primary key,
+  student_id text not null,
+  submission_id uuid not null,
+  type text not null,
+  title text not null,
+  message text not null,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists student_notifications_student_id_idx on student_notifications (student_id);
+create index if not exists student_notifications_submission_id_idx on student_notifications (submission_id);
+create index if not exists student_notifications_read_at_idx on student_notifications (read_at);
+create index if not exists student_notifications_created_at_idx on student_notifications (created_at desc);
+
 create table if not exists reference_records (
   id uuid primary key,
   kind text not null check (kind in ('course', 'crn', 'lecturer', 'advisor', 'programme_mapping')),

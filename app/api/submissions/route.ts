@@ -6,6 +6,7 @@ import { createSubmission } from "@/lib/repository";
 import { storeAttachment } from "@/lib/storage";
 import { submissionPayloadSchema } from "@/lib/validation";
 import { sendSubmissionCreatedEmails } from "@/lib/email";
+import { notifySubmissionCreated } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     }
 
     const record = await createSubmission(user, payload, storedAttachment, request.headers.get("x-forwarded-for") || undefined);
+    await notifySubmissionCreated(record);
     await sendSubmissionCreatedEmails(record);
     return NextResponse.json({ submission: record }, { status: 201 });
   } catch (error) {

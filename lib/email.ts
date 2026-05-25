@@ -12,7 +12,7 @@ type EmailMessage = {
   event: string;
 };
 
-type EmailOutcome = {
+export type EmailOutcome = {
   at: string;
   mode: string;
   event: string;
@@ -27,9 +27,9 @@ function registryEmail() {
   return process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt";
 }
 
-function portalLink(submission: SubmissionRecord) {
+function portalLink(submission: SubmissionRecord, path = `/forms?submission=${submission.id}`) {
   const baseUrl = process.env.PORTAL_BASE_URL || "http://localhost:5001";
-  return `${baseUrl.replace(/\/$/, "")}/forms?submission=${submission.id}`;
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
 }
 
 function statusLabel(submission: SubmissionRecord) {
@@ -50,7 +50,7 @@ function courseSummary(submission: SubmissionRecord) {
     .join("; ");
 }
 
-function details(submission: SubmissionRecord) {
+function details(submission: SubmissionRecord, linkPath?: string) {
   const studentName = `${submission.student.firstName} ${submission.student.lastName}`;
   return [
     ["Student", `${studentName} (${submission.student.studentId})`],
@@ -59,12 +59,19 @@ function details(submission: SubmissionRecord) {
     ["Status", statusLabel(submission)],
     ["Course/CRN", courseSummary(submission) || "Not provided"],
     ["Assigned reviewer", submission.assignedTo?.name || "Registry triage"],
-    ["Portal link", portalLink(submission)]
+    ["Direct request link", portalLink(submission, linkPath)]
   ];
 }
 
-function renderEmail(submission: SubmissionRecord, event: string, to: string | undefined, subject: string, body: string): EmailMessage {
-  const rows = details(submission);
+function renderEmail(
+  submission: SubmissionRecord,
+  event: string,
+  to: string | undefined,
+  subject: string,
+  body: string,
+  linkPath?: string
+): EmailMessage {
+  const rows = details(submission, linkPath);
   const textDetails = rows.map(([label, value]) => `${label}: ${value}`).join("\n");
   const htmlDetails = rows
     .map(([label, value]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</li>`)
@@ -86,7 +93,8 @@ export async function sendSubmissionCreatedEmails(submission: SubmissionRecord) 
       "student.submission_created",
       submission.student.email,
       "COSTAATT e-form submitted",
-      "Your e-form request has been received."
+      "Your e-form request has been received.",
+      `/student/dashboard/${submission.id}`
     ),
     submission.assignedTo
       ? renderEmail(
@@ -94,14 +102,16 @@ export async function sendSubmissionCreatedEmails(submission: SubmissionRecord) 
           "reviewer.assignment_created",
           submission.assignedTo.email,
           "COSTAATT e-form requires your review",
-          "A student request has been assigned to you for review."
+          `A student has submitted a ${formDefinitions[submission.formType].title} request that has been assigned to you for review.`,
+          `/advisor/requests/${submission.id}`
         )
       : renderEmail(
           submission,
           "registry.triage_required",
           registryEmail(),
           "COSTAATT e-form requires Registry triage",
-          "A request has no mapped lecturer or advisor and requires Registry review."
+          "A request has no mapped lecturer or advisor and requires Registry review.",
+          `/admin/submissions/${submission.id}`
         )
   ];
   await sendAll(messages);
@@ -115,7 +125,8 @@ export async function sendReviewerActionEmails(submission: SubmissionRecord, act
       `student.reviewer_${action}`,
       submission.student.email,
       `COSTAATT e-form reviewer update: ${actionText}`,
-      `Your e-form request was ${actionText} by the assigned reviewer.`
+      `Your e-form request was ${actionText} by the assigned reviewer.`,
+      `/student/dashboard/${submission.id}`
     )
   ];
 
@@ -126,7 +137,8 @@ export async function sendReviewerActionEmails(submission: SubmissionRecord, act
         "registry.final_review_required",
         registryEmail(),
         "COSTAATT e-form ready for Registry review",
-        "A reviewer approved this request. Registry final review is now required."
+        "A reviewer approved this request. Registry final review is now required.",
+        `/admin/submissions/${submission.id}`
       )
     );
   }
@@ -141,13 +153,48 @@ export async function sendRegistryStatusEmail(submission: SubmissionRecord) {
       "student.registry_status_changed",
       submission.student.email,
       `COSTAATT e-form status: ${statusLabel(submission)}`,
-      "Your e-form request status has changed."
+      "Your e-form request status has changed.",
+      `/student/dashboard/${submission.id}`
     )
   ]);
 }
 
 export async function sendStatusChangedEmail(submission: SubmissionRecord) {
   await sendRegistryStatusEmail(submission);
+}
+
+export async function sendSlaEscalationEmail(
+  submission: SubmissionRecord,
+  target: "reviewer" | "registry_final_review" | "registry_triage"
+) {
+  const messages: Record<typeof target, EmailMessage> = {
+    reviewer: renderEmail(
+      submission,
+      "sla.reviewer_overdue",
+      submission.assignedTo?.email,
+      "COSTAATT e-form SLA reminder: review overdue",
+      "This assigned e-form request is overdue and requires your review.",
+      `/advisor/requests/${submission.id}`
+    ),
+    registry_final_review: renderEmail(
+      submission,
+      "sla.registry_overdue",
+      registryEmail(),
+      "COSTAATT e-form SLA reminder: Registry review overdue",
+      "This e-form request is overdue and requires Registry action.",
+      `/admin/submissions/${submission.id}`
+    ),
+    registry_triage: renderEmail(
+      submission,
+      "sla.registry_triage_overdue",
+      registryEmail(),
+      "COSTAATT e-form SLA reminder: unmapped request overdue",
+      "This e-form request has no mapped reviewer and requires Registry triage.",
+      `/admin/submissions/${submission.id}`
+    )
+  };
+
+  return sendEmailSafely(messages[target]);
 }
 
 async function sendAll(messages: EmailMessage[]) {
@@ -159,13 +206,11 @@ async function sendAll(messages: EmailMessage[]) {
 async function sendEmailSafely(message: EmailMessage) {
   const mode = process.env.EMAIL_DELIVERY_MODE || "log";
   if (!message.to) {
-    await logOutcome({ message, mode, outcome: "skipped", error: "Missing recipient" });
-    return;
+    return logOutcome({ message, mode, outcome: "skipped", error: "Missing recipient" });
   }
 
   if (mode !== "smtp") {
-    await logOutcome({ message, mode, outcome: "logged" });
-    return;
+    return logOutcome({ message, mode, outcome: "logged" });
   }
 
   try {
@@ -188,9 +233,9 @@ async function sendEmailSafely(message: EmailMessage) {
       text: message.text,
       html: message.html
     });
-    await logOutcome({ message, mode, outcome: "sent", messageId: String(result.messageId || "") });
+    return logOutcome({ message, mode, outcome: "sent", messageId: String(result.messageId || "") });
   } catch (error) {
-    await logOutcome({
+    return logOutcome({
       message,
       mode,
       outcome: "failed",
@@ -227,4 +272,5 @@ async function logOutcome({
   };
   await mkdir(path.dirname(logPath), { recursive: true });
   await appendFile(logPath, `${JSON.stringify(entry)}\n`);
+  return entry;
 }

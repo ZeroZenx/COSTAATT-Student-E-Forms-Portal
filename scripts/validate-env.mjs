@@ -44,7 +44,7 @@ function warnMissing(name, reason) {
 
 function isPlaceholder(name) {
   const current = value(name).toLowerCase();
-  return ["replace-me", "replace-with-portal-shared-secret", "replace-with-quicklaunch-jwt-secret", "password"].some((placeholder) =>
+  return ["replace-me", "replace-with-portal-shared-secret", "replace-with-quicklaunch-jwt-secret", "replace-with-long-random", "password"].some((placeholder) =>
     current.includes(placeholder)
   );
 }
@@ -79,6 +79,8 @@ if (production) {
   if (value("ALLOW_MOCK_SSO") === "true") errors.push("ALLOW_MOCK_SSO must not be true in production.");
   if (isPlaceholder("SSO_SHARED_SECRET")) errors.push("SSO_SHARED_SECRET still contains a placeholder value.");
   if (isPlaceholder("QUICKLAUNCH_JWT_SECRET")) errors.push("QUICKLAUNCH_JWT_SECRET still contains a placeholder value.");
+  if (!has("SLA_ESCALATION_SECRET")) warnings.push("SLA_ESCALATION_SECRET is not set. Windows Task Scheduler cannot run SLA escalations without a logged-in system_admin session.");
+  if (isPlaceholder("SLA_ESCALATION_SECRET")) errors.push("SLA_ESCALATION_SECRET still contains a placeholder value.");
 }
 
 if (has("DATABASE_URL") && !value("DATABASE_URL").startsWith("postgres")) warnings.push("DATABASE_URL does not look like a Postgres connection string.");

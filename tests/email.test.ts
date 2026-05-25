@@ -134,4 +134,16 @@ describe("email notification engine", () => {
     expect(entries[0].outcome).toBe("failed");
     expect(entries[0].subject).toContain("COSTAATT e-form status");
   });
+
+  it("logs reviewer SLA escalation emails", async () => {
+    const logPath = await prepareLog();
+    const { sendSlaEscalationEmail } = await import("../lib/email");
+
+    const outcome = await sendSlaEscalationEmail(baseSubmission, "reviewer");
+
+    expect(outcome.outcome).toBe("logged");
+    const entries = await logLines(logPath);
+    expect(entries[0].event).toBe("sla.reviewer_overdue");
+    expect(entries[0].to).toBe("alex.lecturer@costaatt.edu.tt");
+  });
 });

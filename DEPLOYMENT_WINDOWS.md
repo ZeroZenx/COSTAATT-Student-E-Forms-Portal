@@ -216,7 +216,35 @@ Run these after each deployment:
 - Security: open `/api/dev/session` and confirm it returns 404 in production.
 - Security: attempt an unauthenticated private page and confirm the staff/student access panel or rejection appears.
 
-## 11. Backup And Recovery
+## 11. SLA Escalation Schedule
+
+The portal includes a scheduler-friendly endpoint for overdue SLA reminders:
+
+```text
+POST https://studentforms.costaatt.edu.tt/api/admin/sla/escalations
+Authorization: Bearer <SLA_ESCALATION_SECRET>
+```
+
+Dry-run first:
+
+```powershell
+$headers = @{ Authorization = "Bearer $env:SLA_ESCALATION_SECRET" }
+Invoke-RestMethod -Method Post -Headers $headers -Uri "https://studentforms.costaatt.edu.tt/api/admin/sla/escalations?dryRun=1"
+```
+
+Recommended Windows Task Scheduler setup:
+
+- Trigger: every weekday morning, for example 8:00 AM.
+- Action: PowerShell.
+- Command:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$headers = @{ Authorization = 'Bearer <secret-from-secure-store>' }; Invoke-RestMethod -Method Post -Headers $headers -Uri 'https://studentforms.costaatt.edu.tt/api/admin/sla/escalations'"
+```
+
+The endpoint sends reviewer reminders for overdue reviewer-assigned requests and Registry reminders for overdue Registry/no-reviewer triage requests. Same-day duplicate reminders are skipped using submission audit history.
+
+## 12. Backup And Recovery
 
 Back up:
 
@@ -228,7 +256,7 @@ Back up:
 
 Before major updates, take a database backup and preserve the current Git commit hash so rollback is a normal `git checkout <commit>`, reinstall, rebuild, and service restart.
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 - Blank page after deployment: run `pm2 logs costaatt-eforms` or check NSSM logs, then verify `npm run build` completed successfully.
 - Cannot sign in: verify SSO secrets/header mode and confirm the reverse proxy is forwarding the expected headers.

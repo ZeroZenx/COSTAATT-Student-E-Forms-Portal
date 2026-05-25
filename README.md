@@ -71,6 +71,7 @@ QUICKLAUNCH_JWT_SECRET=replace-with-quicklaunch-jwt-secret
 TRUSTED_SSO_HEADER_NAME=x-portal-sso-token
 TRUSTED_SSO_HEADER_MODE=signed-token
 ALLOW_MOCK_SSO=false
+SLA_ESCALATION_SECRET=replace-with-long-random-scheduler-secret
 DATABASE_URL=postgres://costaatt:password@localhost:5432/costaatt_eforms
 S3_ENDPOINT=https://s3.example.edu
 S3_REGION=us-east-1
@@ -248,6 +249,8 @@ Maximum upload size:
 - `PATCH /api/admin/submissions/[id]`
 - `GET /api/admin/submissions/[id]/attachment`
 - `GET /api/admin/submissions/export`
+- `POST /api/admin/sla/escalations`
+- `POST /api/admin/sla/escalations?dryRun=1`
 - `GET /api/admin/reference-data`
 - `POST /api/admin/reference-data`
 - `PATCH /api/admin/reference-data/[id]`
@@ -322,6 +325,8 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - `/admin/dashboard` shows total volume, pending reviewer work, pending Registry work, missing reviewer mappings, overdue requests, form-type breakdowns, aging buckets, and direct links to action queues.
 - `/advisor/requests` shows pending, overdue, decided, and all assigned requests with age/SLA badges.
 - `/api/admin/submissions/export` includes operational reporting fields: form, status label, student/programme, course/CRN/title, assigned reviewer, routing flags, created/updated dates, age in business days, SLA state, decisions, and latest comment.
+- `/api/admin/sla/escalations?dryRun=1` previews overdue SLA reminder targets without sending email.
+- `/api/admin/sla/escalations` sends reviewer and Registry SLA reminders. Scheduled calls must use `Authorization: Bearer $SLA_ESCALATION_SECRET`.
 
 ## Current Limitations
 - Runtime persistence currently uses the `pg` repository layer, not Prisma Client.
@@ -336,7 +341,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - CSV import wizard with column mapping and validation preview.
 - Dedicated secure short-lived attachment URLs.
 - Rich audit search and export.
-- SLA escalation emails.
+- SLA escalation history dashboard.
 - Advisor/HOD delegated approval queues.
 - Student notifications inside the portal.
 - Production monitoring and structured logging.

@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
+import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { formDefinitions } from "@/lib/forms";
 import { listStudentSubmissions } from "@/lib/repository";
 
@@ -9,6 +11,7 @@ export default async function StudentDashboardPage() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">Student dashboard</p>
           <h1>Valid portal SSO is required.</h1>
           <p>Return to the student portal and open this service from your authenticated services page.</p>
@@ -21,6 +24,11 @@ export default async function StudentDashboardPage() {
   const submissions = await listStudentSubmissions(user.studentId);
   return (
     <main className="app-shell">
+      <AppHeader
+        user={user}
+        staff={isStaff(user)}
+        reviewer={hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"])}
+      />
       <section className="page-intro">
         <div>
           <p className="eyeline">Student dashboard</p>

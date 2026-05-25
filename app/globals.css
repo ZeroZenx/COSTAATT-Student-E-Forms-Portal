@@ -71,6 +71,23 @@ textarea {
   font-weight: 800;
 }
 
+.brand-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.auth-logo {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  margin: 0 auto 12px;
+  display: block;
+}
+
 .topbar nav {
   display: flex;
   gap: 8px;
@@ -84,6 +101,13 @@ textarea {
   color: var(--navy);
   padding: 10px 14px;
   font-weight: 700;
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
 .user-chip {
@@ -763,6 +787,32 @@ textarea {
 }
 
 @media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .brand-lockup {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .brand-lockup span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .topbar nav {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
   .reference-layout,
   .reference-head,
   .reference-row {

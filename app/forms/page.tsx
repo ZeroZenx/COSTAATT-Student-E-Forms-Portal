@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Clock, FileCheck2, ShieldCheck } from "lucide-react";
-import { getCurrentUser, isStaff } from "@/lib/auth";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
+import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { formDefinitions } from "@/lib/forms";
 import { listStudentSubmissions } from "@/lib/repository";
 
@@ -12,6 +14,7 @@ export default async function FormsPage() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">COSTAATT Student Portal</p>
           <h1>Valid portal SSO is required.</h1>
           <p>
@@ -28,7 +31,11 @@ export default async function FormsPage() {
 
   return (
     <main className="app-shell">
-      <Header userName={`${user.firstName} ${user.lastName}`} staff={isStaff(user)} />
+      <AppHeader
+        user={user}
+        staff={isStaff(user)}
+        reviewer={hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"])}
+      />
       <section className="page-intro">
         <div>
           <p className="eyeline">Registry services</p>
@@ -98,21 +105,5 @@ export default async function FormsPage() {
         )}
       </section>
     </main>
-  );
-}
-
-function Header({ userName, staff }: { userName: string; staff: boolean }) {
-  return (
-    <header className="topbar">
-      <Link href="/forms" className="brand-lockup" aria-label="COSTAATT Student E-Forms home">
-        <span className="brand-mark">CS</span>
-        <span>COSTAATT Student Portal</span>
-      </Link>
-      <nav>
-        <Link href="/forms">E-Forms</Link>
-        {staff ? <Link href="/admin/submissions">Admin Review</Link> : null}
-      </nav>
-      <div className="user-chip" title={userName}>{userName.split(" ").map((part) => part[0]).join("")}</div>
-    </header>
   );
 }

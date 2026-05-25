@@ -138,6 +138,7 @@ npm run dev:5000
 Open:
 
 - Student forms: [http://localhost:5000/forms](http://localhost:5000/forms)
+- Admin landing: [http://localhost:5000/admin](http://localhost:5000/admin)
 - Registry admin queue: [http://localhost:5000/admin/submissions](http://localhost:5000/admin/submissions)
 - Registry dashboard: [http://localhost:5000/admin/dashboard](http://localhost:5000/admin/dashboard)
 - Advisor dashboard: [http://localhost:5000/advisor/requests](http://localhost:5000/advisor/requests)
@@ -231,6 +232,7 @@ Maximum upload size:
 - `POST /api/submissions`
 - `GET /api/submissions/me`
 - `GET /api/reference/lookup`
+- `GET /admin`
 - `GET /admin/submissions`
 - `GET /admin/dashboard`
 - `GET /advisor/requests`

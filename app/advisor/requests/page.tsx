@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { getCurrentUser, hasAnyRole } from "@/lib/auth";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
+import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { listAllSubmissions, listAssignedSubmissions } from "@/lib/repository";
 import AdvisorRequests from "@/components/advisor-requests";
 
@@ -9,6 +11,7 @@ export default async function AdvisorRequestsPage() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">Advisor dashboard</p>
           <h1>Advisor or lecturer access is required.</h1>
           <p>Open assigned requests from the authenticated portal.</p>
@@ -23,6 +26,7 @@ export default async function AdvisorRequestsPage() {
     : await listAssignedSubmissions(user);
   return (
     <main className="app-shell">
+      <AppHeader user={user} staff={isStaff(user)} reviewer />
       <section className="page-intro">
         <div>
           <p className="eyeline">Advisor dashboard</p>

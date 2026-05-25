@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, isRegistryAdmin } from "@/lib/auth";
 import { listReferenceRecords } from "@/lib/reference-admin";
 import ReferenceDataAdmin from "@/components/reference-data-admin";
@@ -10,6 +12,7 @@ export default async function ReferenceDataPage() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">Registry administration</p>
           <h1>Registry admin access is required.</h1>
           <p>Reference data management is restricted to Registry administrators and system administrators. In local development, visit /api/dev/session first to create a demo admin session.</p>
@@ -22,6 +25,7 @@ export default async function ReferenceDataPage() {
   const records = await listReferenceRecords();
   return (
     <main className="app-shell">
+      <AppHeader user={user} staff reviewer />
       <Link className="back-link" href="/admin/dashboard"><ChevronLeft size={17} /> Back to dashboard</Link>
       <section className="page-intro">
         <div>

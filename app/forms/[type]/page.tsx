@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { getCurrentUser } from "@/lib/auth";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
+import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { formDefinitions, isFormType } from "@/lib/forms";
 import FormWizard from "@/components/form-wizard";
 
@@ -14,6 +16,7 @@ export default function FormTypePage({ params }: { params: { type: string } }) {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">COSTAATT Student Portal</p>
           <h1>Valid portal SSO is required.</h1>
           <p>Return to the student portal and open this form from your authenticated services page.</p>
@@ -25,6 +28,11 @@ export default function FormTypePage({ params }: { params: { type: string } }) {
 
   return (
     <main className="app-shell">
+      <AppHeader
+        user={user}
+        staff={isStaff(user)}
+        reviewer={hasAnyRole(user, ["advisor", "lecturer", "registry_admin", "system_admin"])}
+      />
       <Link className="back-link" href="/forms"><ChevronLeft size={17} /> Back to e-forms</Link>
       <section className="form-hero">
         <div>

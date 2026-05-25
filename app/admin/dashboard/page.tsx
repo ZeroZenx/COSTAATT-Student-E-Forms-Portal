@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Download, ListChecks, Settings2 } from "lucide-react";
+import AppHeader from "@/components/app-header";
+import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { listAllSubmissions } from "@/lib/repository";
 import { formDefinitions, submissionStatuses } from "@/lib/forms";
@@ -10,6 +12,7 @@ export default async function RegistryDashboardPage() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
+          <BrandLogo className="auth-logo" />
           <p className="eyeline">Registry dashboard</p>
           <h1>Staff access is required.</h1>
           <p>Open this dashboard from the authenticated portal with a Registry role. In local development, visit /api/dev/session first to create a demo staff session.</p>
@@ -29,6 +32,7 @@ export default async function RegistryDashboardPage() {
 
   return (
     <main className="app-shell">
+      <AppHeader user={user} staff reviewer />
       <section className="page-intro">
         <div>
           <p className="eyeline">Registry dashboard</p>

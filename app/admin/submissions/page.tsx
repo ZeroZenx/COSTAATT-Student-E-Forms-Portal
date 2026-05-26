@@ -17,7 +17,10 @@ export default async function AdminSubmissionsPage() {
           <p className="eyeline">Registry services</p>
           <h1>Staff access is required.</h1>
           <p>Open this area from the portal with a Registry or administrator role. In local development, visit /api/dev/session first to create a demo staff session.</p>
-          <Link className="primary-button" href="/forms">Return to e-forms</Link>
+          <div className="auth-actions">
+            <Link className="primary-button" href="/dev/session">Switch demo user</Link>
+            <Link className="secondary-button" href="/forms">Return to e-forms</Link>
+          </div>
         </section>
       </main>
     );

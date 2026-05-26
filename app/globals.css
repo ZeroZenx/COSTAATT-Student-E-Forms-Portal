@@ -129,6 +129,64 @@ textarea {
   gap: 10px;
 }
 
+.dev-session-shell {
+  padding: 36px 16px;
+}
+
+.dev-session-panel {
+  width: min(920px, 100%);
+}
+
+.dev-current-user,
+.dev-session-section {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+  text-align: left;
+}
+
+.dev-current-user h2,
+.dev-session-section h2 {
+  margin: 0 0 14px;
+  color: var(--navy);
+}
+
+.dev-current-user dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.dev-current-user div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.dev-current-user dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dev-current-user dd {
+  margin: 4px 0 0;
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.dev-preset-grid,
+.dev-reviewer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dev-reviewer-form .primary-button {
+  align-self: end;
+}
+
 .user-chip {
   display: grid;
   width: 44px;
@@ -1380,7 +1438,10 @@ textarea {
   .detail-shell,
   .two-column-section,
   .dense-course-review div,
-  .audit-list dl div {
+  .audit-list dl div,
+  .dev-current-user dl,
+  .dev-preset-grid,
+  .dev-reviewer-form {
     grid-template-columns: 1fr;
   }
 

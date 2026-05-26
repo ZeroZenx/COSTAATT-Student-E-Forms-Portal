@@ -254,9 +254,12 @@ function ReviewerActions({
   const pending = submission.status === "pending_advisor_review" && canAct;
   const historyMessage = useMemo(() => {
     if (pending) return "";
+    if (submission.status === "pending_advisor_review" && !canAct) {
+      return "Sign in as the assigned reviewer to approve this request.";
+    }
     if (submission.reviewerDecision) return `Reviewer decision saved: ${submission.reviewerDecision.replace(/_/g, " ")}.`;
     return "This request is not awaiting reviewer action.";
-  }, [pending, submission.reviewerDecision]);
+  }, [canAct, pending, submission.reviewerDecision, submission.status]);
 
   async function submit(action: ReviewerPatch["action"]) {
     if ((action === "decline" || action === "needs_information") && comment.trim().length < 3) {

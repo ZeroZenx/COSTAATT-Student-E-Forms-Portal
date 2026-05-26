@@ -15,7 +15,10 @@ export default async function AdvisorRequestsPage() {
           <p className="eyeline">Advisor dashboard</p>
           <h1>Signed-in access is required.</h1>
           <p>Open assigned requests from the authenticated portal.</p>
-          <Link className="primary-button" href="/forms">Return to e-forms</Link>
+          <div className="auth-actions">
+            <Link className="primary-button" href="/dev/session">Switch demo user</Link>
+            <Link className="secondary-button" href="/forms">Return to e-forms</Link>
+          </div>
         </section>
       </main>
     );

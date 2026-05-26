@@ -22,6 +22,7 @@ export default function AdminPage() {
         </p>
         <div className="auth-actions">
           <Link className="primary-button" href="/api/dev/session">Use local demo session</Link>
+          <Link className="secondary-button" href="/dev/session">Switch demo user</Link>
           <Link className="secondary-button" href="/forms">Return to e-forms</Link>
         </div>
       </section>

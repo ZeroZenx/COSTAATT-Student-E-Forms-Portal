@@ -52,6 +52,24 @@ describe("QuickLaunch-compatible local SSO", () => {
   });
 });
 
+describe("development identity simulator", () => {
+  it("creates assigned reviewer identities from manual input", async () => {
+    const { reviewerIdentityFromInput } = await import("../lib/dev-identities");
+
+    expect(reviewerIdentityFromInput({
+      name: "Jesinta Tobas",
+      email: "nursingdepartment@costaatt.edu.tt",
+      role: "lecturer"
+    })).toEqual({
+      studentId: "LECTURER-DEV",
+      firstName: "Jesinta",
+      lastName: "Tobas",
+      email: "nursingdepartment@costaatt.edu.tt",
+      roles: ["lecturer"]
+    });
+  });
+});
+
 describe("workflow routing", () => {
   const basePayload: SubmissionPayload = {
     formType: "course-override",

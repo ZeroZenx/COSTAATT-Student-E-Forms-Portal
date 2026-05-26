@@ -136,13 +136,13 @@ export async function getSubmission(id: string) {
     const result = await query(
       `select ${SUBMISSION_COLUMNS}
        from submissions
-       where id = $1`,
+       where lower(id::text) = lower($1)`,
       [id]
     );
     return result.rows[0] ? rowToRecord(result.rows[0]) : null;
   }
 
-  return (await readLocal()).find((record) => record.id === id) || null;
+  return (await readLocal()).find((record) => record.id.toLowerCase() === id.toLowerCase()) || null;
 }
 
 export async function updateSubmission(id: string, patch: AdminPatch, actor?: SsoUser, ipAddress?: string) {

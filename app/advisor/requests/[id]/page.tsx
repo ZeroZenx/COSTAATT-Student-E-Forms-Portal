@@ -38,6 +38,7 @@ export default async function AdvisorRequestDetailPage({ params }: { params: { i
           <p className="eyeline">Request detail</p>
           <h1>{submission ? "This request is not assigned to you." : "Request not found."}</h1>
           <p className="empty-state">Advisor and lecturer views only show requests assigned to the signed-in reviewer.</p>
+          <Link className="primary-button" href="/dev/session">Switch demo user</Link>
         </section>
       </main>
     );

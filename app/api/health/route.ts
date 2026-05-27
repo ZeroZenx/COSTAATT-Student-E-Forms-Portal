@@ -6,6 +6,7 @@ export async function GET() {
   const status = snapshot.state === "degraded" ? 503 : 200;
   return NextResponse.json({
     status: snapshot.state,
+    build: snapshot.build,
     generatedAt: snapshot.generatedAt,
     environment: snapshot.environment,
     database: snapshot.database,

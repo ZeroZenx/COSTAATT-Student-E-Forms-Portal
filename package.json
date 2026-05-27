@@ -9,6 +9,7 @@
     "build": "node scripts/clean-next.mjs && next build",
     "start": "next start",
     "validate:env": "node scripts/validate-env.mjs",
+    "smoke:windows": "node scripts/smoke-windows.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

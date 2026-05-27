@@ -187,6 +187,30 @@ textarea {
   align-self: end;
 }
 
+.diagnostics-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.diagnostics-action-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--surface-soft);
+}
+
+.diagnostics-action-card h3,
+.diagnostics-action-card p {
+  margin: 0;
+}
+
+.compact-breakdown {
+  gap: 6px;
+}
+
 .user-chip {
   display: grid;
   width: 44px;
@@ -1198,7 +1222,9 @@ textarea {
   display: block;
   color: var(--navy);
   font-size: 2rem;
+  line-height: 1.1;
   margin-top: 8px;
+  overflow-wrap: anywhere;
 }
 
 .metric-alert {
@@ -1441,7 +1467,8 @@ textarea {
   .audit-list dl div,
   .dev-current-user dl,
   .dev-preset-grid,
-  .dev-reviewer-form {
+  .dev-reviewer-form,
+  .diagnostics-action-grid {
     grid-template-columns: 1fr;
   }
 

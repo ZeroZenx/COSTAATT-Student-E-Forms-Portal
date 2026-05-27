@@ -326,8 +326,10 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - **Uploads:** First production deployment may use local VM disk uploads. Verify PDF/image upload, inline staff preview, forced download with `?download=1`, denied unauthenticated access, and daily backup of `uploads/`.
 - **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.
 - **Health:** Confirm `/api/health` returns non-sensitive JSON and `/admin/diagnostics` shows acceptable readiness checks for Registry admins.
+- **Go-live diagnostics:** Use `/admin/diagnostics` to confirm version/commit metadata, signed-in QuickLaunch claims, SMTP test delivery, SLA dry-run counts, and upload backup warnings.
 - **Local dev:** Run `npm run dev:5001`, visit `/api/dev/session`, then smoke-test `/forms`, `/student/dashboard`, `/advisor/requests`, and `/admin/submissions`.
 - **Build checks:** Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before deployment.
+- **Windows smoke command:** Run `SMOKE_BASE_URL=https://studentforms.costaatt.edu.tt SMOKE_EXPECT_PRODUCTION=true npm run smoke:windows` after deployment.
 - **Audit:** Confirm status updates, reviewer decisions, and attachment view/download events appear in the Registry audit trail.
 - **Windows host:** Run `npm run validate:env -- --production`, confirm `/api/dev/session` returns 404, and keep Node.js behind IIS/Caddy rather than exposing port `5001`.
 

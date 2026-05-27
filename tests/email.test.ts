@@ -46,7 +46,7 @@ async function logLines(filePath: string) {
   return (await readFile(filePath, "utf8"))
     .trim()
     .split("\n")
-    .map((line) => JSON.parse(line) as { event: string; to: string; outcome: string; subject: string; text: string });
+    .map((line) => JSON.parse(line) as { event: string; to: string; outcome: string; subject: string; text: string; mode?: string });
 }
 
 async function prepareLog() {
@@ -145,5 +145,18 @@ describe("email notification engine", () => {
     const entries = await logLines(logPath);
     expect(entries[0].event).toBe("sla.reviewer_overdue");
     expect(entries[0].to).toBe("alex.lecturer@costaatt.edu.tt");
+  });
+
+  it("logs operations diagnostic test emails", async () => {
+    const logPath = await prepareLog();
+    const { sendOperationalTestEmail } = await import("../lib/email");
+
+    const outcome = await sendOperationalTestEmail("registry@costaatt.edu.tt", "Go-live check");
+
+    expect(outcome.outcome).toBe("logged");
+    const entries = await logLines(logPath);
+    expect(entries[0].event).toBe("operations.test_email");
+    expect(entries[0].to).toBe("registry@costaatt.edu.tt");
+    expect(entries[0].text).toContain("Go-live check");
   });
 });

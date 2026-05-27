@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DiagnosticsActions from "@/components/diagnostics-actions";
 import { getCurrentUser, isRegistryAdmin } from "@/lib/auth";
 import { productionReadinessSnapshot } from "@/lib/production-readiness";
 
@@ -42,6 +43,8 @@ export default async function AdminDiagnosticsPage() {
 
       <section className="dashboard-grid">
         <Metric label="Overall state" value={snapshot.state} alert={snapshot.state !== "ok"} />
+        <Metric label="Version" value={snapshot.build.appVersion} alert={snapshot.build.gitCommit === "not-set"} />
+        <Metric label="Git commit" value={snapshot.build.gitCommit.slice(0, 12)} alert={snapshot.build.gitCommit === "not-set"} />
         <Metric label="Environment" value={snapshot.environment} alert={snapshot.environment !== "production"} />
         <Metric label="Database" value={snapshot.database.state} alert={snapshot.database.state !== "ok"} />
         <Metric label="DB pool" value={`${snapshot.databasePool.totalCount}/${snapshot.databasePool.config.max}`} alert={snapshot.databasePool.waitingCount > 0} />
@@ -50,6 +53,30 @@ export default async function AdminDiagnosticsPage() {
         <Metric label="Email" value={snapshot.email.mode} alert={snapshot.email.mode !== "smtp"} />
         <Metric label="SSO" value={snapshot.sso.mode} alert={snapshot.sso.mode !== "quicklaunch-jwt"} />
         <Metric label="Generated" value={new Date(snapshot.generatedAt).toLocaleString()} />
+      </section>
+
+      <section className="dashboard-two-column">
+        <section className="history-section dashboard-panel">
+          <h2>Go-live checklist</h2>
+          <div className="breakdown-list">
+            <div><span>Build version</span><strong>{snapshot.build.appVersion}</strong><small>{snapshot.build.gitCommit}</small></div>
+            <div><span>Production environment</span><strong>{snapshot.environment}</strong><small>{snapshot.environment === "production" ? "Production runtime enabled" : "Development runtime; validate again on Windows VM"}</small></div>
+            <div><span>Upload storage</span><strong>{snapshot.storage.attachments}</strong><small>{snapshot.storage.attachments === "s3" ? "Object storage configured" : "Local VM disk; uploads folder must be backed up"}</small></div>
+            <div><span>Registry email</span><strong>{process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt"}</strong><small>Email mode: {snapshot.email.mode}</small></div>
+            <div><span>SLA scheduler</span><strong>{process.env.SLA_ESCALATION_SECRET ? "configured" : "missing secret"}</strong><small>Windows Task Scheduler requires a bearer secret</small></div>
+            <div><span>Dev identity simulator</span><strong>{snapshot.environment === "production" ? "disabled" : "available"}</strong><small>/api/dev/session must return 404 in production</small></div>
+          </div>
+        </section>
+
+        <section className="history-section dashboard-panel">
+          <h2>Signed-in identity</h2>
+          <div className="breakdown-list">
+            <div><span>Name</span><strong>{user.firstName} {user.lastName}</strong></div>
+            <div><span>Email</span><strong>{user.email}</strong></div>
+            <div><span>Student ID</span><strong>{user.studentId}</strong></div>
+            <div><span>Roles</span><strong>{user.roles?.join(", ") || "student"}</strong><small>Use this to verify QuickLaunch claims and internal role enrichment.</small></div>
+          </div>
+        </section>
       </section>
 
       <section className="dashboard-two-column">
@@ -86,6 +113,8 @@ export default async function AdminDiagnosticsPage() {
           )}
         </section>
       </section>
+
+      <DiagnosticsActions defaultEmail={process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt"} />
 
       <section className="history-section dashboard-panel">
         <h2>Database pool</h2>

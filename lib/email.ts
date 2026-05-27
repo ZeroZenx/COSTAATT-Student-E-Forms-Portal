@@ -201,6 +201,21 @@ export async function sendSlaEscalationEmail(
   return sendEmailSafely(messages[target]);
 }
 
+export async function sendOperationalTestEmail(to: string, label = "Operations test") {
+  return sendEmailSafely({
+    to,
+    event: "operations.test_email",
+    subject: "COSTAATT e-forms email test",
+    text: [
+      "This is a COSTAATT Student E-Forms Portal test email.",
+      `Label: ${label}`,
+      `Mode: ${emailDeliveryMode()}`,
+      `Generated: ${new Date().toISOString()}`
+    ].join("\n"),
+    html: `<p>This is a COSTAATT Student E-Forms Portal test email.</p><ul><li><strong>Label:</strong> ${escapeHtml(label)}</li><li><strong>Mode:</strong> ${escapeHtml(emailDeliveryMode())}</li><li><strong>Generated:</strong> ${escapeHtml(new Date().toISOString())}</li></ul>`
+  });
+}
+
 async function sendAll(messages: EmailMessage[]) {
   for (const message of messages) {
     await sendEmailSafely(message);

@@ -15,6 +15,14 @@ export function ssoMode() {
   return "not-configured";
 }
 
+export function buildMetadata() {
+  return {
+    appVersion: process.env.APP_VERSION || process.env.npm_package_version || "0.1.0",
+    gitCommit: process.env.GIT_COMMIT || "not-set",
+    nodeEnv: process.env.NODE_ENV || "development"
+  };
+}
+
 export async function databaseHealth() {
   if (!hasDatabase()) {
     return {
@@ -75,6 +83,7 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
   const uploadMode = attachmentStorageMode();
   const mode = process.env.NODE_ENV === "production" ? "production" : "development";
   const checks = [
+    check("Build metadata", process.env.GIT_COMMIT ? "ok" : "warning", process.env.GIT_COMMIT ? "Git commit configured" : "GIT_COMMIT is not configured"),
     check("Runtime mode", mode === "production" ? "ok" : "warning", mode),
     check("Database", database.state, database.message),
     check("Reference data", referenceStorageMode() === "postgres" ? "ok" : "warning", `${referenceStorageMode()} storage`),
@@ -82,7 +91,8 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
     check("Email", email.state, email.message),
     check("SSO", ssoMode() === "quicklaunch-jwt" ? "ok" : "warning", ssoMode()),
     check("Portal URL", process.env.PORTAL_BASE_URL?.startsWith("https://") ? "ok" : "warning", process.env.PORTAL_BASE_URL ? "Configured" : "Not configured"),
-    check("Dev session", process.env.NODE_ENV === "production" ? "ok" : "warning", process.env.NODE_ENV === "production" ? "Disabled by production mode" : "Available in development")
+    check("Dev session", process.env.NODE_ENV === "production" ? "ok" : "warning", process.env.NODE_ENV === "production" ? "Disabled by production mode" : "Available in development"),
+    check("SLA scheduler", process.env.SLA_ESCALATION_SECRET ? "ok" : "warning", process.env.SLA_ESCALATION_SECRET ? "Secret configured" : "SLA_ESCALATION_SECRET is not configured")
   ];
   const state: CheckState = checks.some((item) => item.state === "degraded")
     ? "degraded"
@@ -92,6 +102,7 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
 
   return {
     state,
+    build: buildMetadata(),
     generatedAt: new Date().toISOString(),
     environment: mode,
     database,

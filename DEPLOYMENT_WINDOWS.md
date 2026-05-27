@@ -53,6 +53,8 @@ Required production settings:
 
 ```env
 NODE_ENV=production
+APP_VERSION=0.1.0
+GIT_COMMIT=<git-commit-being-deployed>
 DATABASE_URL=postgres://costaatt:strong-password@postgres-host:5432/costaatt_eforms
 PG_POOL_MAX=20
 PG_IDLE_TIMEOUT_MS=30000
@@ -224,6 +226,14 @@ If NSSM is used, restart the Windows service instead of PM2.
 
 Run these after each deployment:
 
+- Command-line smoke test:
+
+```powershell
+$env:SMOKE_BASE_URL = "https://studentforms.costaatt.edu.tt"
+$env:SMOKE_EXPECT_PRODUCTION = "true"
+npm run smoke:windows
+```
+
 - Health: open `/api/health` and confirm it returns non-sensitive JSON with `status` not equal to `degraded`.
 - Student: open `/forms`, submit a mapped CRN with an attachment, and confirm `/student/dashboard` shows the request.
 - Reviewer: open `/advisor/requests`, verify assigned-only visibility, and approve or decline a test request.
@@ -239,9 +249,9 @@ Before opening the system to students, confirm:
 - `npm run validate:env -- --production` passes on the Windows VM.
 - `psql "$env:DATABASE_URL" -f db/schema.sql` has completed successfully.
 - `/api/health` is reachable through HTTPS.
-- `/admin/diagnostics` shows `postgres` reference data storage and the expected reference-data counts.
+- `/admin/diagnostics` shows the deployed Git commit, `postgres` reference data storage, expected reference-data counts, current signed-in QuickLaunch identity claims, and safe operations test actions.
 - QuickLaunch sends `studentId`, `firstName`, `lastName`, and `email` in a signed JWT. Registry/system roles are added internally by matching COSTAATT email addresses.
-- SMTP has sent test messages to a student, reviewer, and Registry mailbox.
+- SMTP has sent diagnostic test messages from `/admin/diagnostics` to a student, reviewer, and Registry mailbox.
 - `uploads/` is included in the VM backup job if S3 is not configured.
 - IIS/Caddy proxies only to `127.0.0.1:5001`; port `5001` is not public.
 - Windows Task Scheduler dry-run for SLA escalations succeeds.
@@ -286,6 +296,22 @@ Back up:
 - PM2 process list or NSSM service configuration.
 
 Before major updates, take a database backup and preserve the current Git commit hash so rollback is a normal `git checkout <commit>`, reinstall, rebuild, and service restart.
+
+Example backup command:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows\Backup-CostaattEforms.ps1 `
+  -AppRoot "C:\Apps\COSTAATT-Student-E-Forms-Portal" `
+  -BackupRoot "D:\Backups\COSTAATT-EForms"
+```
+
+Restore test checklist:
+
+- Restore the SQL backup into a non-production Postgres database.
+- Restore `uploads/` into a non-production app folder.
+- Start the app against the restored database and uploads.
+- Run `npm run smoke:windows` against the restored test URL.
+- Open one submission with an attachment and confirm inline preview/download works.
 
 ## 13. Troubleshooting
 

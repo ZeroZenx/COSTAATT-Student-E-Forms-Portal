@@ -14,6 +14,8 @@ afterEach(() => {
   delete process.env.QUICKLAUNCH_JWT_SECRET;
   delete process.env.SSO_SHARED_SECRET;
   delete process.env.PORTAL_BASE_URL;
+  delete process.env.APP_VERSION;
+  delete process.env.GIT_COMMIT;
 });
 
 describe("production readiness validation", () => {
@@ -79,6 +81,19 @@ describe("reference data persistence", () => {
 });
 
 describe("health snapshot", () => {
+  it("includes non-sensitive build metadata", async () => {
+    process.env.APP_VERSION = "1.2.3";
+    process.env.GIT_COMMIT = "abc123def456";
+    const { productionReadinessSnapshot } = await import("../lib/production-readiness");
+
+    await expect(productionReadinessSnapshot({ includeReferenceCounts: false })).resolves.toMatchObject({
+      build: {
+        appVersion: "1.2.3",
+        gitCommit: "abc123def456"
+      }
+    });
+  });
+
   it("reports degraded database health when configured Postgres is unreachable", async () => {
     vi.doMock("pg", () => ({
       Pool: vi.fn(() => ({

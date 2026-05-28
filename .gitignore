@@ -4,5 +4,6 @@ node_modules
 .env*.local
 data
 uploads
+logs
 npm-debug.log*
 tsconfig.tsbuildinfo

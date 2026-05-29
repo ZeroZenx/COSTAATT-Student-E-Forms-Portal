@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
-import { getFormAvailability } from "@/lib/admin-settings";
+import { getAdminSettings } from "@/lib/admin-settings";
 import { formDefinitions, isFormType } from "@/lib/forms";
 import FormWizard from "@/components/form-wizard";
 
@@ -12,7 +12,8 @@ export default async function FormTypePage({ params }: { params: { type: string 
   if (!isFormType(params.type)) notFound();
   const user = getCurrentUser();
   const definition = formDefinitions[params.type];
-  const availability = await getFormAvailability(params.type);
+  const settings = await getAdminSettings();
+  const availability = settings.forms[params.type];
 
   if (!user) {
     return (
@@ -56,7 +57,7 @@ export default async function FormTypePage({ params }: { params: { type: string 
           <Link className="primary-button" href="/forms">Return to e-forms</Link>
         </section>
       ) : (
-        <FormWizard formType={params.type} user={user} />
+        <FormWizard formType={params.type} user={user} semesterOptions={settings.system.semesters} />
       )}
     </main>
   );

@@ -14,8 +14,15 @@ export type SystemSettings = {
   portalBaseUrl: string;
   registryNotificationEmail: string;
   emailDeliveryMode: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword?: string;
+  smtpFrom: string;
+  smtpSecure: boolean;
   uploadMaxMb: number;
   uploadTypes: string;
+  semesters: string[];
   updatedAt: string;
 };
 
@@ -42,8 +49,15 @@ function defaultSettings(): AdminSettings {
       portalBaseUrl: process.env.PORTAL_BASE_URL || "http://localhost:5001",
       registryNotificationEmail: process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt",
       emailDeliveryMode: process.env.EMAIL_DELIVERY_MODE || "log",
+      smtpHost: process.env.SMTP_HOST || "",
+      smtpPort: Number(process.env.SMTP_PORT || 587),
+      smtpUser: process.env.SMTP_USER || "",
+      smtpPassword: process.env.SMTP_PASSWORD || "",
+      smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER || "registry@costaatt.edu.tt",
+      smtpSecure: process.env.SMTP_SECURE === "true",
       uploadMaxMb: Number(process.env.UPLOAD_MAX_MB || 8),
       uploadTypes: "PDF, PNG, JPG",
+      semesters: defaultSemesters(),
       updatedAt: now
     }
   };
@@ -80,8 +94,15 @@ export async function updateSystemSettings(input: Partial<SystemSettings>) {
     portalBaseUrl: input.portalBaseUrl ?? settings.system.portalBaseUrl,
     registryNotificationEmail: input.registryNotificationEmail ?? settings.system.registryNotificationEmail,
     emailDeliveryMode: input.emailDeliveryMode ?? settings.system.emailDeliveryMode,
+    smtpHost: input.smtpHost ?? settings.system.smtpHost,
+    smtpPort: Number(input.smtpPort ?? settings.system.smtpPort),
+    smtpUser: input.smtpUser ?? settings.system.smtpUser,
+    smtpPassword: input.smtpPassword === "" || input.smtpPassword === undefined ? settings.system.smtpPassword : input.smtpPassword,
+    smtpFrom: input.smtpFrom ?? settings.system.smtpFrom,
+    smtpSecure: Boolean(input.smtpSecure ?? settings.system.smtpSecure),
     uploadMaxMb: Number(input.uploadMaxMb ?? settings.system.uploadMaxMb),
     uploadTypes: input.uploadTypes ?? settings.system.uploadTypes,
+    semesters: normalizeSemesters(input.semesters ?? settings.system.semesters),
     updatedAt: new Date().toISOString()
   };
   await writeAdminSettings(settings);
@@ -106,6 +127,17 @@ function mergeDefaults(settings: AdminSettings): AdminSettings {
   const defaults = defaultSettings();
   return {
     forms: { ...defaults.forms, ...(settings.forms || {}) },
-    system: { ...defaults.system, ...(settings.system || {}) }
+    system: { ...defaults.system, ...(settings.system || {}), semesters: normalizeSemesters(settings.system?.semesters || defaults.system.semesters) }
   };
+}
+
+function defaultSemesters() {
+  return ["Semester 1", "Semester 2", "Summer"];
+}
+
+function normalizeSemesters(values?: string[]) {
+  const cleaned = (values || [])
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set(cleaned)).length > 0 ? Array.from(new Set(cleaned)) : defaultSemesters();
 }

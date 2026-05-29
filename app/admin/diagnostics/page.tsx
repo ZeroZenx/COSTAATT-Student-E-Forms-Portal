@@ -62,7 +62,7 @@ export default async function AdminDiagnosticsPage() {
             <div><span>Build version</span><strong>{snapshot.build.appVersion}</strong><small>{snapshot.build.gitCommit}</small></div>
             <div><span>Production environment</span><strong>{snapshot.environment}</strong><small>{snapshot.environment === "production" ? "Production runtime enabled" : "Development runtime; validate again on Windows VM"}</small></div>
             <div><span>Upload storage</span><strong>{snapshot.storage.attachments}</strong><small>{snapshot.storage.attachments === "s3" ? "Object storage configured" : "Local VM disk; uploads folder must be backed up"}</small></div>
-            <div><span>Registry email</span><strong>{process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt"}</strong><small>Email mode: {snapshot.email.mode}</small></div>
+            <div><span>Registry email</span><strong>{snapshot.email.registryEmail}</strong><small>Email mode: {snapshot.email.mode}</small></div>
             <div><span>SLA scheduler</span><strong>{process.env.SLA_ESCALATION_SECRET ? "configured" : "missing secret"}</strong><small>Windows Task Scheduler requires a bearer secret</small></div>
             <div><span>Dev identity simulator</span><strong>{snapshot.environment === "production" ? "disabled" : "available"}</strong><small>/api/dev/session must return 404 in production</small></div>
           </div>
@@ -114,7 +114,7 @@ export default async function AdminDiagnosticsPage() {
         </section>
       </section>
 
-      <DiagnosticsActions defaultEmail={process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt"} />
+      <DiagnosticsActions defaultEmail={snapshot.email.registryEmail} />
 
       <section className="history-section dashboard-panel">
         <h2>Database pool</h2>

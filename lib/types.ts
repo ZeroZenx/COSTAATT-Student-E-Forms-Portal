@@ -49,6 +49,7 @@ export type RoutingFlag = "no_reviewer_mapping";
 export type SubmissionPayload = {
   formType: FormType;
   requestType?: string;
+  requestTypes?: string[];
   academicYear: string;
   semester: string;
   programme: string;

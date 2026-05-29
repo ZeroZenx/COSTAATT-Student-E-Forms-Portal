@@ -176,11 +176,25 @@ textarea {
   font-weight: 800;
 }
 
+.dev-switch-card,
+.dev-preview-grid,
 .dev-preset-grid,
 .dev-reviewer-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.dev-switch-card {
+  grid-template-columns: 1fr;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 16px;
+}
+
+.dev-preview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .dev-reviewer-form .primary-button {
@@ -617,7 +631,8 @@ textarea {
 }
 
 .field,
-.textarea-field {
+.textarea-field,
+.request-type-picker {
   display: grid;
   gap: 8px;
   color: var(--navy);
@@ -641,9 +656,65 @@ textarea {
   padding: 10px 12px;
 }
 
+.request-type-picker {
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 0;
+  padding: 14px;
+  background: var(--surface-soft);
+}
+
+.request-type-picker legend {
+  padding: 0 6px;
+}
+
+.request-type-picker p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.request-type-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.request-type-picker label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.request-type-picker label.selected {
+  border-color: var(--teal);
+  background: #e6f3f3;
+  color: var(--teal-dark);
+}
+
+.request-type-picker input {
+  width: 18px;
+  height: 18px;
+}
+
 .field.readonly input {
   background: var(--surface-soft);
   color: var(--muted);
+}
+
+.checkbox-field {
+  align-content: end;
+}
+
+.checkbox-field input {
+  width: 22px;
+  min-height: 22px;
 }
 
 .course-table {
@@ -1372,6 +1443,40 @@ textarea {
   padding: 18px;
 }
 
+.settings-subsection {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.settings-subsection h2,
+.settings-subsection p {
+  margin: 0;
+}
+
+.settings-subsection p {
+  color: var(--muted);
+}
+
+.semester-list {
+  display: grid;
+  gap: 10px;
+}
+
+.semester-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.semester-row input {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
 .reference-editor {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   margin-top: 16px;
@@ -1466,9 +1571,12 @@ textarea {
   .dense-course-review div,
   .audit-list dl div,
   .dev-current-user dl,
+  .dev-preview-grid,
+  .dev-switch-card,
   .dev-preset-grid,
   .dev-reviewer-form,
-  .diagnostics-action-grid {
+  .diagnostics-action-grid,
+  .semester-row {
     grid-template-columns: 1fr;
   }
 

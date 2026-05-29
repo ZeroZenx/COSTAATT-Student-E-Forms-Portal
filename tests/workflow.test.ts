@@ -68,6 +68,15 @@ describe("development identity simulator", () => {
       roles: ["lecturer"]
     });
   });
+
+  it("builds switchable demo identities with route destinations", async () => {
+    const { devIdentityFromOptionId, devIdentityOptions, devPresetRedirectFor } = await import("../lib/dev-identities");
+
+    expect(devPresetRedirectFor("registry_admin")).toBe("/admin/dashboard");
+    expect(devPresetRedirectFor("registry_staff")).toBe("/admin/submissions");
+    expect(devIdentityFromOptionId("preset:student").redirectTo).toBe("/forms");
+    expect(devIdentityOptions().some((option) => option.group === "Course reviewers" && option.email.toLowerCase() === "nursingdepartment@costaatt.edu.tt")).toBe(true);
+  });
 });
 
 describe("workflow routing", () => {
@@ -120,6 +129,23 @@ describe("workflow routing", () => {
     expect(reviewerPatchSchema.safeParse({ action: "needs_information" }).success).toBe(false);
     expect(reviewerPatchSchema.safeParse({ action: "approve" }).success).toBe(true);
     expect(reviewerPatchSchema.safeParse({ action: "decline", comment: "Prerequisite not met." }).success).toBe(true);
+  });
+
+  it("accepts multiple Course Override request types", async () => {
+    const { submissionPayloadSchema } = await import("../lib/validation");
+
+    expect(submissionPayloadSchema.safeParse({
+      ...basePayload,
+      requestType: "Override Co-requisite, Override Pre-requisite",
+      requestTypes: ["Override Co-requisite", "Override Pre-requisite"],
+      semester: "Semester 1",
+      advisorName: "Advisor",
+      courses: [{ crn: "23021", courseCode: "NURS 411", courseTitle: "Professional Development" }],
+      declarations: [
+        "I have met with an Academic Advisor to determine the course for which I am requesting an override.",
+        "I understand that Registry may place me in the next available CRN where applicable."
+      ]
+    }).success).toBe(true);
   });
 });
 

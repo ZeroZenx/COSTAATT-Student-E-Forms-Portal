@@ -1,7 +1,7 @@
 import { stat } from "fs/promises";
 import path from "path";
+import { getAdminSettings } from "./admin-settings";
 import { databasePoolStats, hasDatabase, query } from "./db";
-import { emailDeliveryMode } from "./email";
 import { referenceRecordCounts, referenceStorageMode } from "./reference-admin";
 import { attachmentStorageMode } from "./storage";
 
@@ -51,8 +51,25 @@ export async function databaseHealth() {
 }
 
 export async function emailLogHealth() {
-  if (emailDeliveryMode() === "smtp") {
-    return { state: "ok" as const, mode: "smtp", message: "SMTP delivery mode is enabled." };
+  const settings = await getAdminSettings().catch(() => null);
+  const system = settings?.system;
+  const mode = process.env.EMAIL_DELIVERY_MODE || system?.emailDeliveryMode || "log";
+  const registryEmail = process.env.REGISTRY_NOTIFICATION_EMAIL || system?.registryNotificationEmail || "registrar@costaatt.edu.tt";
+
+  if (mode === "smtp") {
+    const smtpHost = process.env.SMTP_HOST || system?.smtpHost || "";
+    const smtpFrom = process.env.SMTP_FROM || system?.smtpFrom || system?.smtpUser || "";
+    const missing = [
+      !smtpHost ? "SMTP host" : "",
+      !smtpFrom ? "from email" : ""
+    ].filter(Boolean);
+
+    return {
+      state: missing.length > 0 ? "warning" as const : "ok" as const,
+      mode: "smtp",
+      registryEmail,
+      message: missing.length > 0 ? `SMTP mode is enabled but missing ${missing.join(", ")}.` : "SMTP delivery mode is enabled."
+    };
   }
 
   const logPath = process.env.EMAIL_LOG_PATH || path.join(process.cwd(), "data", "email-log.jsonl");
@@ -61,6 +78,7 @@ export async function emailLogHealth() {
     return {
       state: "warning" as const,
       mode: "log",
+      registryEmail,
       message: "Email delivery is in log mode.",
       lastUpdatedAt: info.mtime.toISOString()
     };
@@ -68,6 +86,7 @@ export async function emailLogHealth() {
     return {
       state: "warning" as const,
       mode: "log",
+      registryEmail,
       message: "Email delivery is in log mode; no log file exists yet."
     };
   }

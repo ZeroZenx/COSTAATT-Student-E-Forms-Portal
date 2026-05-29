@@ -23,6 +23,7 @@ export default async function AdminSettingsPage() {
   }
 
   const settings = await getAdminSettings();
+  const safeSystemSettings = { ...settings.system, smtpPassword: "" };
   return (
     <main className="app-shell">
       <AppHeader user={user} staff reviewer />
@@ -31,13 +32,13 @@ export default async function AdminSettingsPage() {
         <div>
           <p className="eyeline">Registry administration</p>
           <h1>System settings</h1>
-          <p>Manage safe operational settings. Secrets remain controlled by deployment environment variables.</p>
+          <p>Manage operational settings. SSO signing keys and portal secrets remain controlled by deployment environment variables.</p>
         </div>
         <div className="dashboard-actions">
           <Link className="secondary-button" href="/admin/settings/forms">Form availability</Link>
         </div>
       </section>
-      <SystemSettingsAdmin initialSettings={settings.system} />
+      <SystemSettingsAdmin initialSettings={safeSystemSettings} passwordConfigured={Boolean(settings.system.smtpPassword)} />
     </main>
   );
 }

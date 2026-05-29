@@ -10,6 +10,7 @@ export const courseLineSchema = z.object({
 export const submissionPayloadSchema = z.object({
   formType: z.enum(["course-override", "academic-standing-petition", "repeat-rule"]),
   requestType: z.string().trim().optional(),
+  requestTypes: z.array(z.string().trim()).optional(),
   academicYear: z.string().trim().min(4, "Academic year is required."),
   semester: z.string().trim().min(3, "Semester is required."),
   programme: z.string().trim().min(2, "Programme is required."),
@@ -31,14 +32,20 @@ export const submissionPayloadSchema = z.object({
     });
   }
 
-  if (!value.requestType || !definition.requestTypes.includes(value.requestType)) {
+  const requestTypes = normalizedRequestTypes(value.requestTypes, value.requestType);
+  if (requestTypes.length === 0 || requestTypes.some((requestType) => !definition.requestTypes.includes(requestType))) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ["requestType"],
+      path: ["requestTypes"],
       message: "Select a valid request type."
     });
   }
 });
+
+function normalizedRequestTypes(requestTypes?: string[], requestType?: string) {
+  const values = requestTypes?.length ? requestTypes : String(requestType || "").split(",");
+  return values.map((value) => value.trim()).filter(Boolean);
+}
 
 export const adminPatchSchema = z.object({
   status: z.enum(submissionStatuses).optional(),

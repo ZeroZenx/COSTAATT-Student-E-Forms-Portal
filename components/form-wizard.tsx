@@ -24,7 +24,7 @@ type WizardState = {
   phone: string;
   advisorName: string;
   advisorDate: string;
-  requestType: string;
+  requestTypes: string[];
   studentComment: string;
   courses: CourseLine[];
   declarations: string[];
@@ -44,7 +44,7 @@ type ReferenceOptions = {
   courseTitles: CourseLookupMatch[];
 };
 
-export default function FormWizard({ formType, user }: { formType: FormType; user: SsoUser }) {
+export default function FormWizard({ formType, user, semesterOptions }: { formType: FormType; user: SsoUser; semesterOptions: string[] }) {
   const definition = formDefinitions[formType];
   const [step, setStep] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
@@ -54,7 +54,8 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
 
   const payload: SubmissionPayload = useMemo(() => ({
     formType,
-    requestType: state.requestType,
+    requestType: state.requestTypes.join(", "),
+    requestTypes: state.requestTypes,
     academicYear: state.academicYear,
     semester: state.semester,
     programme: state.programme,
@@ -204,6 +205,7 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
     if (!state.programme.trim()) return "Select your programme before submitting.";
     if (!state.degree.trim()) return "Enter your certificate or degree before submitting.";
     if (!state.semester.trim()) return "Select the semester before submitting.";
+    if (state.requestTypes.length === 0) return "Select at least one request type before submitting.";
     if (!state.advisorName.trim()) return "Select or enter your academic advisor before submitting.";
     if (payload.courses.length === 0) return "Add at least one course before submitting.";
 
@@ -261,9 +263,17 @@ export default function FormWizard({ formType, user }: { formType: FormType; use
           <div className="form-section">
             <h2>Request details</h2>
             <div className="field-grid three">
-              <SelectField label="Request type" value={state.requestType} options={definition.requestTypes} onChange={(requestType) => setState({ ...state, requestType })} />
+              {formType === "course-override" ? (
+                <RequestTypePicker
+                  options={definition.requestTypes}
+                  values={state.requestTypes}
+                  onChange={(requestTypes) => setState({ ...state, requestTypes })}
+                />
+              ) : (
+                <SelectField label="Request type" value={state.requestTypes[0] || ""} options={definition.requestTypes} onChange={(requestType) => setState({ ...state, requestTypes: [requestType] })} />
+              )}
               <Field label="Academic year" value={state.academicYear} onChange={(academicYear) => setState({ ...state, academicYear })} required />
-              <SelectField label="Semester" value={state.semester} options={["Semester 1", "Semester 2", "Summer"]} onChange={(semester) => setState({ ...state, semester })} />
+              <SelectField label="Semester" value={state.semester} options={semesterOptions} onChange={(semester) => setState({ ...state, semester })} />
               <Field label="Academic advisor" value={state.advisorName} onChange={(advisorName) => setState({ ...state, advisorName })} list="advisor-options" required />
               <Field label="Advisor date" type="date" value={state.advisorDate} onChange={(advisorDate) => setState({ ...state, advisorDate })} />
             </div>
@@ -373,7 +383,7 @@ function initialWizardState(requestType: string): WizardState {
     phone: "",
     advisorName: "",
     advisorDate: "",
-    requestType,
+    requestTypes: [requestType],
     studentComment: "",
     courses: [{ ...emptyCourse }],
     declarations: []
@@ -424,6 +434,28 @@ function Field({ label, value, onChange, type = "text", required = false, list }
       {label}{required ? <span aria-hidden="true"> *</span> : null}
       <input type={type} list={list} value={value} required={required} onChange={(event) => onChange(event.target.value)} />
     </label>
+  );
+}
+
+function RequestTypePicker({ options, values, onChange }: { options: string[]; values: string[]; onChange: (values: string[]) => void }) {
+  function toggle(option: string) {
+    const next = values.includes(option) ? values.filter((item) => item !== option) : [...values, option];
+    onChange(next);
+  }
+
+  return (
+    <fieldset className="request-type-picker">
+      <legend>Request type</legend>
+      <p>Select all override reasons that apply to this course request.</p>
+      <div>
+        {options.map((option) => (
+          <label key={option} className={values.includes(option) ? "selected" : ""}>
+            <input type="checkbox" checked={values.includes(option)} onChange={() => toggle(option)} />
+            <span>{option}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ArrowRight, Clock, FileCheck2, ShieldCheck } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { getAdminSettings } from "@/lib/admin-settings";
+import { studentStatusLabel } from "@/lib/display";
 import { formDefinitions } from "@/lib/forms";
 import { listStudentSubmissions } from "@/lib/repository";
 
@@ -19,13 +21,8 @@ export default async function FormsPage() {
           <BrandLogo className="auth-logo" />
           <p className="eyeline">COSTAATT Student Portal</p>
           <h1>Valid portal SSO is required.</h1>
-          <p>
-            Students must enter this service from the authenticated student portal. For local development,
-            create a signed demo session.
-          </p>
-          <Link className="primary-button" href="/api/dev/session">
-            Use local demo session
-          </Link>
+          <p>Students must enter this service from the authenticated student portal.</p>
+          <DevelopmentSessionLink href="/api/dev/session">Use local demo session</DevelopmentSessionLink>
         </section>
       </main>
     );
@@ -107,7 +104,7 @@ export default async function FormsPage() {
                   <strong>{formDefinitions[submission.formType].title}</strong>
                   <span>{new Date(submission.createdAt).toLocaleString()}</span>
                 </div>
-                <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
+                <span className={`status-pill status-${submission.status}`}>{studentStatusLabel(submission.status)}</span>
               </div>
             ))}
           </div>

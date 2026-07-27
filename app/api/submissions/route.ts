@@ -7,6 +7,7 @@ import { storeAttachment } from "@/lib/storage";
 import { submissionPayloadSchema } from "@/lib/validation";
 import { sendSubmissionCreatedEmails } from "@/lib/email";
 import { notifySubmissionCreated } from "@/lib/notifications";
+import { runPostCommitTasks } from "@/lib/side-effects";
 
 export async function POST(request: Request) {
   try {
@@ -27,8 +28,10 @@ export async function POST(request: Request) {
     }
 
     const record = await createSubmission(user, payload, storedAttachment, request.headers.get("x-forwarded-for") || undefined);
-    await notifySubmissionCreated(record);
-    await sendSubmissionCreatedEmails(record);
+    await runPostCommitTasks([
+      { name: "student_notification.submission_created", run: () => notifySubmissionCreated(record) },
+      { name: "email.submission_created", run: () => sendSubmissionCreatedEmails(record) }
+    ]);
     return NextResponse.json({ submission: record }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHENTICATED") {

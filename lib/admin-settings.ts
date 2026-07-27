@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { formDefinitions } from "./forms";
+import { protectSettingSecret, revealSettingSecret, settingSecretIsProtected } from "./settings-crypto";
 import type { FormType } from "./types";
 
 export type FormAvailability = {
@@ -52,7 +53,7 @@ function defaultSettings(): AdminSettings {
       smtpHost: process.env.SMTP_HOST || "",
       smtpPort: Number(process.env.SMTP_PORT || 587),
       smtpUser: process.env.SMTP_USER || "",
-      smtpPassword: process.env.SMTP_PASSWORD || "",
+      smtpPassword: "",
       smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER || "registry@costaatt.edu.tt",
       smtpSecure: process.env.SMTP_SECURE === "true",
       uploadMaxMb: Number(process.env.UPLOAD_MAX_MB || 8),
@@ -64,14 +65,24 @@ function defaultSettings(): AdminSettings {
 }
 
 export async function getAdminSettings() {
+  let source: string;
   try {
-    const parsed = JSON.parse(await readFile(settingsPath, "utf8")) as AdminSettings;
-    return mergeDefaults(parsed);
-  } catch {
+    source = await readFile(settingsPath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     const settings = defaultSettings();
     await writeAdminSettings(settings);
     return settings;
   }
+
+  const parsed = JSON.parse(source) as AdminSettings;
+  const storedPassword = parsed.system?.smtpPassword;
+  const settings = mergeDefaults(parsed);
+  settings.system.smtpPassword = revealSettingSecret(settings.system.smtpPassword);
+  if (storedPassword && !settingSecretIsProtected(storedPassword) && process.env.SETTINGS_ENCRYPTION_KEY) {
+    await writeAdminSettings(settings);
+  }
+  return settings;
 }
 
 export async function updateFormAvailability(input: Partial<FormAvailability> & { formType: FormType }) {
@@ -119,8 +130,15 @@ export async function assertFormOpen(formType: FormType) {
 }
 
 async function writeAdminSettings(settings: AdminSettings) {
+  const storedSettings: AdminSettings = {
+    ...settings,
+    system: {
+      ...settings.system,
+      smtpPassword: protectSettingSecret(settings.system.smtpPassword)
+    }
+  };
   await mkdir(path.dirname(settingsPath), { recursive: true });
-  await writeFile(settingsPath, JSON.stringify(settings, null, 2));
+  await writeFile(settingsPath, JSON.stringify(storedSettings, null, 2), { mode: 0o600 });
 }
 
 function mergeDefaults(settings: AdminSettings): AdminSettings {

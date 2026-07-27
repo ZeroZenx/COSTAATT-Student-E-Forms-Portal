@@ -15,7 +15,7 @@ export default async function ReferenceDataPage() {
           <BrandLogo className="auth-logo" />
           <p className="eyeline">Registry administration</p>
           <h1>Registry admin access is required.</h1>
-          <p>Reference data management is restricted to Registry administrators and system administrators. In local development, visit /api/dev/session first to create a demo admin session.</p>
+          <p>Reference data management is restricted to Registry administrators and system administrators.</p>
           <Link className="primary-button" href="/forms">Return to e-forms</Link>
         </section>
       </main>

@@ -41,7 +41,7 @@ export default async function AdminDiagnosticsPage() {
         </div>
       </section>
 
-      <section className="dashboard-grid">
+      <section className="dashboard-grid diagnostics-metrics">
         <Metric label="Overall state" value={snapshot.state} alert={snapshot.state !== "ok"} />
         <Metric label="Version" value={snapshot.build.appVersion} alert={snapshot.build.gitCommit === "not-set"} />
         <Metric label="Git commit" value={snapshot.build.gitCommit.slice(0, 12)} alert={snapshot.build.gitCommit === "not-set"} />
@@ -62,7 +62,7 @@ export default async function AdminDiagnosticsPage() {
             <div><span>Build version</span><strong>{snapshot.build.appVersion}</strong><small>{snapshot.build.gitCommit}</small></div>
             <div><span>Production environment</span><strong>{snapshot.environment}</strong><small>{snapshot.environment === "production" ? "Production runtime enabled" : "Development runtime; validate again on Windows VM"}</small></div>
             <div><span>Upload storage</span><strong>{snapshot.storage.attachments}</strong><small>{snapshot.storage.attachments === "s3" ? "Object storage configured" : "Local VM disk; uploads folder must be backed up"}</small></div>
-            <div><span>Registry email</span><strong>{snapshot.email.registryEmail}</strong><small>Email mode: {snapshot.email.mode}</small></div>
+            <div><span>Registry email</span><strong>{snapshot.email.registryEmail}</strong><small>Email mode: {snapshot.email.mode} ({snapshot.email.source} settings)</small></div>
             <div><span>SLA scheduler</span><strong>{process.env.SLA_ESCALATION_SECRET ? "configured" : "missing secret"}</strong><small>Windows Task Scheduler requires a bearer secret</small></div>
             <div><span>Dev identity simulator</span><strong>{snapshot.environment === "production" ? "disabled" : "available"}</strong><small>/api/dev/session must return 404 in production</small></div>
           </div>

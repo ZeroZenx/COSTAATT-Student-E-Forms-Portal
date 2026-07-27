@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { attachmentMeta, formLabel, formatDateTime, latestVisibleComment, reviewerDisplay, studentStatusLabel } from "@/lib/display";
 import { listStudentSubmissions } from "@/lib/repository";
@@ -15,7 +16,7 @@ export default async function StudentDashboardPage() {
           <p className="eyeline">Student dashboard</p>
           <h1>Valid portal SSO is required.</h1>
           <p>Return to the student portal and open this service from your authenticated services page.</p>
-          <Link className="primary-button" href="/api/dev/session">Use local demo session</Link>
+          <DevelopmentSessionLink href="/api/dev/session">Use local demo session</DevelopmentSessionLink>
         </section>
       </main>
     );

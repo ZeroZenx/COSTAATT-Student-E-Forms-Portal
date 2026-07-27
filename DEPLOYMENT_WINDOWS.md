@@ -25,7 +25,7 @@ Install these as an administrator:
 - Git for Windows.
 - PostgreSQL client tools, including `psql`.
 - IIS with URL Rewrite and Application Request Routing, or Caddy as a simpler HTTPS reverse proxy.
-- PM2 for Windows or NSSM to keep the Node.js process running after reboot.
+- NSSM to run the Node.js process as a Windows service. PM2 may be used only if its Windows service integration has been separately tested.
 - Optional: S3-compatible object storage client/tools if uploads are stored outside the VM.
 
 ## 3. Clone And Install
@@ -35,7 +35,7 @@ Open PowerShell in the deployment folder:
 ```powershell
 git clone https://github.com/ZeroZenx/COSTAATT-Student-E-Forms-Portal.git
 cd COSTAATT-Student-E-Forms-Portal
-npm install
+npm ci
 ```
 
 Create the production environment file:
@@ -63,6 +63,7 @@ PG_MAX_USES=7500
 PG_STATEMENT_TIMEOUT_MS=15000
 PORTAL_BASE_URL=https://studentforms.costaatt.edu.tt
 EMAIL_DELIVERY_MODE=smtp
+EMAIL_CONFIG_SOURCE=admin
 SMTP_HOST=smtp.costaatt.edu.tt
 SMTP_PORT=587
 SMTP_FROM=registry@costaatt.edu.tt
@@ -73,12 +74,24 @@ Configure QuickLaunch JWT as the primary production authentication path:
 
 ```env
 QUICKLAUNCH_JWT_SECRET=production-quicklaunch-secret
+QUICKLAUNCH_JWT_ISSUER=https://quicklaunch.costaatt.edu.tt
+QUICKLAUNCH_JWT_AUDIENCE=costaatt-student-eforms
+QUICKLAUNCH_JWT_CLOCK_TOLERANCE_SECONDS=60
 TRUSTED_SSO_HEADER_NAME=x-portal-sso-token
 TRUSTED_SSO_HEADER_MODE=signed-token
 ALLOW_MOCK_SSO=false
+SETTINGS_ENCRYPTION_KEY=<32-byte-base64-key>
 ```
 
-For trusted claim-header deployments, set `TRUSTED_SSO_HEADER_MODE=claims` only when IIS/Caddy or the upstream portal strips spoofed public headers and injects trusted internal headers.
+Generate `SETTINGS_ENCRYPTION_KEY` once, keep it in the approved secrets store, and preserve it during restores:
+
+```powershell
+$bytes = New-Object byte[] 32
+[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+[Convert]::ToBase64String($bytes)
+```
+
+For trusted claim-header deployments, set `TRUSTED_SSO_HEADER_MODE=claims` only when IIS/Caddy or the upstream portal strips spoofed public headers, injects trusted internal headers, and supplies a private `TRUSTED_SSO_PROXY_SECRET`.
 
 Optional S3-compatible upload storage:
 
@@ -131,10 +144,10 @@ npm run build
 
 The `npm run build` command removes stale `.next` output before compiling. This keeps repeated Windows VM deployments consistent with a fresh clone.
 
-Start the production server on the internal port:
+Start the production server on the internal loopback interface:
 
 ```powershell
-npm run start -- -p 5001
+npm run start:windows
 ```
 
 The app should only listen internally. IIS or Caddy should serve HTTPS and proxy to `http://127.0.0.1:5001`.
@@ -143,43 +156,32 @@ The app should only listen internally. IIS or Caddy should serve HTTPS and proxy
 
 Use one process manager, not both.
 
-### PM2 Option
-
-```powershell
-npm install -g pm2
-pm2 start "npm" --name costaatt-eforms -- run start -- -p 5001
-pm2 save
-pm2 startup
-```
-
-For the first production VM, run one app process and use the shared Postgres pool settings above. After live usage is measured, PM2 cluster mode can be enabled with two processes if CPU headroom and database connection capacity are confirmed:
-
-```powershell
-pm2 start "npm" --name costaatt-eforms --instances 2 -- run start -- -p 5001
-```
-
-When using two instances, keep `PG_POOL_MAX=10` to preserve a similar total database connection ceiling.
-
-Useful commands:
-
-```powershell
-pm2 status
-pm2 logs costaatt-eforms
-pm2 restart costaatt-eforms
-pm2 stop costaatt-eforms
-```
-
-### NSSM Option
+### Recommended: NSSM
 
 Install NSSM and create a Windows service that runs:
 
 ```text
 Application: C:\Program Files\nodejs\npm.cmd
-Arguments: run start -- -p 5001
+Arguments: run start:windows
 Startup directory: C:\path\to\COSTAATT-Student-E-Forms-Portal
 ```
 
 Configure stdout/stderr log files in a folder such as `C:\Logs\costaatt-eforms`.
+Set the service to `Automatic (Delayed Start)` and configure Windows Service Recovery to restart after first and second failures. Run the service under a dedicated, least-privilege account with modify access only to the app's `uploads\`, `data\`, and log directories.
+
+Useful commands:
+
+```powershell
+nssm status COSTAATT-EForms
+nssm restart COSTAATT-EForms
+Get-Content C:\Logs\costaatt-eforms\stderr.log -Tail 100
+```
+
+For the first production VM, run one app process with `PG_POOL_MAX=20`. Horizontal or multi-process scaling should be introduced only after mail settings and other local JSON operational settings are moved to shared persistence.
+
+### Optional: PM2
+
+PM2 can manage the process interactively, but `pm2 startup` is not a reliable Windows service installation path by itself. Use PM2 only with a Windows service wrapper that the infrastructure team has validated; otherwise use NSSM.
 
 ## 8. Reverse Proxy
 
@@ -191,6 +193,7 @@ Use IIS with URL Rewrite and Application Request Routing:
 - Enable proxy support in Application Request Routing.
 - Add a rewrite rule that proxies all requests to `http://127.0.0.1:5001/{R:1}`.
 - Ensure SSO headers are only accepted from the trusted portal path and cannot be supplied by public clients.
+- Remove public inbound `x-sso-*`, `x-portal-sso-token`, and `x-sso-proxy-secret` headers before adding any identity headers at the trusted proxy layer.
 
 ### Caddy
 
@@ -210,17 +213,17 @@ For each deployment:
 
 ```powershell
 git pull origin main
-npm install
+npm ci
 npm run validate:env -- --production
 psql "$env:DATABASE_URL" -f db/schema.sql
 npm run typecheck
 npm run lint
 npm test
 npm run build
-pm2 restart costaatt-eforms
+Restart-Service COSTAATT-EForms
 ```
 
-If NSSM is used, restart the Windows service instead of PM2.
+If a validated PM2 service is used, restart that process instead.
 
 ## 10. Smoke Tests
 
@@ -291,6 +294,7 @@ Back up:
 
 - Postgres database.
 - `uploads/` if local file storage is used.
+- `data/admin-settings.json`, which contains form availability, semester choices, and encrypted SMTP settings.
 - `.env.local` in a secure secrets store, not in GitHub.
 - IIS/Caddy configuration.
 - PM2 process list or NSSM service configuration.
@@ -309,14 +313,46 @@ Restore test checklist:
 
 - Restore the SQL backup into a non-production Postgres database.
 - Restore `uploads/` into a non-production app folder.
+- Restore `data/admin-settings.json` and provide the original `SETTINGS_ENCRYPTION_KEY`.
 - Start the app against the restored database and uploads.
 - Run `npm run smoke:windows` against the restored test URL.
 - Open one submission with an attachment and confirm inline preview/download works.
 
 ## 13. Troubleshooting
 
-- Blank page after deployment: run `pm2 logs costaatt-eforms` or check NSSM logs, then verify `npm run build` completed successfully.
+- Blank page after deployment: check the NSSM stdout/stderr logs, then verify `npm run build` completed successfully.
 - Cannot sign in: verify SSO secrets/header mode and confirm the reverse proxy is forwarding the expected headers.
 - Attachments fail: verify S3 variables or local `uploads/` permissions.
 - Emails do not send: set `EMAIL_DELIVERY_MODE=log` temporarily, verify `data/email-log.jsonl`, then restore SMTP after the SMTP issue is corrected.
 - `/api/dev/session` works in production: stop deployment immediately and confirm `NODE_ENV=production`.
+
+## 14. Rollback
+
+Record the tested commit before every release:
+
+```powershell
+git rev-parse HEAD
+```
+
+If a deployment fails:
+
+1. Stop `COSTAATT-EForms`.
+2. Restore the pre-deployment Postgres backup if the schema/data changed.
+3. Restore `uploads\` and `data\admin-settings.json` when applicable.
+4. Check out the recorded commit with `git checkout <known-good-commit>`.
+5. Run `npm ci`, `npm run build`, and `npm run validate:env -- --production`.
+6. Start the service and run `npm run smoke:windows`.
+
+Do not delete a failed release or its logs until the cause has been documented.
+
+## 15. External Go-Live Dependencies
+
+The repository can verify code and configuration shape, but production approval still requires evidence from the Windows environment:
+
+- a reachable Postgres instance with a successful backup and restore test
+- the real QuickLaunch issuer, audience, signing secret, and sample identity claims
+- an HTTPS DNS name and trusted certificate
+- successful SMTP delivery to student, reviewer, and Registry mailboxes
+- an operational local-upload backup job or production S3 configuration
+- Windows Task Scheduler execution of the SLA dry-run
+- role-based acceptance testing by COSTAATT staff

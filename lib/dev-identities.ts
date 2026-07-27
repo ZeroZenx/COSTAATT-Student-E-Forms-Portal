@@ -1,4 +1,5 @@
 import type { SsoUser, UserRole } from "./types";
+import { courseCatalogOptions } from "./course-catalog-data";
 import { internalRoleDirectory } from "./internal-roles";
 import { advisorOptions, courseAdvisorOptions } from "./reference-data";
 
@@ -93,8 +94,6 @@ export function devIdentityOptions(): DevIdentityOption[] {
     });
   });
   const presetEmails = new Set(presets.map((option) => option.email.toLowerCase()));
-  const seen = new Set<string>();
-
   const staff = internalRoleDirectory
     .filter((entry) => !presetEmails.has(entry.email.toLowerCase()))
     .map((entry) => identityOption({
@@ -115,13 +114,9 @@ export function devIdentityOptions(): DevIdentityOption[] {
     user: userFromName(displayName(item.name), item.email, "ADVISOR-DEV", ["advisor"]),
     redirectTo: "/advisor/requests"
   }));
+  const directoryOptions = uniquePeople([...reviewers, ...advisors]);
 
-  return [...presets, ...staff, ...reviewers, ...advisors]
-    .filter((option) => {
-      if (!option.email || seen.has(option.id)) return false;
-      seen.add(option.id);
-      return true;
-    })
+  return [...presets, ...staff, ...directoryOptions]
     .sort((a, b) => {
       const groupOrder = groupRank(a.group) - groupRank(b.group);
       return groupOrder || a.name.localeCompare(b.name);
@@ -129,7 +124,7 @@ export function devIdentityOptions(): DevIdentityOption[] {
 }
 
 export function reviewerDevIdentityOptions() {
-  return devIdentityOptions().filter((option) => option.roles.includes("lecturer") || option.roles.includes("advisor"));
+  return devIdentityOptions().filter((option) => option.source === "reviewer" || option.source === "advisor");
 }
 
 export function devIdentityFromOptionId(id?: string | null) {
@@ -204,28 +199,47 @@ function identityOption(input: {
 
 function reviewerOptionsFromCourseMappings() {
   const reviewers = new Map<string, DevIdentityOption>();
+  for (const item of courseCatalogOptions) {
+    if (!item.reviewerName || !item.reviewerEmail) continue;
+    const email = item.reviewerEmail.toLowerCase();
+    const role = item.reviewerRole === "lecturer" ? "lecturer" : "advisor";
+    reviewers.set(`reviewer:${role}:${email}`, identityOption({
+      id: `reviewer:${role}:${email}`,
+      label: `${displayName(item.reviewerName)} (${role === "lecturer" ? "Lecturer" : "Advisor"})`,
+      group: "Course reviewers",
+      source: "reviewer",
+      user: userFromName(displayName(item.reviewerName), item.reviewerEmail, `${role.toUpperCase()}-DEV`, [role]),
+      redirectTo: "/advisor/requests"
+    }));
+  }
   for (const item of courseAdvisorOptions) {
     if (item.lecturerName && item.lecturerEmail) {
       const email = item.lecturerEmail.toLowerCase();
-      reviewers.set(`reviewer:lecturer:${email}`, identityOption({
-        id: `reviewer:lecturer:${email}`,
-        label: `${displayName(item.lecturerName)} (Lecturer)`,
-        group: "Course reviewers",
-        source: "reviewer",
-        user: userFromName(displayName(item.lecturerName), item.lecturerEmail, "LECTURER-DEV", ["lecturer"]),
-        redirectTo: "/advisor/requests"
-      }));
+      const id = `reviewer:lecturer:${email}`;
+      if (!reviewers.has(id)) {
+        reviewers.set(id, identityOption({
+          id,
+          label: `${displayName(item.lecturerName)} (Lecturer)`,
+          group: "Course reviewers",
+          source: "reviewer",
+          user: userFromName(displayName(item.lecturerName), item.lecturerEmail, "LECTURER-DEV", ["lecturer"]),
+          redirectTo: "/advisor/requests"
+        }));
+      }
     }
     if (item.advisorName && item.advisorEmail) {
       const email = item.advisorEmail.toLowerCase();
-      reviewers.set(`reviewer:advisor:${email}`, identityOption({
-        id: `reviewer:advisor:${email}`,
-        label: `${displayName(item.advisorName)} (Advisor)`,
-        group: "Course reviewers",
-        source: "reviewer",
-        user: userFromName(displayName(item.advisorName), item.advisorEmail, "ADVISOR-DEV", ["advisor"]),
-        redirectTo: "/advisor/requests"
-      }));
+      const id = `reviewer:advisor:${email}`;
+      if (!reviewers.has(id)) {
+        reviewers.set(id, identityOption({
+          id,
+          label: `${displayName(item.advisorName)} (Advisor)`,
+          group: "Course reviewers",
+          source: "reviewer",
+          user: userFromName(displayName(item.advisorName), item.advisorEmail, "ADVISOR-DEV", ["advisor"]),
+          redirectTo: "/advisor/requests"
+        }));
+      }
     }
   }
   return Array.from(reviewers.values());
@@ -262,6 +276,20 @@ function staffId(name: string, roles: UserRole[]) {
 
 function groupRank(group: string) {
   return ["Preset users", "System administrators", "Registry team", "Course reviewers", "Advisors"].indexOf(group);
+}
+
+function uniquePeople(options: DevIdentityOption[]) {
+  const emails = new Set<string>();
+  const names = new Set<string>();
+  return options.filter((option) => {
+    const email = option.email.trim().toLowerCase();
+    const name = option.name.trim().toLowerCase();
+    if (!email || !name || name === "blank" || name.startsWith("blank ")) return false;
+    if (emails.has(email) || names.has(name)) return false;
+    emails.add(email);
+    names.add(name);
+    return true;
+  });
 }
 
 function scoreIdentityMatch(option: DevIdentityOption, userRoles: Set<UserRole>) {

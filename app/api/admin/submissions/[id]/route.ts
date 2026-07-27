@@ -4,6 +4,7 @@ import { getSubmission, updateSubmission } from "@/lib/repository";
 import { adminPatchSchema } from "@/lib/validation";
 import { sendRegistryStatusEmail } from "@/lib/email";
 import { notifyRegistryStatusChange } from "@/lib/notifications";
+import { runPostCommitTasks } from "@/lib/side-effects";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
@@ -27,8 +28,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const submission = await updateSubmission(params.id, patch, user, request.headers.get("x-forwarded-for") || undefined);
     if (!submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
     if (patch.status) {
-      await notifyRegistryStatusChange(submission);
-      await sendRegistryStatusEmail(submission);
+      await runPostCommitTasks([
+        { name: "student_notification.registry_status", run: () => notifyRegistryStatusChange(submission) },
+        { name: "email.registry_status", run: () => sendRegistryStatusEmail(submission) }
+      ]);
     }
     return NextResponse.json({ submission });
   } catch (error) {

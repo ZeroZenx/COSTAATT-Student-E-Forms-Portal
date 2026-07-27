@@ -1,7 +1,9 @@
 import { appendFile, mkdir } from "fs/promises";
 import path from "path";
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { getAdminSettings } from "./admin-settings";
+import { statusLabel as workflowStatusLabel } from "./display";
 import { formDefinitions } from "./forms";
 import type { ReviewerPatch, SubmissionRecord } from "./types";
 
@@ -14,6 +16,7 @@ type EmailMessage = {
 };
 
 type EmailConfig = {
+  source: "admin" | "environment";
   mode: "log" | "smtp";
   registryEmail: string;
   portalBaseUrl: string;
@@ -36,6 +39,9 @@ export type EmailOutcome = {
   messageId?: string;
 };
 
+let cachedTransport: Transporter | null = null;
+let cachedTransportKey = "";
+
 function registryEmail(config?: EmailConfig) {
   return config?.registryEmail || process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt";
 }
@@ -50,7 +56,7 @@ function portalLink(submission: SubmissionRecord, path = `/forms?submission=${su
 }
 
 function statusLabel(submission: SubmissionRecord) {
-  return submission.status.replace(/_/g, " ");
+  return workflowStatusLabel(submission.status);
 }
 
 function escapeHtml(value: string) {
@@ -136,7 +142,7 @@ export async function sendSubmissionCreatedEmails(submission: SubmissionRecord) 
           config
         )
   ];
-  await sendAll(messages);
+  await sendAll(messages, config);
 }
 
 export async function sendReviewerActionEmails(submission: SubmissionRecord, action: ReviewerPatch["action"]) {
@@ -168,7 +174,7 @@ export async function sendReviewerActionEmails(submission: SubmissionRecord, act
     );
   }
 
-  await sendAll(messages);
+  await sendAll(messages, config);
 }
 
 export async function sendRegistryStatusEmail(submission: SubmissionRecord) {
@@ -183,7 +189,7 @@ export async function sendRegistryStatusEmail(submission: SubmissionRecord) {
       `/student/dashboard/${submission.id}`,
       config
     )
-  ]);
+  ], config);
 }
 
 export async function sendStatusChangedEmail(submission: SubmissionRecord) {
@@ -225,11 +231,12 @@ export async function sendSlaEscalationEmail(
     )
   };
 
-  return sendEmailSafely(messages[target]);
+  return sendEmailSafely(messages[target], config);
 }
 
 export async function sendOperationalTestEmail(to: string, label = "Operations test") {
   const config = await resolveEmailConfig();
+  const generatedAt = new Date().toISOString();
   return sendEmailSafely({
     to,
     event: "operations.test_email",
@@ -238,20 +245,26 @@ export async function sendOperationalTestEmail(to: string, label = "Operations t
       "This is a COSTAATT Student E-Forms Portal test email.",
       `Label: ${label}`,
       `Mode: ${config.mode}`,
-      `Generated: ${new Date().toISOString()}`
+      `Generated: ${generatedAt}`
     ].join("\n"),
-    html: `<p>This is a COSTAATT Student E-Forms Portal test email.</p><ul><li><strong>Label:</strong> ${escapeHtml(label)}</li><li><strong>Mode:</strong> ${escapeHtml(config.mode)}</li><li><strong>Generated:</strong> ${escapeHtml(new Date().toISOString())}</li></ul>`
-  });
+    html: brandedEmailHtml(
+      "COSTAATT e-forms email test",
+      "This is a COSTAATT Student E-Forms Portal test email.",
+      [
+        ["Label", label],
+        ["Mode", config.mode],
+        ["Generated", generatedAt]
+      ].map(([key, value]) => `<tr><th style="width:38%;padding:12px 14px;text-align:left;background:#edf4f4;border-bottom:1px solid #d8e2e3;color:#122c46;font-size:13px;">${escapeHtml(key)}</th><td style="padding:12px 14px;border-bottom:1px solid #d8e2e3;color:#102027;font-size:14px;">${escapeHtml(value)}</td></tr>`).join("")
+    )
+  }, config);
 }
 
-async function sendAll(messages: EmailMessage[]) {
-  for (const message of messages) {
-    await sendEmailSafely(message);
-  }
+async function sendAll(messages: EmailMessage[], config: EmailConfig) {
+  await Promise.all(messages.map((message) => sendEmailSafely(message, config)));
 }
 
-async function sendEmailSafely(message: EmailMessage) {
-  const config = await resolveEmailConfig();
+async function sendEmailSafely(message: EmailMessage, providedConfig?: EmailConfig) {
+  const config = providedConfig || await resolveEmailConfig();
   const mode = config.mode;
   if (!message.to) {
     return logOutcome({ message, mode, outcome: "skipped", error: "Missing recipient" });
@@ -262,18 +275,7 @@ async function sendEmailSafely(message: EmailMessage) {
   }
 
   try {
-    const transport = nodemailer.createTransport({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      secure: config.smtpSecure,
-      auth: config.smtpUser && config.smtpPassword
-        ? {
-            user: config.smtpUser,
-            pass: config.smtpPassword
-          }
-        : undefined
-    });
-
+    const transport = smtpTransport(config);
     const result = await transport.sendMail({
       from: config.smtpFrom || "registry@costaatt.edu.tt",
       to: message.to,
@@ -293,20 +295,82 @@ async function sendEmailSafely(message: EmailMessage) {
 }
 
 async function resolveEmailConfig(): Promise<EmailConfig> {
-  const settings = await getAdminSettings().catch(() => null);
+  const settings = await getAdminSettings();
   const system = settings?.system;
-  const mode = process.env.EMAIL_DELIVERY_MODE || system?.emailDeliveryMode || "log";
+  const source = process.env.EMAIL_CONFIG_SOURCE === "environment" ? "environment" : "admin";
+  const settingFirst = <T>(settingValue: T | undefined, environmentValue: T | undefined, fallback: T) =>
+    source === "admin" ? settingValue ?? environmentValue ?? fallback : environmentValue ?? fallback;
+  const textSetting = (settingValue: string | undefined, environmentValue: string | undefined, fallback = "") =>
+    settingFirst(settingValue?.trim() || undefined, environmentValue?.trim() || undefined, fallback);
+  const mode = textSetting(system?.emailDeliveryMode, process.env.EMAIL_DELIVERY_MODE, "log");
+  const smtpUser = textSetting(system?.smtpUser, process.env.SMTP_USER);
   return {
+    source,
     mode: mode === "smtp" ? "smtp" : "log",
-    registryEmail: process.env.REGISTRY_NOTIFICATION_EMAIL || system?.registryNotificationEmail || "registrar@costaatt.edu.tt",
+    registryEmail: textSetting(system?.registryNotificationEmail, process.env.REGISTRY_NOTIFICATION_EMAIL, "registrar@costaatt.edu.tt"),
     portalBaseUrl: process.env.PORTAL_BASE_URL || system?.portalBaseUrl || "http://localhost:5001",
-    smtpHost: process.env.SMTP_HOST || system?.smtpHost || "",
-    smtpPort: Number(process.env.SMTP_PORT || system?.smtpPort || 587),
-    smtpUser: process.env.SMTP_USER || system?.smtpUser || "",
-    smtpPassword: process.env.SMTP_PASSWORD || system?.smtpPassword || "",
-    smtpFrom: process.env.SMTP_FROM || system?.smtpFrom || system?.smtpUser || "registry@costaatt.edu.tt",
-    smtpSecure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : Boolean(system?.smtpSecure)
+    smtpHost: textSetting(system?.smtpHost, process.env.SMTP_HOST),
+    smtpPort: Number(settingFirst(system?.smtpPort, numberEnvironmentValue("SMTP_PORT"), 587)),
+    smtpUser,
+    smtpPassword: textSetting(system?.smtpPassword, process.env.SMTP_PASSWORD),
+    smtpFrom: textSetting(system?.smtpFrom, process.env.SMTP_FROM, smtpUser || "registry@costaatt.edu.tt"),
+    smtpSecure: settingFirst(system?.smtpSecure, booleanEnvironmentValue("SMTP_SECURE"), false)
   };
+}
+
+export async function emailConfigurationSummary() {
+  const config = await resolveEmailConfig();
+  return {
+    source: config.source,
+    mode: config.mode,
+    registryEmail: config.registryEmail,
+    smtpHostConfigured: Boolean(config.smtpHost),
+    smtpFromConfigured: Boolean(config.smtpFrom),
+    smtpAuthConfigured: Boolean(config.smtpUser && config.smtpPassword)
+  };
+}
+
+function smtpTransport(config: EmailConfig) {
+  const transportKey = JSON.stringify([
+    config.smtpHost,
+    config.smtpPort,
+    config.smtpSecure,
+    config.smtpUser,
+    config.smtpPassword,
+    config.smtpFrom
+  ]);
+  if (cachedTransport && cachedTransportKey === transportKey) return cachedTransport;
+
+  cachedTransportKey = transportKey;
+  const transport = nodemailer.createTransport({
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
+    host: config.smtpHost,
+    port: config.smtpPort,
+    secure: config.smtpSecure,
+    auth: config.smtpUser && config.smtpPassword
+      ? {
+          user: config.smtpUser,
+          pass: config.smtpPassword
+        }
+      : undefined
+  });
+  cachedTransport = transport;
+  return transport;
+}
+
+function numberEnvironmentValue(name: string) {
+  const value = process.env[name]?.trim();
+  return value ? Number(value) : undefined;
+}
+
+function booleanEnvironmentValue(name: string) {
+  const value = process.env[name]?.trim();
+  return value ? value === "true" : undefined;
 }
 
 async function logOutcome({
@@ -323,7 +387,8 @@ async function logOutcome({
   messageId?: string;
 }) {
   const logPath = process.env.EMAIL_LOG_PATH || path.join(process.cwd(), "data", "email-log.jsonl");
-  const entry: EmailOutcome & Pick<EmailMessage, "text" | "html"> = {
+  const includeBody = mode === "log" || process.env.EMAIL_LOG_INCLUDE_BODY === "true";
+  const entry: EmailOutcome & Partial<Pick<EmailMessage, "text" | "html">> = {
     at: new Date().toISOString(),
     mode,
     event: message.event,
@@ -332,11 +397,20 @@ async function logOutcome({
     outcome,
     error,
     messageId,
-    text: message.text,
-    html: message.html
+    ...(includeBody ? { text: message.text, html: message.html } : {})
   };
-  await mkdir(path.dirname(logPath), { recursive: true });
-  await appendFile(logPath, `${JSON.stringify(entry)}\n`);
+  try {
+    await mkdir(path.dirname(logPath), { recursive: true });
+    await appendFile(logPath, `${JSON.stringify(entry)}\n`);
+  } catch (logError) {
+    console.error(JSON.stringify({
+      level: "error",
+      event: "email.outcome_log_failed",
+      emailEvent: message.event,
+      outcome,
+      error: logError instanceof Error ? logError.message : "Email outcome log failed"
+    }));
+  }
   return entry;
 }
 

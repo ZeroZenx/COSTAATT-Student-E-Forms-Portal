@@ -4,6 +4,7 @@ import { internalRolesForEmail } from "./internal-roles";
 import type { SsoUser, UserRole } from "./types";
 
 const COOKIE_NAME = "costaatt_sso";
+const DEVELOPMENT_SECRET = "development-only-secret";
 const roleAliases: Record<string, UserRole> = {
   student: "student",
   advisor: "advisor",
@@ -17,7 +18,7 @@ const roleAliases: Record<string, UserRole> = {
 };
 
 function getSecret() {
-  return process.env.SSO_SHARED_SECRET || "development-only-secret";
+  return process.env.SSO_SHARED_SECRET || (process.env.NODE_ENV === "production" ? null : DEVELOPMENT_SECRET);
 }
 
 function base64url(input: Buffer | string) {
@@ -25,7 +26,9 @@ function base64url(input: Buffer | string) {
 }
 
 function signPayload(payload: string) {
-  return crypto.createHmac("sha256", getSecret()).update(payload).digest("base64url");
+  const secret = getSecret();
+  if (!secret) throw new Error("SSO_SHARED_SECRET is required to create signed portal tokens.");
+  return crypto.createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
 export function createSsoToken(user: SsoUser) {
@@ -66,10 +69,11 @@ function mapClaims(parsed: Record<string, unknown>): SsoUser | null {
 }
 
 export function verifySsoToken(token?: string | null): SsoUser | null {
-  if (!token || !token.includes(".")) return null;
+  const secret = getSecret();
+  if (!secret || !token || token.split(".").length !== 2) return null;
   const [body, signature] = token.split(".");
-  const expected = signPayload(body);
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  const expected = crypto.createHmac("sha256", secret).update(body).digest("base64url");
+  if (!safeEqual(signature, expected)) return null;
 
   return mapClaims(decodeJson<Partial<SsoUser> & Record<string, unknown>>(body) || {});
 }
@@ -77,16 +81,28 @@ export function verifySsoToken(token?: string | null): SsoUser | null {
 export function verifyQuickLaunchJwt(token?: string | null): SsoUser | null {
   if (!token || token.split(".").length !== 3) return null;
   const [header, body, signature] = token.split(".");
+  const jwtSecret = process.env.QUICKLAUNCH_JWT_SECRET || getSecret();
+  if (!jwtSecret) return null;
+
+  const parsedHeader = decodeJson<Record<string, unknown>>(header);
+  if (!parsedHeader || parsedHeader.alg !== "HS256") return null;
+
   const expected = crypto
-    .createHmac("sha256", process.env.QUICKLAUNCH_JWT_SECRET || getSecret())
+    .createHmac("sha256", jwtSecret)
     .update(`${header}.${body}`)
     .digest("base64url");
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
-  return mapClaims(decodeJson<Partial<SsoUser> & Record<string, unknown>>(body) || {});
+  if (!safeEqual(signature, expected)) return null;
+
+  const claims = decodeJson<Partial<SsoUser> & Record<string, unknown>>(body);
+  if (!claims || !validQuickLaunchClaims(claims)) return null;
+  return mapClaims(claims);
 }
 
 function userFromTrustedHeaders() {
   const source = headers();
+  if (!trustedClaimHeadersAuthorized(source.get(process.env.TRUSTED_SSO_PROXY_SECRET_HEADER || "x-sso-proxy-secret"))) {
+    return null;
+  }
   const studentId = source.get("x-sso-student-id") || undefined;
   const firstName = source.get("x-sso-first-name") || undefined;
   const lastName = source.get("x-sso-last-name") || undefined;
@@ -127,6 +143,49 @@ export function isRegistryAdmin(user: SsoUser) {
 
 export function hasAnyRole(user: SsoUser, roles: UserRole[]) {
   return Boolean(user.roles?.some((role) => roles.includes(role)));
+}
+
+function validQuickLaunchClaims(claims: Record<string, unknown>) {
+  const now = Math.floor(Date.now() / 1000);
+  const tolerance = Number(process.env.QUICKLAUNCH_JWT_CLOCK_TOLERANCE_SECONDS || 60);
+  const expiresAt = numericClaim(claims.exp);
+  const notBefore = numericClaim(claims.nbf);
+
+  if (expiresAt === null || notBefore === null) return false;
+  if (process.env.NODE_ENV === "production" && expiresAt === undefined) return false;
+  if (expiresAt !== undefined && expiresAt <= now - tolerance) return false;
+  if (notBefore !== undefined && notBefore > now + tolerance) return false;
+
+  const expectedIssuer = process.env.QUICKLAUNCH_JWT_ISSUER?.trim();
+  if (expectedIssuer && claims.iss !== expectedIssuer) return false;
+
+  const expectedAudience = process.env.QUICKLAUNCH_JWT_AUDIENCE?.trim();
+  if (expectedAudience && !claimAudience(claims.aud).includes(expectedAudience)) return false;
+
+  return true;
+}
+
+function numericClaim(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function claimAudience(value: unknown) {
+  if (Array.isArray(value)) return value.map(String);
+  return typeof value === "string" ? [value] : [];
+}
+
+function trustedClaimHeadersAuthorized(provided?: string | null) {
+  const expected = process.env.TRUSTED_SSO_PROXY_SECRET;
+  if (!expected) return process.env.NODE_ENV !== "production";
+  return Boolean(provided && safeEqual(provided, expected));
+}
+
+function safeEqual(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 export { COOKIE_NAME };

@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const url = new URL(request.url);
     const download = url.searchParams.get("download") === "1";
-    const safeFileName = submission.attachment.fileName.replace(/"/g, "");
+    const safeFileName = submission.attachment.fileName.replace(/[\r\n"\\]/g, "_");
     const bytes = await loadAttachment(submission.attachment);
     await appendSubmissionAuditEvent(
       params.id,
@@ -30,6 +30,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       headers: {
         "content-type": submission.attachment.contentType,
         "content-disposition": `${download ? "attachment" : "inline"}; filename="${safeFileName}"`,
+        "cache-control": "private, no-store",
         "x-content-type-options": "nosniff"
       }
     });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { listAllSubmissions, listAssignedSubmissions } from "@/lib/repository";
 import AdvisorRequests from "@/components/advisor-requests";
@@ -16,7 +17,7 @@ export default async function AdvisorRequestsPage() {
           <h1>Signed-in access is required.</h1>
           <p>Open assigned requests from the authenticated portal.</p>
           <div className="auth-actions">
-            <Link className="primary-button" href="/dev/session">Switch demo user</Link>
+            <DevelopmentSessionLink>Switch demo user</DevelopmentSessionLink>
             <Link className="secondary-button" href="/forms">Return to e-forms</Link>
           </div>
         </section>

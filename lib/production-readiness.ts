@@ -1,7 +1,7 @@
 import { stat } from "fs/promises";
 import path from "path";
-import { getAdminSettings } from "./admin-settings";
 import { databasePoolStats, hasDatabase, query } from "./db";
+import { emailConfigurationSummary } from "./email";
 import { referenceRecordCounts, referenceStorageMode } from "./reference-admin";
 import { attachmentStorageMode } from "./storage";
 
@@ -13,6 +13,14 @@ export function ssoMode() {
   if (process.env.QUICKLAUNCH_JWT_SECRET) return "quicklaunch-jwt";
   if (process.env.SSO_SHARED_SECRET) return "signed-portal-token";
   return "not-configured";
+}
+
+function quickLaunchReady() {
+  return Boolean(
+    process.env.QUICKLAUNCH_JWT_SECRET &&
+    process.env.QUICKLAUNCH_JWT_ISSUER &&
+    process.env.QUICKLAUNCH_JWT_AUDIENCE
+  );
 }
 
 export function buildMetadata() {
@@ -51,23 +59,30 @@ export async function databaseHealth() {
 }
 
 export async function emailLogHealth() {
-  const settings = await getAdminSettings().catch(() => null);
-  const system = settings?.system;
-  const mode = process.env.EMAIL_DELIVERY_MODE || system?.emailDeliveryMode || "log";
-  const registryEmail = process.env.REGISTRY_NOTIFICATION_EMAIL || system?.registryNotificationEmail || "registrar@costaatt.edu.tt";
+  let config: Awaited<ReturnType<typeof emailConfigurationSummary>>;
+  try {
+    config = await emailConfigurationSummary();
+  } catch {
+    return {
+      state: "degraded" as const,
+      mode: "unknown",
+      source: process.env.EMAIL_CONFIG_SOURCE === "environment" ? "environment" : "admin",
+      registryEmail: process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt",
+      message: "Email settings could not be loaded. Check the settings file and SETTINGS_ENCRYPTION_KEY."
+    };
+  }
 
-  if (mode === "smtp") {
-    const smtpHost = process.env.SMTP_HOST || system?.smtpHost || "";
-    const smtpFrom = process.env.SMTP_FROM || system?.smtpFrom || system?.smtpUser || "";
+  if (config.mode === "smtp") {
     const missing = [
-      !smtpHost ? "SMTP host" : "",
-      !smtpFrom ? "from email" : ""
+      !config.smtpHostConfigured ? "SMTP host" : "",
+      !config.smtpFromConfigured ? "from email" : ""
     ].filter(Boolean);
 
     return {
       state: missing.length > 0 ? "warning" as const : "ok" as const,
       mode: "smtp",
-      registryEmail,
+      source: config.source,
+      registryEmail: config.registryEmail,
       message: missing.length > 0 ? `SMTP mode is enabled but missing ${missing.join(", ")}.` : "SMTP delivery mode is enabled."
     };
   }
@@ -78,7 +93,8 @@ export async function emailLogHealth() {
     return {
       state: "warning" as const,
       mode: "log",
-      registryEmail,
+      source: config.source,
+      registryEmail: config.registryEmail,
       message: "Email delivery is in log mode.",
       lastUpdatedAt: info.mtime.toISOString()
     };
@@ -86,7 +102,8 @@ export async function emailLogHealth() {
     return {
       state: "warning" as const,
       mode: "log",
-      registryEmail,
+      source: config.source,
+      registryEmail: config.registryEmail,
       message: "Email delivery is in log mode; no log file exists yet."
     };
   }
@@ -108,7 +125,8 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
     check("Reference data", referenceStorageMode() === "postgres" ? "ok" : "warning", `${referenceStorageMode()} storage`),
     check("Uploads", uploadMode === "s3" ? "ok" : "warning", uploadMode === "s3" ? "S3-compatible storage" : "Local VM disk; backup required"),
     check("Email", email.state, email.message),
-    check("SSO", ssoMode() === "quicklaunch-jwt" ? "ok" : "warning", ssoMode()),
+    check("SSO", quickLaunchReady() ? "ok" : "warning", quickLaunchReady() ? "QuickLaunch JWT issuer, audience, and secret configured" : `${ssoMode()} (issuer/audience required)`),
+    check("Settings encryption", process.env.SETTINGS_ENCRYPTION_KEY ? "ok" : "warning", process.env.SETTINGS_ENCRYPTION_KEY ? "Admin SMTP credentials are encrypted" : "SETTINGS_ENCRYPTION_KEY is not configured"),
     check("Portal URL", process.env.PORTAL_BASE_URL?.startsWith("https://") ? "ok" : "warning", process.env.PORTAL_BASE_URL ? "Configured" : "Not configured"),
     check("Dev session", process.env.NODE_ENV === "production" ? "ok" : "warning", process.env.NODE_ENV === "production" ? "Disabled by production mode" : "Available in development"),
     check("SLA scheduler", process.env.SLA_ESCALATION_SECRET ? "ok" : "warning", process.env.SLA_ESCALATION_SECRET ? "Secret configured" : "SLA_ESCALATION_SECRET is not configured")
@@ -132,7 +150,9 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
     },
     email,
     sso: {
-      mode: ssoMode()
+      mode: ssoMode(),
+      issuerConfigured: Boolean(process.env.QUICKLAUNCH_JWT_ISSUER),
+      audienceConfigured: Boolean(process.env.QUICKLAUNCH_JWT_AUDIENCE)
     },
     referenceCounts,
     checks

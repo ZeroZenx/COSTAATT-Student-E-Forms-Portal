@@ -69,10 +69,15 @@ tests/                       Unit and workflow tests
 NODE_ENV=development
 SSO_SHARED_SECRET=replace-with-portal-shared-secret
 QUICKLAUNCH_JWT_SECRET=replace-with-quicklaunch-jwt-secret
+QUICKLAUNCH_JWT_ISSUER=https://quicklaunch.example.edu
+QUICKLAUNCH_JWT_AUDIENCE=costaatt-student-eforms
+QUICKLAUNCH_JWT_CLOCK_TOLERANCE_SECONDS=60
 TRUSTED_SSO_HEADER_NAME=x-portal-sso-token
 TRUSTED_SSO_HEADER_MODE=signed-token
+TRUSTED_SSO_PROXY_SECRET=replace-with-proxy-held-secret
 ALLOW_MOCK_SSO=false
 SLA_ESCALATION_SECRET=replace-with-long-random-scheduler-secret
+SETTINGS_ENCRYPTION_KEY=replace-with-32-byte-base64-key
 DATABASE_URL=postgres://costaatt:password@localhost:5432/costaatt_eforms
 S3_ENDPOINT=https://s3.example.edu
 S3_REGION=us-east-1
@@ -86,6 +91,7 @@ SMTP_PASSWORD=replace-me
 SMTP_FROM=registry@costaatt.edu.tt
 SMTP_SECURE=false
 EMAIL_DELIVERY_MODE=log
+EMAIL_CONFIG_SOURCE=admin
 EMAIL_LOG_PATH=data/email-log.jsonl
 REGISTRY_NOTIFICATION_EMAIL=registrar@costaatt.edu.tt
 PORTAL_BASE_URL=http://localhost:5001
@@ -137,7 +143,7 @@ From a fresh clone:
 ```bash
 git clone https://github.com/ZeroZenx/COSTAATT-Student-E-Forms-Portal.git
 cd COSTAATT-Student-E-Forms-Portal
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev:5001
 ```
@@ -175,7 +181,7 @@ Production access must come from the authenticated student portal or QuickLaunch
 - signed internal SSO cookie/token using `SSO_SHARED_SECRET`
 - QuickLaunch-compatible HMAC JWT using `QUICKLAUNCH_JWT_SECRET`
 - trusted SSO header token via `TRUSTED_SSO_HEADER_NAME`
-- trusted claim headers when `TRUSTED_SSO_HEADER_MODE=claims`
+- trusted claim headers when `TRUSTED_SSO_HEADER_MODE=claims` and the proxy supplies `TRUSTED_SSO_PROXY_SECRET`
 
 Mapped claims:
 - `studentId`
@@ -192,6 +198,8 @@ Production mode must not expose mock identities. The `/api/dev/session` route re
 - The portal or reverse proxy authenticates users before they reach production routes.
 - Trusted claim headers are only accepted from infrastructure controlled by COSTAATT.
 - Header spoofing must be blocked at the public edge.
+- QuickLaunch JWTs must be HS256-signed, unexpired, and match the configured issuer and audience.
+- The SMTP password saved by Registry administration is encrypted with `SETTINGS_ENCRYPTION_KEY`; that key must be kept outside Git and preserved for disaster recovery.
 - Attachments are downloaded only through authorized API routes.
 - Upload type and size validation is enforced before storage.
 - Comments and notes are sanitized before persistence.
@@ -226,6 +234,8 @@ Registry admins and system admins can:
 Attachments are stored using:
 - S3-compatible storage when S3 variables are configured
 - local `uploads/` fallback when S3 variables are absent
+
+The server validates both the declared MIME type and the file signature. Local paths are boundary-checked before reads, and authorized attachment responses use private/no-store caching.
 
 Allowed file types:
 - PDF
@@ -286,6 +296,12 @@ npm run build
 npm test
 ```
 
+Or run the complete local release gate:
+
+```bash
+npm run verify
+```
+
 Recommended manual smoke tests:
 - unauthenticated `/forms` shows the SSO required screen
 - `/api/dev/session` creates local access in development
@@ -324,7 +340,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - **Postgres:** Apply the schema, verify JSON workflow/audit columns, and confirm submissions, notifications, and reference data persist after restart.
 - **Concurrency:** Start production with one Node.js process and `PG_POOL_MAX=20`; monitor `/admin/diagnostics` for database pool waiting requests before increasing PM2 instances.
 - **Uploads:** First production deployment may use local VM disk uploads. Verify PDF/image upload, inline staff preview, forced download with `?download=1`, denied unauthenticated access, and daily backup of `uploads/`.
-- **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then switch to `smtp` after confirming `SMTP_FROM`, `REGISTRY_NOTIFICATION_EMAIL`, and delivery outcomes.
+- **SMTP:** Start with `EMAIL_DELIVERY_MODE=log`, then configure SMTP under `/admin/settings` and send diagnostic messages. Admin-managed SMTP passwords are encrypted with `SETTINGS_ENCRYPTION_KEY`. Set `EMAIL_CONFIG_SOURCE=environment` to make environment settings authoritative instead.
 - **Health:** Confirm `/api/health` returns non-sensitive JSON and `/admin/diagnostics` shows acceptable readiness checks for Registry admins.
 - **Go-live diagnostics:** Use `/admin/diagnostics` to confirm version/commit metadata, signed-in QuickLaunch claims, SMTP test delivery, SLA dry-run counts, and upload backup warnings.
 - **Local dev:** Run `npm run dev:5001`, visit `/api/dev/session`, then smoke-test `/forms`, `/student/dashboard`, `/advisor/requests`, and `/admin/submissions`.
@@ -354,7 +370,7 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - Bulk CSV import UI is scaffolded but not yet a full column-mapping wizard.
 - First production deployment is planned for local VM disk uploads; S3-compatible storage remains preferred long-term.
 - Concurrency tuning assumes a single Node.js process and a Postgres pool of 20 connections for the first launch; increase only after observing pool pressure and server CPU/RAM.
-- Email notifications support SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`.
+- Email notifications support pooled SMTP and local log mode. Local mode writes delivery outcomes to `data/email-log.jsonl`; SMTP logs omit message bodies by default.
 - Student notifications are created for new workflow events after the inbox build; historical submissions are not backfilled automatically.
 - CRN metadata depends on the imported reference data; missing CRNs are routed to Registry review.
 - Workflow routing uses the mapped lecturer first, then mapped advisor. Missing mappings go to Registry triage.
@@ -367,6 +383,5 @@ For Windows Server hosting, use [DEPLOYMENT_WINDOWS.md](DEPLOYMENT_WINDOWS.md). 
 - Rich audit search and export.
 - SLA escalation history dashboard.
 - Advisor/HOD delegated approval queues.
-- Student notifications inside the portal.
 - Production monitoring and structured logging.
 - End-to-end browser tests for all roles.

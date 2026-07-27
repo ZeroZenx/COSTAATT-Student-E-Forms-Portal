@@ -82,7 +82,7 @@ export default function SystemSettingsAdmin({ initialSettings, passwordConfigure
           </div>
         </div>
       </section>
-      <p className="notice-banner">SMTP passwords are stored in the local settings file for this deployment. SSO signing keys and other portal secrets remain controlled by environment variables.</p>
+      <p className="notice-banner">SMTP passwords are encrypted in the local settings file when SETTINGS_ENCRYPTION_KEY is configured. SSO signing keys and other portal secrets remain controlled by environment variables.</p>
       <button className="primary-button" type="button" onClick={save}>Save settings</button>
     </section>
   );

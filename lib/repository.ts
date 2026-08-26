@@ -1,8 +1,9 @@
 import path from "path";
 import crypto from "crypto";
-import { hasDatabase, query } from "./db";
+import { hasDatabase, query, withReferenceDataSharedLockTransaction } from "./db";
 import { readJsonFile, writeJsonFile } from "./json-store";
 import type { AdminPatch, ReviewerPatch, SubmissionPayload, SubmissionRecord, SsoUser } from "./types";
+import { assertActiveSubmissionReferences } from "./reference-consistency";
 import {
   auditEvent,
   assignmentForPayload,
@@ -35,61 +36,69 @@ export async function createSubmission(
   attachment?: SubmissionRecord["attachment"],
   ipAddress?: string
 ) {
-  const now = new Date().toISOString();
-  const enrichedPayload = enrichSubmissionPayload(payload);
-  const status = initialWorkflowStatus(payload.formType, enrichedPayload);
-  const assignedTo = assignmentForPayload(enrichedPayload);
-  const routingFlags = routingFlagsForPayload(enrichedPayload);
-  const record: SubmissionRecord = {
-    id: crypto.randomUUID(),
-    formType: enrichedPayload.formType,
-    status,
-    student: user,
-    payload: enrichedPayload,
-    attachment,
-    assignedTo,
-    routingFlags,
-    workflowHistory: [
-      workflowEvent(user, "submitted", undefined, status)
-    ],
-    auditTrail: [],
-    createdAt: now,
-    updatedAt: now
-  };
-  record.auditTrail = [
-    auditEvent(user, "submission.created", "submission", record.id, ipAddress, {
-      formType: record.formType,
+  const buildRecord = (enrichedPayload: SubmissionPayload): SubmissionRecord => {
+    const now = new Date().toISOString();
+    const status = initialWorkflowStatus(enrichedPayload.formType, enrichedPayload);
+    const assignedTo = assignmentForPayload(enrichedPayload);
+    const routingFlags = routingFlagsForPayload(enrichedPayload);
+    const record: SubmissionRecord = {
+      id: crypto.randomUUID(),
+      formType: enrichedPayload.formType,
+      status,
+      student: user,
+      payload: enrichedPayload,
+      attachment,
       assignedTo,
-      routingFlags
-    })
-  ];
+      routingFlags,
+      workflowHistory: [
+        workflowEvent(user, "submitted", undefined, status)
+      ],
+      auditTrail: [],
+      createdAt: now,
+      updatedAt: now
+    };
+    record.auditTrail = [
+      auditEvent(user, "submission.created", "submission", record.id, ipAddress, {
+        formType: record.formType,
+        assignedTo,
+        routingFlags
+      })
+    ];
+    return record;
+  };
 
   if (hasDatabase()) {
-    await query(
-      `insert into submissions
-        (id, form_type, status, student, payload, attachment, assigned_to, workflow_history, audit_trail, routing_flags, created_at, updated_at)
-       values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12)`,
-      [
-        record.id,
-        record.formType,
-        record.status,
-        JSON.stringify(record.student),
-        JSON.stringify(record.payload),
-        JSON.stringify(record.attachment || null),
-        JSON.stringify(record.assignedTo || null),
-        JSON.stringify(record.workflowHistory || []),
-        JSON.stringify(record.auditTrail || []),
-        JSON.stringify(record.routingFlags || []),
-        record.createdAt,
-        record.updatedAt
-      ]
-    );
-  } else {
-    const records = await readLocal();
-    records.unshift(record);
-    await writeLocal(records);
+    return withReferenceDataSharedLockTransaction(async (client) => {
+      const enrichedPayload = enrichSubmissionPayload(payload);
+      await assertActiveSubmissionReferences(client, enrichedPayload);
+      const record = buildRecord(enrichedPayload);
+      await client.query(
+        `insert into submissions
+          (id, form_type, status, student, payload, attachment, assigned_to, workflow_history, audit_trail, routing_flags, created_at, updated_at)
+         values ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12)`,
+        [
+          record.id,
+          record.formType,
+          record.status,
+          JSON.stringify(record.student),
+          JSON.stringify(record.payload),
+          JSON.stringify(record.attachment || null),
+          JSON.stringify(record.assignedTo || null),
+          JSON.stringify(record.workflowHistory || []),
+          JSON.stringify(record.auditTrail || []),
+          JSON.stringify(record.routingFlags || []),
+          record.createdAt,
+          record.updatedAt
+        ]
+      );
+      return record;
+    });
   }
 
+  const record = buildRecord(enrichSubmissionPayload(payload));
+  const records = await readLocal();
+  records.unshift(record);
+  await writeLocal(records);
   return record;
 }
 

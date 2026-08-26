@@ -6,14 +6,12 @@ import { formDefinitions } from "@/lib/forms";
 import {
   advisorOptions,
   courseAdvisorOptions,
-  findAdvisorForProgramme,
   programmeOptions
 } from "@/lib/reference-data";
-import type { CourseLookupField, CourseLookupMatch } from "@/lib/reference-data";
+import type { AdvisorOption, CourseLookupField, CourseLookupMatch, ProgrammeOption } from "@/lib/reference-data";
 import type { CourseLine, FormType, SsoUser, SubmissionPayload } from "@/lib/types";
 
 const steps = ["Student details", "Request details", "Declarations", "Review & submit"];
-const defaultAcademicYear = "2026/2027";
 const emptyCourse: CourseLine = { crn: "", courseCode: "", courseTitle: "" };
 
 type WizardState = {
@@ -42,15 +40,27 @@ type ReferenceOptions = {
   crns: CourseLookupMatch[];
   courseCodes: CourseLookupMatch[];
   courseTitles: CourseLookupMatch[];
+  programmes: ProgrammeOption[];
+  advisors: AdvisorOption[];
 };
 
-export default function FormWizard({ formType, user, semesterOptions }: { formType: FormType; user: SsoUser; semesterOptions: string[] }) {
+export default function FormWizard({
+  formType,
+  user,
+  academicYearOptions,
+  semesterOptions
+}: {
+  formType: FormType;
+  user: SsoUser;
+  academicYearOptions: string[];
+  semesterOptions: string[];
+}) {
   const definition = formDefinitions[formType];
   const [step, setStep] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [referenceOptions, setReferenceOptions] = useState<ReferenceOptions>({ crns: [], courseCodes: [], courseTitles: [] });
-  const [state, setState] = useState<WizardState>(() => initialWizardState(definition.requestTypes[0]));
+  const [referenceOptions, setReferenceOptions] = useState<ReferenceOptions>({ crns: [], courseCodes: [], courseTitles: [], programmes: [], advisors: [] });
+  const [state, setState] = useState<WizardState>(() => initialWizardState(definition.requestTypes[0], academicYearOptions[0] || ""));
 
   const payload: SubmissionPayload = useMemo(() => ({
     formType,
@@ -70,7 +80,7 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
 
   useEffect(() => {
     let active = true;
-    fetch("/api/reference/options")
+    fetch("/api/reference/options", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((result) => {
         if (active && result) setReferenceOptions(result);
@@ -82,11 +92,9 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
   }, []);
 
   function updateProgramme(programme: string) {
-    const advisor = findAdvisorForProgramme(programme);
     setState((current) => ({
       ...current,
-      programme,
-      advisorName: current.advisorName || advisor?.advisorName || ""
+      programme
     }));
   }
 
@@ -100,7 +108,6 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
   function applyCourseMatch(index: number, match: CourseLookupMatch) {
     setState((current) => ({
       ...current,
-      advisorName: current.advisorName || match.advisorName || match.lecturerName || "",
       courses: current.courses.map((course, courseIndex) => courseIndex === index ? courseWithMatch(course, match) : course)
     }));
   }
@@ -157,11 +164,11 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
     if (match) applyCourseMatch(index, match);
   }
 
-  function addCourse() {
-    setState((current) => current.courses.length >= 5 ? current : {
+  function clearCourse(index: number) {
+    setState((current) => ({
       ...current,
-      courses: [...current.courses, { ...emptyCourse }]
-    });
+      courses: current.courses.map((course, courseIndex) => courseIndex === index ? { ...emptyCourse } : course)
+    }));
   }
 
   function toggleDeclaration(value: string) {
@@ -232,6 +239,59 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
     return "";
   }
 
+  function validateCurrentStep() {
+    if (step === 0) {
+      if (!state.programme.trim()) return "Select your programme before continuing.";
+      if (!state.degree.trim()) return "Enter your certificate or degree before continuing.";
+    }
+
+    if (step === 1) {
+      if (state.requestTypes.length === 0) return "Select at least one request type before continuing.";
+      if (!state.academicYear.trim()) return "Select the academic year before continuing.";
+      if (!state.semester.trim()) return "Select the semester before continuing.";
+      if (!state.advisorName.trim()) return "Search for and select your academic advisor before continuing.";
+      if (payload.courses.length === 0) return "Add at least one course before continuing.";
+      const courseMessage = validateCourses();
+      if (courseMessage) return courseMessage;
+    }
+
+    if (step === 2) {
+      const missingDeclarations = definition.declarations.filter((declaration) => !state.declarations.includes(declaration));
+      if (missingDeclarations.length > 0) return "Confirm all required declarations before continuing.";
+      if (!state.attachment) return `Upload ${definition.requiredAttachment} before continuing.`;
+    }
+
+    return "";
+  }
+
+  function validateCourses() {
+    const incompleteCourse = state.courses.find((course) => {
+      const lookupLine = course as CourseLookupLine;
+      return (
+        lookupLine.requiresSelection ||
+        !course.crn.trim() ||
+        !course.courseCode.trim() ||
+        !course.courseTitle.trim()
+      );
+    });
+
+    if (!incompleteCourse) return "";
+    if ((incompleteCourse as CourseLookupLine).requiresSelection) {
+      return "Select the correct CRN and section for each course before continuing.";
+    }
+    return "Each course must include a CRN, course code, and course title before continuing.";
+  }
+
+  function continueToNextStep() {
+    const validationMessage = validateCurrentStep();
+    if (validationMessage) {
+      setMessage(validationMessage);
+      return;
+    }
+    setMessage(null);
+    setStep(step + 1);
+  }
+
   return (
     <section className="wizard-layout">
       <aside className="step-rail" aria-label="Form progress">
@@ -272,7 +332,7 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
               ) : (
                 <SelectField label="Request type" value={state.requestTypes[0] || ""} options={definition.requestTypes} onChange={(requestType) => setState({ ...state, requestTypes: [requestType] })} />
               )}
-              <Field label="Academic year" value={state.academicYear} onChange={(academicYear) => setState({ ...state, academicYear })} required />
+              <SelectField label="Academic year" value={state.academicYear} options={academicYearOptions} onChange={(academicYear) => setState({ ...state, academicYear })} />
               <SelectField label="Semester" value={state.semester} options={semesterOptions} onChange={(semester) => setState({ ...state, semester })} />
               <Field label="Academic advisor" value={state.advisorName} onChange={(advisorName) => setState({ ...state, advisorName })} list="advisor-options" required />
               <Field label="Advisor date" type="date" value={state.advisorDate} onChange={(advisorDate) => setState({ ...state, advisorDate })} />
@@ -282,13 +342,16 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
                 <span>CRN</span>
                 <span>Course code</span>
                 <span>Course title</span>
+                <span>Assigned reviewer</span>
+                <span>Actions</span>
               </div>
               {state.courses.map((course, index) => (
                 <div className="course-row" key={index}>
-                  <input list="crn-options" aria-label={`CRN ${index + 1}`} value={course.crn} readOnly={Boolean((course as CourseLookupLine).locked && course.crn)} onChange={(event) => lookupCourse(index, "crn", event.target.value)} />
-                  <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseCode", event.target.value)} />
-                  <input list="course-title-options" aria-label={`Course title ${index + 1}`} value={course.courseTitle} readOnly={Boolean((course as CourseLookupLine).locked)} onChange={(event) => lookupCourse(index, "courseTitle", event.target.value)} />
+                  <input list="crn-options" aria-label={`CRN ${index + 1}`} value={course.crn} onChange={(event) => lookupCourse(index, "crn", event.target.value)} />
+                  <input list="course-code-options" aria-label={`Course code ${index + 1}`} value={course.courseCode} onChange={(event) => lookupCourse(index, "courseCode", event.target.value)} />
+                  <input list="course-title-options" aria-label={`Course title ${index + 1}`} value={course.courseTitle} onChange={(event) => lookupCourse(index, "courseTitle", event.target.value)} />
                   <input aria-label={`Assigned lecturer or advisor ${index + 1}`} value={reviewerDisplay(course)} readOnly />
+                  <button type="button" className="secondary-button course-clear-button" onClick={() => clearCourse(index)}>Clear</button>
                   {(course as CourseLookupLine).requiresSelection ? (
                     <label className="course-selector">
                       Select CRN / section
@@ -309,7 +372,6 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
                   ) : null}
                 </div>
               ))}
-              <button type="button" className="secondary-button" onClick={addCourse}>Add another course</button>
             </div>
             <label className="textarea-field">
               Student comment
@@ -354,12 +416,14 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
           </div>
         ) : null}
 
+        {message && step !== 3 ? <p className="error-message">{message}</p> : null}
+
         <div className="wizard-actions">
-          <button type="button" className="secondary-button" disabled={step === 0} onClick={() => setStep(step - 1)}>
-            <ChevronLeft size={17} /> Back
-          </button>
+            <button type="button" className="secondary-button" disabled={step === 0} onClick={() => setStep(step - 1)}>
+              <ChevronLeft size={17} /> Back
+            </button>
           {step < steps.length - 1 ? (
-            <button type="button" className="primary-button" onClick={() => setStep(step + 1)}>
+            <button type="button" className="primary-button" onClick={continueToNextStep}>
               Continue <ChevronRight size={17} />
             </button>
           ) : (
@@ -374,9 +438,9 @@ export default function FormWizard({ formType, user, semesterOptions }: { formTy
   );
 }
 
-function initialWizardState(requestType: string): WizardState {
+function initialWizardState(requestType: string, academicYear: string): WizardState {
   return {
-    academicYear: defaultAcademicYear,
+    academicYear,
     semester: "",
     programme: "",
     degree: "",
@@ -424,7 +488,7 @@ function courseWithMatch(course: CourseLine, match: CourseLookupMatch): CourseLo
     lookupMatches: undefined,
     requiresSelection: false,
     lookupWarning: undefined,
-    locked: true
+    locked: false
   };
 }
 
@@ -462,17 +526,19 @@ function RequestTypePicker({ options, values, onChange }: { options: string[]; v
 function ReferenceDataLists({ options }: { options: ReferenceOptions }) {
   const codeOptions = options.courseCodes.length > 0 ? options.courseCodes : courseAdvisorOptions.map((option) => normalizeOption(option));
   const titleOptions = options.courseTitles.length > 0 ? options.courseTitles : codeOptions;
+  const programmes = programmeReferenceOptions(options);
+  const advisors = options.advisors.length > 0 ? options.advisors : advisorOptions;
   return (
     <>
       <datalist id="programme-options">
-        {programmeOptions.map((option) => (
+        {programmes.map((option) => (
           <option key={option.programme} value={option.programme}>
             {option.advisorName}
           </option>
         ))}
       </datalist>
       <datalist id="advisor-options">
-        {advisorOptions.map((option) => (
+        {advisors.map((option) => (
           <option key={`${option.name}-${option.email}`} value={option.name}>
             {option.email}
           </option>
@@ -501,6 +567,10 @@ function ReferenceDataLists({ options }: { options: ReferenceOptions }) {
       </datalist>
     </>
   );
+}
+
+function programmeReferenceOptions(options: ReferenceOptions) {
+  return options.programmes.length > 0 ? options.programmes : programmeOptions;
 }
 
 function courseMatchKey(match: CourseLookupMatch) {

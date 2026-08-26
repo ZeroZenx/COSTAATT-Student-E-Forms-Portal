@@ -43,3 +43,210 @@ model ReferenceRecord {
   @@index([kind])
   @@map("reference_records")
 }
+
+model ReferenceImport {
+  id              String              @id @db.Uuid
+  kind            String
+  originalFilename String             @map("original_filename")
+  fileSha256      String              @map("file_sha256")
+  uploadedBy      Json                @map("uploaded_by")
+  status          String
+  totalRows       Int                 @default(0) @map("total_rows")
+  validRows       Int                 @default(0) @map("valid_rows")
+  newCount        Int                 @default(0) @map("new_count")
+  unchangedCount  Int                 @default(0) @map("unchanged_count")
+  updateCount     Int                 @default(0) @map("update_count")
+  invalidCount    Int                 @default(0) @map("invalid_count")
+  conflictCount   Int                 @default(0) @map("conflict_count")
+  insertedCount   Int                 @default(0) @map("inserted_count")
+  updatedCount    Int                 @default(0) @map("updated_count")
+  skippedCount    Int                 @default(0) @map("skipped_count")
+  rejectedCount   Int                 @default(0) @map("rejected_count")
+  errorMessage    String?             @map("error_message")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  validatedAt     DateTime?           @map("validated_at")
+  confirmedAt     DateTime?           @map("confirmed_at")
+  completedAt     DateTime?           @map("completed_at")
+  rowExpiresAt    DateTime            @map("row_expires_at")
+  summaryExpiresAt DateTime           @map("summary_expires_at")
+
+  rows            ReferenceImportRow[]
+
+  @@index([createdAt])
+  @@index([kind, status, createdAt])
+  @@map("reference_imports")
+}
+
+model ReferenceImportRow {
+  id                  String          @id @db.Uuid
+  importId            String          @map("import_id") @db.Uuid
+  rowNumber           Int             @map("row_number")
+  identifier          String?
+  recordId            String?         @map("record_id") @db.Uuid
+  status              String
+  operation           String
+  inputData           Json            @map("input_data")
+  currentData         Json?           @map("current_data")
+  proposedData        Json?           @map("proposed_data")
+  snapshotHash        String?         @map("snapshot_hash")
+  snapshotUpdatedAt   DateTime?       @map("snapshot_updated_at")
+  errors              Json            @default("[]")
+  warnings            Json            @default("[]")
+  result              String?
+  reason              String?
+  createdAt           DateTime        @default(now()) @map("created_at")
+  import              ReferenceImport  @relation(fields: [importId], references: [id], onDelete: Cascade)
+
+  @@unique([importId, rowNumber])
+  @@index([importId, status, rowNumber])
+  @@index([importId, recordId])
+  @@map("reference_import_rows")
+}
+
+model CustomForm {
+  id               String    @id @db.Uuid
+  slug             String    @unique
+  title            String
+  description      String
+  department       String
+  targetAudience   String    @map("target_audience")
+  status           String
+  openAt           DateTime? @map("open_at")
+  closeAt          DateTime? @map("close_at")
+  createdBy        Json      @map("created_by")
+  currentVersionId String?   @map("current_version_id") @db.Uuid
+  versionNumber    Int       @default(0) @map("version_number")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @map("updated_at")
+  archivedAt       DateTime? @map("archived_at")
+
+  @@index([status])
+  @@index([department])
+  @@map("custom_forms")
+}
+
+model CustomFormVersion {
+  id             String   @id @db.Uuid
+  formId         String   @map("form_id") @db.Uuid
+  versionNumber  Int      @map("version_number")
+  definitionJson Json     @map("definition_json")
+  status         String   @default("published")
+  publishedBy    Json     @map("published_by")
+  publishedAt    DateTime @default(now()) @map("published_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([formId, versionNumber])
+  @@map("custom_form_versions")
+}
+
+model CustomFormField {
+  id              String   @id @db.Uuid
+  formId          String   @map("form_id") @db.Uuid
+  fieldKey        String   @map("field_key")
+  label           String
+  fieldType       String   @map("field_type")
+  helpText        String?  @map("help_text")
+  required        Boolean  @default(false)
+  sortOrder       Int      @default(0) @map("sort_order")
+  optionsJson     Json     @default("[]") @map("options_json")
+  validationJson  Json     @default("{}") @map("validation_json")
+  profileBinding  String?  @map("profile_binding")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @map("updated_at")
+
+  @@unique([formId, fieldKey])
+  @@map("custom_form_fields")
+}
+
+model CustomFormSubmission {
+  id                    String    @id @db.Uuid
+  formId                String    @map("form_id") @db.Uuid
+  formVersionId         String    @map("form_version_id") @db.Uuid
+  studentJson           Json      @map("student_json")
+  status                String
+  assignedReviewerJson  Json?     @map("assigned_reviewer_json")
+  assignedApproverJson  Json?     @map("assigned_approver_json")
+  assignedProcessorJson Json?     @map("assigned_processor_json")
+  currentStepId         String?   @map("current_step_id") @db.Uuid
+  submittedAt           DateTime? @map("submitted_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @map("updated_at")
+
+  @@index([status])
+  @@index([formId, formVersionId])
+  @@map("custom_form_submissions")
+}
+
+model CustomFormFieldResponse {
+  id             String   @id @db.Uuid
+  submissionId   String   @map("submission_id") @db.Uuid
+  fieldKey       String   @map("field_key")
+  fieldType      String   @map("field_type")
+  valueJson      Json?    @map("value_json")
+  attachmentJson Json?    @map("attachment_json")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("custom_form_field_responses")
+}
+
+model CustomWorkflowStep {
+  id            String   @id @db.Uuid
+  formId        String   @map("form_id") @db.Uuid
+  formVersionId String?  @map("form_version_id") @db.Uuid
+  stepKey       String   @map("step_key")
+  stepType      String   @map("step_type")
+  label         String
+  sortOrder     Int      @default(0) @map("sort_order")
+  assigneeType  String   @default("user") @map("assignee_type")
+  assigneeJson  Json     @map("assignee_json")
+  required      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("custom_workflow_steps")
+}
+
+model CustomWorkflowAssignment {
+  id             String    @id @db.Uuid
+  submissionId   String    @map("submission_id") @db.Uuid
+  stepId         String    @map("step_id") @db.Uuid
+  assignedToJson Json      @map("assigned_to_json")
+  status         String
+  decision       String?
+  comment        String?
+  actedBy        Json?     @map("acted_by")
+  actedAt        DateTime? @map("acted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("custom_workflow_assignments")
+}
+
+model CustomEmailTemplate {
+  id             String   @id @db.Uuid
+  formId         String   @map("form_id") @db.Uuid
+  eventKey       String   @map("event_key")
+  enabled        Boolean  @default(true)
+  subject        String
+  body           String
+  recipientGroup String   @map("recipient_group")
+  ccJson         Json     @default("[]") @map("cc_json")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @map("updated_at")
+
+  @@unique([formId, eventKey])
+  @@map("custom_email_templates")
+}
+
+model CustomAuditLog {
+  id           String   @id @db.Uuid
+  actorJson    Json     @map("actor_json")
+  action       String
+  targetType   String   @map("target_type")
+  targetId     String   @map("target_id")
+  metadataJson Json?    @map("metadata_json")
+  ipAddress    String?  @map("ip_address")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([targetType, targetId])
+  @@map("custom_audit_logs")
+}

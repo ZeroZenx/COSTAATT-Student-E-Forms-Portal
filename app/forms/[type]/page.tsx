@@ -1,16 +1,28 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { getAdminSettings } from "@/lib/admin-settings";
 import { formDefinitions, isFormType } from "@/lib/forms";
+import { samlLoginUrl } from "@/lib/saml";
 import FormWizard from "@/components/form-wizard";
 
-export default async function FormTypePage({ params }: { params: { type: string } }) {
+type PageSearchParams = Record<string, string | string[] | undefined>;
+
+export default async function FormTypePage({ params, searchParams }: { params: { type: string }; searchParams?: PageSearchParams }) {
   if (!isFormType(params.type)) notFound();
   const user = getCurrentUser();
+  if (!user && process.env.NODE_ENV === "production") {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(searchParams || {})) {
+      for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) query.append(key, item);
+    }
+    const target = query.toString() ? `/forms/${params.type}?${query.toString()}` : `/forms/${params.type}`;
+    redirect(samlLoginUrl(target));
+  }
+
   const definition = formDefinitions[params.type];
   const settings = await getAdminSettings();
   const availability = settings.forms[params.type];
@@ -57,7 +69,12 @@ export default async function FormTypePage({ params }: { params: { type: string 
           <Link className="primary-button" href="/forms">Return to e-forms</Link>
         </section>
       ) : (
-        <FormWizard formType={params.type} user={user} semesterOptions={settings.system.semesters} />
+        <FormWizard
+          formType={params.type}
+          user={user}
+          academicYearOptions={settings.system.academicYears}
+          semesterOptions={settings.system.semesters}
+        />
       )}
     </main>
   );

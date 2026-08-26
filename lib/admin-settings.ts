@@ -22,6 +22,7 @@ export type SystemSettings = {
   smtpSecure: boolean;
   uploadMaxMb: number;
   uploadTypes: string;
+  academicYears: string[];
   semesters: string[];
   updatedAt: string;
 };
@@ -57,6 +58,7 @@ function defaultSettings(): AdminSettings {
       smtpSecure: process.env.SMTP_SECURE === "true",
       uploadMaxMb: Number(process.env.UPLOAD_MAX_MB || 8),
       uploadTypes: "PDF, PNG, JPG",
+      academicYears: defaultAcademicYears(),
       semesters: defaultSemesters(),
       updatedAt: now
     }
@@ -102,6 +104,7 @@ export async function updateSystemSettings(input: Partial<SystemSettings>) {
     smtpSecure: Boolean(input.smtpSecure ?? settings.system.smtpSecure),
     uploadMaxMb: Number(input.uploadMaxMb ?? settings.system.uploadMaxMb),
     uploadTypes: input.uploadTypes ?? settings.system.uploadTypes,
+    academicYears: normalizeAcademicYears(input.academicYears ?? settings.system.academicYears),
     semesters: normalizeSemesters(input.semesters ?? settings.system.semesters),
     updatedAt: new Date().toISOString()
   };
@@ -127,12 +130,29 @@ function mergeDefaults(settings: AdminSettings): AdminSettings {
   const defaults = defaultSettings();
   return {
     forms: { ...defaults.forms, ...(settings.forms || {}) },
-    system: { ...defaults.system, ...(settings.system || {}), semesters: normalizeSemesters(settings.system?.semesters || defaults.system.semesters) }
+    system: {
+      ...defaults.system,
+      ...(settings.system || {}),
+      academicYears: normalizeAcademicYears(settings.system?.academicYears || defaults.system.academicYears),
+      semesters: normalizeSemesters(settings.system?.semesters || defaults.system.semesters)
+    }
   };
+}
+
+function defaultAcademicYears() {
+  const currentYear = new Date().getFullYear();
+  return [`${currentYear}/${currentYear + 1}`, `${currentYear + 1}/${currentYear + 2}`];
 }
 
 function defaultSemesters() {
   return ["Semester 1", "Semester 2", "Summer"];
+}
+
+function normalizeAcademicYears(values?: string[]) {
+  const cleaned = (values || [])
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set(cleaned)).length > 0 ? Array.from(new Set(cleaned)) : defaultAcademicYears();
 }
 
 function normalizeSemesters(values?: string[]) {

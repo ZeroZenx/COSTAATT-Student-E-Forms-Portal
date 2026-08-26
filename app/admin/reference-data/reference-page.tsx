@@ -4,7 +4,9 @@ import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import ReferenceDataAdmin from "@/components/reference-data-admin";
 import { getCurrentUser, isRegistryAdmin } from "@/lib/auth";
-import { listReferenceRecords, type ReferenceKind } from "@/lib/reference-admin";
+import { listReferenceRecordsPage, referenceRecordCounts, type ReferenceKind } from "@/lib/reference-admin";
+import { canDeleteAllReferences, canDeleteReference, canDeactivateAllReferences } from "@/lib/reference-deletion-policy";
+import { referenceBulkImportEnabled } from "@/lib/reference-import";
 
 export default async function ReferenceDataPageByKind({ kind, title }: { kind: ReferenceKind; title: string }) {
   const user = getCurrentUser();
@@ -22,7 +24,7 @@ export default async function ReferenceDataPageByKind({ kind, title }: { kind: R
     );
   }
 
-  const records = await listReferenceRecords();
+  const [page, counts] = await Promise.all([listReferenceRecordsPage({ kind, active: "active", pageSize: 50 }), referenceRecordCounts()]);
   return (
     <main className="app-shell">
       <AppHeader user={user} staff reviewer />
@@ -34,7 +36,16 @@ export default async function ReferenceDataPageByKind({ kind, title }: { kind: R
           <p>Manage active academic reference records used by student lookup, routing, dashboards, and reporting.</p>
         </div>
       </section>
-      <ReferenceDataAdmin initialRecords={records} initialKind={kind} />
+      <ReferenceDataAdmin
+        initialRecords={page.records}
+        initialKind={kind}
+        initialTotal={page.total}
+        initialCounts={counts}
+        bulkToolsEnabled={referenceBulkImportEnabled()}
+        allowIndividualDelete={canDeleteReference(user)}
+        allowDeleteAll={canDeleteAllReferences(user)}
+        allowDeactivateAll={canDeactivateAllReferences(user)}
+      />
     </main>
   );
 }

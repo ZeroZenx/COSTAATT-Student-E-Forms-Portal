@@ -13,7 +13,11 @@ const roleAliases: Record<string, UserRole> = {
   registry_staff: "registry_staff",
   registry_admin: "registry_admin",
   admin: "registry_admin",
-  system_admin: "system_admin"
+  system_admin: "system_admin",
+  form_creator: "form_creator",
+  form_manager: "form_manager",
+  reviewer: "reviewer",
+  approver: "approver"
 };
 
 function getSecret() {
@@ -56,19 +60,29 @@ function mapClaims(parsed: Record<string, unknown>): SsoUser | null {
   const roles = Array.isArray(parsed.roles) ? parsed.roles.map(String) : typeof parsed.role === "string" ? [parsed.role] : [];
 
   if (!studentId || !firstName || !lastName || !email) return null;
+  const normalizedEmail = normalizeLegacyEmail(String(email));
   return {
-    studentId: String(studentId),
+    studentId: normalizeLegacyStudentId(String(studentId), normalizedEmail),
     firstName: String(firstName),
     lastName: String(lastName),
-    email: String(email),
-    roles: normalizeRoles(roles.map(String), String(email))
+    email: normalizedEmail,
+    roles: normalizeRoles(roles.map(String), normalizedEmail)
   };
+}
+
+function normalizeLegacyEmail(email: string) {
+  return email.toLowerCase() === "darren.headley@student.costaatt.edu.tt" ? "dheadley@costaatt.edu.tt" : email;
+}
+
+function normalizeLegacyStudentId(studentId: string, email: string) {
+  return studentId === "00012345" && email.toLowerCase() === "dheadley@costaatt.edu.tt" ? "00012346" : studentId;
 }
 
 export function verifySsoToken(token?: string | null): SsoUser | null {
   if (!token || !token.includes(".")) return null;
   const [body, signature] = token.split(".");
   const expected = signPayload(body);
+  if (signature.length !== expected.length) return null;
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
 
   return mapClaims(decodeJson<Partial<SsoUser> & Record<string, unknown>>(body) || {});
@@ -81,6 +95,7 @@ export function verifyQuickLaunchJwt(token?: string | null): SsoUser | null {
     .createHmac("sha256", process.env.QUICKLAUNCH_JWT_SECRET || getSecret())
     .update(`${header}.${body}`)
     .digest("base64url");
+  if (signature.length !== expected.length) return null;
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
   return mapClaims(decodeJson<Partial<SsoUser> & Record<string, unknown>>(body) || {});
 }
@@ -123,6 +138,14 @@ export function isStaff(user: SsoUser) {
 
 export function isRegistryAdmin(user: SsoUser) {
   return hasAnyRole(user, ["registry_admin", "system_admin"]);
+}
+
+export function isFormStaff(user: SsoUser) {
+  return hasAnyRole(user, ["form_creator", "form_manager", "registry_admin", "system_admin"]);
+}
+
+export function isReviewer(user: SsoUser) {
+  return hasAnyRole(user, ["advisor", "lecturer", "reviewer", "approver", "registry_admin", "system_admin"]);
 }
 
 export function hasAnyRole(user: SsoUser, roles: UserRole[]) {

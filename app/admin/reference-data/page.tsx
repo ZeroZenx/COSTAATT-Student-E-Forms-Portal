@@ -3,8 +3,13 @@ import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, isRegistryAdmin } from "@/lib/auth";
-import { listReferenceRecords } from "@/lib/reference-admin";
+import { listReferenceRecordsPage, referenceRecordCounts } from "@/lib/reference-admin";
 import ReferenceDataAdmin from "@/components/reference-data-admin";
+import { canDeleteAllReferences, canDeleteReference, canDeactivateAllReferences } from "@/lib/reference-deletion-policy";
+import { referenceBulkImportEnabled } from "@/lib/reference-import";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ReferenceDataPage() {
   const user = getCurrentUser();
@@ -22,7 +27,7 @@ export default async function ReferenceDataPage() {
     );
   }
 
-  const records = await listReferenceRecords();
+  const [page, counts] = await Promise.all([listReferenceRecordsPage({ kind: "course", active: "active", pageSize: 50 }), referenceRecordCounts()]);
   return (
     <main className="app-shell">
       <AppHeader user={user} staff reviewer />
@@ -38,9 +43,18 @@ export default async function ReferenceDataPage() {
           <Link className="secondary-button" href="/admin/reference-data/crns">CRNs</Link>
           <Link className="secondary-button" href="/admin/reference-data/lecturers">Lecturers</Link>
           <Link className="secondary-button" href="/admin/reference-data/advisors">Advisors</Link>
+          <Link className="secondary-button" href="/admin/reference-data/programme-mappings">Programme mappings</Link>
         </div>
       </section>
-      <ReferenceDataAdmin initialRecords={records} />
+      <ReferenceDataAdmin
+        initialRecords={page.records}
+        initialTotal={page.total}
+        initialCounts={counts}
+        bulkToolsEnabled={referenceBulkImportEnabled()}
+        allowIndividualDelete={canDeleteReference(user)}
+        allowDeleteAll={canDeleteAllReferences(user)}
+        allowDeactivateAll={canDeactivateAllReferences(user)}
+      />
     </main>
   );
 }

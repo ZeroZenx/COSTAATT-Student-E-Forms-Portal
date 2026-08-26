@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import path from "path";
-import { hasDatabase, query } from "./db";
+import type { PoolClient } from "pg";
+import { hasDatabase, query, withReferenceDataWriteTransaction } from "./db";
+import type { SsoUser } from "./types";
 import { readOrSeedJsonFile, writeJsonFile } from "./json-store";
 import { courseCatalogOptions } from "./course-catalog-data";
 import {
@@ -8,8 +10,10 @@ import {
   courseAdvisorOptions,
   normalizeCourseMatch,
   programmeOptions,
+  type AdvisorOption,
   type CourseLookupField,
-  type CourseLookupMatch
+  type CourseLookupMatch,
+  type ProgrammeOption
 } from "./reference-data";
 
 export type ReferenceKind = "course" | "crn" | "lecturer" | "advisor" | "programme_mapping";
@@ -21,10 +25,18 @@ export type ReferenceRecord = {
   label: string;
   email?: string;
   active: boolean;
+  archived: boolean;
   data: Record<string, string | boolean | number | undefined>;
   createdAt: string;
   updatedAt: string;
 };
+
+export function publicReferenceAdminError(error: unknown, fallback = "Reference record could not be saved.") {
+  if (!(error instanceof Error)) return fallback;
+  const message = error.message;
+  if (/^(Duplicate|Invalid|CRN is required|Course code is required|Email is required|Inactive|Linked|Lecturer cannot be deactivated|Only inactive reference records can be archived|Archived|This reference record changed)/i.test(message)) return message;
+  return fallback;
+}
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function localReferencePath() {
@@ -39,6 +51,7 @@ function seedRecords(): ReferenceRecord[] {
     key: item.courseCode,
     label: item.courseTitle || item.courseCode,
     active: true,
+    archived: false,
     data: {
       courseCode: item.courseCode,
       courseTitle: item.courseTitle || item.courseCode,
@@ -64,6 +77,7 @@ function seedRecords(): ReferenceRecord[] {
     label: item.name,
     email: item.email,
     active: true,
+    archived: false,
     data: { name: item.name, email: item.email },
     createdAt: now,
     updatedAt: now
@@ -75,6 +89,7 @@ function seedRecords(): ReferenceRecord[] {
     label: item.name,
     email: item.email,
     active: true,
+    archived: false,
     data: { name: item.name, email: item.email },
     createdAt: now,
     updatedAt: now
@@ -86,6 +101,7 @@ function seedRecords(): ReferenceRecord[] {
     label: item.programme,
     email: item.advisorEmail,
     active: true,
+    archived: false,
     data: {
       programme: item.programme,
       advisorName: item.advisorName,
@@ -101,6 +117,7 @@ function seedRecords(): ReferenceRecord[] {
     label: `${item.crn} - ${item.courseCode}`,
     email: item.reviewerEmail || undefined,
     active: true,
+    archived: false,
     data: {
       crn: item.crn,
       courseCode: item.courseCode,
@@ -132,16 +149,17 @@ function uniqueBy<T>(items: T[], keyFor: (item: T) => string) {
 async function readReferenceRecords() {
   if (hasDatabase()) return readDbReferenceRecords();
 
-  return readOrSeedJsonFile<ReferenceRecord[]>(localReferencePath(), seedRecords);
+  const records = await readOrSeedJsonFile<ReferenceRecord[]>(localReferencePath(), seedRecords);
+  return records.map((record) => ({ ...record, archived: Boolean(record.archived) }));
 }
 
 async function readDbReferenceRecords() {
   const result = await query(
-    `select id, kind, data, active, created_at, updated_at
+    `select id, kind, data, active, archived, archived_at, created_at, updated_at
      from reference_records
      order by updated_at desc`
   );
-  if (result.rows.length > 0) return result.rows.map(rowToReferenceRecord);
+  if (result.rows.length > 0) return result.rows.map(referenceRecordFromDbRow);
 
   const records = seedRecords();
   await seedDbReferenceRecords(records);
@@ -151,14 +169,15 @@ async function readDbReferenceRecords() {
 async function seedDbReferenceRecords(records: ReferenceRecord[]) {
   for (const record of records) {
     await query(
-      `insert into reference_records (id, kind, data, active, created_at, updated_at)
-       values ($1, $2, $3::jsonb, $4, $5, $6)
+      `insert into reference_records (id, kind, data, active, archived, created_at, updated_at)
+       values ($1, $2, $3::jsonb, $4, $5, $6, $7)
        on conflict do nothing`,
       [
         record.id,
         record.kind,
         JSON.stringify(recordToDbData(record)),
         record.active,
+        record.archived,
         record.createdAt,
         record.updatedAt
       ]
@@ -182,15 +201,51 @@ export async function listReferenceRecords(kind?: ReferenceKind, search?: string
 export async function upsertReferenceRecord(input: Partial<ReferenceRecord> & { kind: ReferenceKind; key: string; label: string }) {
   const normalized = normalizeReferenceInput(input);
   validateReferenceRecord(normalized);
+  if (hasDatabase()) {
+    return withReferenceDataWriteTransaction(async (client) => {
+      const records = await readDbReferenceRecordsWithClient(client);
+      ensureReviewerIsAssignable(normalized, records);
+      const duplicate = records.find((record) => record.id !== normalized.id && record.kind === normalized.kind && record.key.toLowerCase() === normalized.key.toLowerCase() && record.active);
+      if (duplicate) throw new Error(`Duplicate ${normalized.kind.replace("_", " ")} records are not allowed.`);
+      const existing = normalized.id ? records.find((record) => record.id === normalized.id) : undefined;
+      if (existing && normalized.updatedAt && new Date(normalized.updatedAt).getTime() !== new Date(existing.updatedAt).getTime()) throw new Error("This reference record changed while it was being edited. Reload it and try again.");
+      if (existing?.archived && normalized.active !== false) throw new Error("Archived reference records must be unarchived before they can be activated or edited as active records.");
+      const now = new Date().toISOString();
+      const next: ReferenceRecord = {
+        id: normalized.id || crypto.randomUUID(),
+        kind: normalized.kind,
+        key: normalized.key,
+        label: normalized.label,
+        email: normalized.email,
+        active: normalized.active ?? true,
+        archived: existing?.archived ?? false,
+        data: normalized.data || {},
+        createdAt: existing?.createdAt || now,
+        updatedAt: now
+      };
+      const result = await client.query(
+        `insert into reference_records (id, kind, data, active, archived, created_at, updated_at)
+         values ($1, $2, $3::jsonb, $4, $5, $6, $7)
+         on conflict (id) do update set
+           kind = excluded.kind,
+           data = excluded.data,
+           active = excluded.active,
+           archived = excluded.archived,
+           updated_at = excluded.updated_at
+         returning id, kind, data, active, archived, archived_at, created_at, updated_at`,
+        [next.id, next.kind, JSON.stringify(recordToDbData(next)), next.active, next.archived, next.createdAt, next.updatedAt]
+      );
+      return referenceRecordFromDbRow(result.rows[0]);
+    });
+  }
+
   const records = await readReferenceRecords();
   ensureReviewerIsAssignable(normalized, records);
-  const duplicate = records.find((record) => {
-    return record.id !== normalized.id && record.kind === normalized.kind && record.key.toLowerCase() === normalized.key.toLowerCase() && record.active;
-  });
+  const duplicate = records.find((record) => record.id !== normalized.id && record.kind === normalized.kind && record.key.toLowerCase() === normalized.key.toLowerCase() && record.active);
   if (duplicate) throw new Error(`Duplicate ${normalized.kind.replace("_", " ")} records are not allowed.`);
-
   const now = new Date().toISOString();
   const index = normalized.id ? records.findIndex((record) => record.id === normalized.id) : -1;
+  if (index >= 0 && records[index].archived && normalized.active !== false) throw new Error("Archived reference records must be unarchived before they can be activated or edited as active records.");
   const next: ReferenceRecord = {
     id: normalized.id || crypto.randomUUID(),
     kind: normalized.kind,
@@ -198,32 +253,11 @@ export async function upsertReferenceRecord(input: Partial<ReferenceRecord> & { 
     label: normalized.label,
     email: normalized.email,
     active: normalized.active ?? true,
+    archived: index >= 0 ? Boolean(records[index].archived) : false,
     data: normalized.data || {},
     createdAt: index >= 0 ? records[index].createdAt : now,
     updatedAt: now
   };
-
-  if (hasDatabase()) {
-    const result = await query(
-      `insert into reference_records (id, kind, data, active, created_at, updated_at)
-       values ($1, $2, $3::jsonb, $4, $5, $6)
-       on conflict (id) do update set
-         kind = excluded.kind,
-         data = excluded.data,
-         active = excluded.active,
-         updated_at = excluded.updated_at
-       returning id, kind, data, active, created_at, updated_at`,
-      [
-        next.id,
-        next.kind,
-        JSON.stringify(recordToDbData(next)),
-        next.active,
-        next.createdAt,
-        next.updatedAt
-      ]
-    );
-    return rowToReferenceRecord(result.rows[0]);
-  }
 
   if (index >= 0) records[index] = next;
   else records.unshift(next);
@@ -245,35 +279,136 @@ function ensureReviewerIsAssignable(input: Partial<ReferenceRecord> & { kind: Re
 export async function getReferenceRecord(id: string) {
   if (hasDatabase()) {
     const result = await query(
-      `select id, kind, data, active, created_at, updated_at
+      `select id, kind, data, active, archived, archived_at, created_at, updated_at
        from reference_records
        where id = $1`,
       [id]
     );
-    return result.rows[0] ? rowToReferenceRecord(result.rows[0]) : null;
+    return result.rows[0] ? referenceRecordFromDbRow(result.rows[0]) : null;
   }
 
   return (await readReferenceRecords()).find((record) => record.id === id) || null;
 }
 
-export async function deactivateReferenceRecord(id: string, linkedToSubmission = false) {
+export async function deactivateReferenceRecord(id: string, linkedToSubmission = false, actor?: SsoUser) {
   if (linkedToSubmission) throw new Error("Linked reference records cannot be deleted; deactivate them instead.");
   if (hasDatabase()) {
-    const result = await query(
-      `update reference_records
-       set active = false,
-           updated_at = $2
-       where id = $1
-       returning id, kind, data, active, created_at, updated_at`,
-      [id, new Date().toISOString()]
-    );
-    return result.rows[0] ? rowToReferenceRecord(result.rows[0]) : null;
+    return withReferenceDataWriteTransaction(async (client) => {
+      const existingResult = await client.query(
+        `select id, kind, data, active, archived, archived_at, created_at, updated_at
+         from reference_records
+         where id = $1
+         for update`,
+        [id]
+      );
+      const existingRow = existingResult.rows[0];
+      if (!existingRow) return null;
+      if (existingRow.kind === "lecturer") {
+        const raw = existingRow.data as Record<string, any>;
+        const nested = raw?.data && typeof raw.data === "object" ? raw.data : {};
+        const email = String(raw?.email || nested.email || raw?.key || nested.key || "").trim().toLowerCase();
+        const assignments = await client.query<{ count: string }>(
+          `select count(*)::text as count
+           from reference_records
+           where active = true
+             and kind in ('course', 'crn')
+             and lower(coalesce(data->'data'->>'reviewerEmail', data->'data'->>'lecturerEmail', data->>'reviewerEmail', data->>'lecturerEmail', data->>'email', '')) = $1`,
+          [email]
+        );
+        if (Number(assignments.rows[0]?.count || 0) > 0) {
+          throw new Error("Lecturer cannot be deactivated while active Course or CRN assignments reference this record.");
+        }
+      }
+      const result = await client.query(
+        `update reference_records
+         set active = false,
+             updated_at = $2
+         where id = $1
+         returning id, kind, data, active, archived, archived_at, created_at, updated_at`,
+        [id, new Date().toISOString()]
+      );
+      if (!result.rows[0]) return null;
+      if (actor) {
+        await client.query(
+          `insert into custom_audit_logs
+             (id, actor_json, action, target_type, target_id, metadata_json, created_at)
+           values ($1, $2::jsonb, 'reference_record.deactivated', 'reference_record', $3, $4::jsonb, $5)`,
+          [
+            crypto.randomUUID(),
+            JSON.stringify({ identity: actor.studentId, name: `${actor.firstName} ${actor.lastName}`.trim(), email: actor.email.toLowerCase(), roles: actor.roles || [] }),
+            id,
+            JSON.stringify({ kind: result.rows[0].kind, snapshot: { id, kind: result.rows[0].kind, data: result.rows[0].data, active: true, created_at: result.rows[0].created_at, updated_at: result.rows[0].updated_at } }),
+            new Date().toISOString()
+          ]
+        );
+      }
+      return referenceRecordFromDbRow(result.rows[0]);
+    });
   }
 
   const records = await readReferenceRecords();
   const index = records.findIndex((record) => record.id === id);
   if (index === -1) return null;
+  if (records[index].kind === "lecturer") {
+    const email = String(records[index].email || records[index].data.email || records[index].key || "").trim().toLowerCase();
+    const assigned = records.some((record) => record.active && (record.kind === "course" || record.kind === "crn") && String(record.data.reviewerEmail || record.data.lecturerEmail || record.email || "").trim().toLowerCase() === email);
+    if (assigned) throw new Error("Lecturer cannot be deactivated while active Course or CRN assignments reference this record.");
+  }
   records[index] = { ...records[index], active: false, updatedAt: new Date().toISOString() };
+  await writeReferenceRecords(records);
+  return records[index];
+}
+
+export async function setReferenceRecordArchived(id: string, archived: boolean, actor?: SsoUser) {
+  if (hasDatabase()) {
+    return withReferenceDataWriteTransaction(async (client) => {
+      const existingResult = await client.query(
+        `select id, kind, data, active, archived, archived_at, created_at, updated_at
+         from reference_records
+         where id = $1
+         for update`,
+        [id]
+      );
+      const existingRow = existingResult.rows[0];
+      if (!existingRow) return null;
+      if (archived && existingRow.active) throw new Error("Only inactive reference records can be archived.");
+      if (Boolean(existingRow.archived) === archived) return referenceRecordFromDbRow(existingRow);
+      const now = new Date().toISOString();
+      const result = await client.query(
+        `update reference_records
+         set archived = $2,
+             archived_at = case when $2 then $3::timestamptz else null end,
+             updated_at = $3::timestamptz
+         where id = $1
+         returning id, kind, data, active, archived, archived_at, created_at, updated_at`,
+        [id, archived, now]
+      );
+      if (!result.rows[0]) return null;
+      if (actor) {
+        await client.query(
+          `insert into custom_audit_logs
+             (id, actor_json, action, target_type, target_id, metadata_json, created_at)
+           values ($1, $2::jsonb, $3, 'reference_record', $4, $5::jsonb, $6)`,
+          [
+            crypto.randomUUID(),
+            JSON.stringify({ identity: actor.studentId, name: `${actor.firstName} ${actor.lastName}`.trim(), email: actor.email.toLowerCase(), roles: actor.roles || [] }),
+            archived ? "reference_record.archived" : "reference_record.unarchived",
+            id,
+            JSON.stringify({ kind: result.rows[0].kind, archived, snapshot: { id, kind: result.rows[0].kind, data: result.rows[0].data, active: result.rows[0].active, archived: !archived, archived_at: archived ? null : existingRow.archived_at, created_at: result.rows[0].created_at, updated_at: result.rows[0].updated_at } }),
+            now
+          ]
+        );
+      }
+      return referenceRecordFromDbRow(result.rows[0]);
+    });
+  }
+
+  const records = await readReferenceRecords();
+  const index = records.findIndex((record) => record.id === id);
+  if (index === -1) return null;
+  if (archived && records[index].active) throw new Error("Only inactive reference records can be archived.");
+  if (records[index].archived === archived) return records[index];
+  records[index] = { ...records[index], archived, updatedAt: new Date().toISOString() };
   await writeReferenceRecords(records);
   return records[index];
 }
@@ -335,6 +470,87 @@ export async function listReferenceCourseOptions(): Promise<CourseLookupMatch[]>
     .filter((option): option is CourseLookupMatch => Boolean(option));
 
   return uniqueBy([...crnOptions, ...courseOptions], (item) => `${item.crn || "no-crn"}|${item.courseCode}|${item.courseTitle}|${item.section}`);
+}
+
+/** Direct read used by import/export paths. It never seeds an empty PostgreSQL table. */
+export async function listReferenceRecordsDirect(kind?: ReferenceKind) {
+  if (!hasDatabase()) return (await readReferenceRecords()).filter((record) => !kind || record.kind === kind);
+  const params = kind ? [kind] : [];
+  const result = await query(
+    `select id, kind, data, active, archived, archived_at, created_at, updated_at
+     from reference_records
+     ${kind ? "where kind = $1" : ""}
+     order by kind, updated_at desc, id`,
+    params
+  );
+  return result.rows.map(referenceRecordFromDbRow);
+}
+
+export type ReferenceRecordPage = { records: ReferenceRecord[]; total: number; page: number; pageSize: number };
+
+export async function listReferenceRecordsPage(options: { kind?: ReferenceKind; search?: string; active?: "active" | "inactive" | "archived" | "all"; page?: number; pageSize?: number } = {}): Promise<ReferenceRecordPage> {
+  const page = Math.max(1, Math.floor(options.page || 1));
+  const pageSize = Math.min(200, Math.max(1, Math.floor(options.pageSize || 50)));
+  const active = options.active || "all";
+  if (!hasDatabase()) {
+    const records = await listReferenceRecords(options.kind, options.search);
+    const filtered = records.filter((record) => active === "all" ? true : active === "active" ? record.active && !record.archived : active === "inactive" ? !record.active && !record.archived : record.archived);
+    return { records: filtered.slice((page - 1) * pageSize, page * pageSize), total: filtered.length, page, pageSize };
+  }
+  const params: unknown[] = [];
+  const filters: string[] = [];
+  if (options.kind) { params.push(options.kind); filters.push(`kind = $${params.length}`); }
+  if (active === "active") filters.push("active = true and archived = false");
+  if (active === "inactive") filters.push("active = false and archived = false");
+  if (active === "archived") filters.push("archived = true");
+  if (options.search?.trim()) { params.push(`%${options.search.trim()}%`); filters.push(`data::text ilike $${params.length}`); }
+  const where = filters.length ? `where ${filters.join(" and ")}` : "";
+  const count = await query<{ count: string }>(`select count(*)::text as count from reference_records ${where}`, params);
+  const offset = (page - 1) * pageSize;
+  const rows = await query(`select id, kind, data, active, archived, archived_at, created_at, updated_at from reference_records ${where} order by updated_at desc, id limit $${params.length + 1} offset $${params.length + 2}`, [...params, pageSize, offset]);
+  return { records: rows.rows.map(referenceRecordFromDbRow), total: Number(count.rows[0]?.count || 0), page, pageSize };
+}
+
+async function readDbReferenceRecordsWithClient(client: PoolClient): Promise<ReferenceRecord[]> {
+  const result = await client.query(
+    `select id, kind, data, active, archived, archived_at, created_at, updated_at
+       from reference_records
+     order by updated_at desc`
+  );
+  return result.rows.map((row: Record<string, unknown>) => referenceRecordFromDbRow(row));
+}
+
+export async function listReferenceProgrammeOptions(): Promise<ProgrammeOption[]> {
+  const records = (await readReferenceRecords()).filter((record) => record.active && record.kind === "programme_mapping");
+  return uniqueBy(
+    records
+      .map((record) => {
+        const programme = String(record.data.programme || record.key || record.label || "").trim();
+        if (!programme) return null;
+        return {
+          programme,
+          advisorName: String(record.data.advisorName || record.label || "").trim(),
+          advisorEmail: String(record.data.advisorEmail || record.email || "").trim()
+        };
+      })
+      .filter((option): option is ProgrammeOption => Boolean(option)),
+    (option) => option.programme.toLowerCase()
+  );
+}
+
+export async function listReferenceAdvisorOptions(): Promise<AdvisorOption[]> {
+  const records = (await readReferenceRecords()).filter((record) => record.active && (record.kind === "advisor" || record.kind === "lecturer"));
+  return uniqueBy(
+    records
+      .map((record) => {
+        const name = String(record.data.name || record.label || "").trim();
+        const email = String(record.data.email || record.email || record.key || "").trim();
+        if (!name || !email) return null;
+        return { name, email };
+      })
+      .filter((option): option is AdvisorOption => Boolean(option)),
+    (option) => option.email.toLowerCase()
+  );
 }
 
 function recordToCourseLookup(record: ReferenceRecord, courseRecord?: ReferenceRecord): CourseLookupMatch | null {
@@ -406,7 +622,7 @@ function recordToDbData(record: ReferenceRecord) {
   };
 }
 
-function rowToReferenceRecord(row: Record<string, unknown>): ReferenceRecord {
+export function referenceRecordFromDbRow(row: Record<string, unknown>): ReferenceRecord {
   const data = row.data as {
     key?: string;
     label?: string;
@@ -421,6 +637,7 @@ function rowToReferenceRecord(row: Record<string, unknown>): ReferenceRecord {
     label: String(data.label || nestedData.label || ""),
     email: data.email || undefined,
     active: Boolean(row.active),
+    archived: Boolean(row.archived),
     data: nestedData,
     createdAt: new Date(row.created_at as string).toISOString(),
     updatedAt: new Date(row.updated_at as string).toISOString()

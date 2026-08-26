@@ -95,6 +95,25 @@ describe("SLA escalation execution", () => {
     process.env.EMAIL_DELIVERY_MODE = "log";
     process.env.REGISTRY_NOTIFICATION_EMAIL = "registrar@costaatt.edu.tt";
 
+    vi.doMock("../lib/admin-settings", () => ({
+      getAdminSettings: vi.fn().mockResolvedValue({
+        system: {
+          portalBaseUrl: "http://localhost:5001",
+          registryNotificationEmail: "registrar@costaatt.edu.tt",
+          emailDeliveryMode: "log",
+          smtpHost: "",
+          smtpPort: 587,
+          smtpUser: "",
+          smtpPassword: "",
+          smtpFrom: "registry@costaatt.edu.tt",
+          smtpSecure: false,
+          uploadMaxMb: 8,
+          uploadTypes: "PDF, PNG, JPG",
+          semesters: ["Semester 1"],
+          updatedAt: "2026-06-01T00:00:00.000Z"
+        }
+      })
+    }));
     const appendSubmissionAuditEvent = vi.fn().mockResolvedValue(null);
     vi.doMock("../lib/repository", () => ({
       listAllSubmissions: vi.fn().mockResolvedValue([

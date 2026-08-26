@@ -10,6 +10,9 @@ import {
 
 const lookupFields = new Set(["crn", "courseCode", "courseTitle"]);
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function uniqueMatches(matches: CourseLookupMatch[]) {
   const seen = new Set<string>();
   return matches.filter((match) => {
@@ -67,7 +70,7 @@ export async function GET(request: Request) {
         selectedMatch: null,
         requiresSelection: false,
         warning: "No lecturer assigned"
-      });
+      }, { headers: noStoreHeaders() });
     }
 
     return NextResponse.json({
@@ -75,8 +78,14 @@ export async function GET(request: Request) {
       matches,
       selectedMatch,
       requiresSelection: matches.length > 1
-    });
+    }, { headers: noStoreHeaders() });
   } catch {
-    return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401 });
+    return NextResponse.json({ error: "Valid portal SSO is required." }, { status: 401, headers: noStoreHeaders() });
   }
+}
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, max-age=0"
+  };
 }

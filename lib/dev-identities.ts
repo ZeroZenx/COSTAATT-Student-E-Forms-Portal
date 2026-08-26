@@ -4,17 +4,31 @@ import { advisorOptions, courseAdvisorOptions } from "./reference-data";
 
 export const devIdentityPresets = {
   student: {
-    studentId: "00012345",
+    studentId: "00012346",
     firstName: "Darren",
     lastName: "Headley",
-    email: "darren.headley@student.costaatt.edu.tt",
+    email: "dheadley@costaatt.edu.tt",
     roles: ["student"]
   },
   all_access: {
-    studentId: "00012345",
+    studentId: "00012346",
     firstName: "Darren",
     lastName: "Headley",
-    email: "darren.headley@student.costaatt.edu.tt",
+    email: "dheadley@costaatt.edu.tt",
+    roles: ["student", "advisor", "lecturer", "registry_staff", "registry_admin"]
+  },
+  nigel_all_access: {
+    studentId: "REG-NT",
+    firstName: "Nigel",
+    lastName: "Thomas",
+    email: "NiThomas@costaatt.edu.tt",
+    roles: ["student", "advisor", "lecturer", "registry_staff", "registry_admin"]
+  },
+  kempson_all_access: {
+    studentId: "REG-KB",
+    firstName: "Kempson",
+    lastName: "Banfield",
+    email: "KBanfield@costaatt.edu.tt",
     roles: ["student", "advisor", "lecturer", "registry_staff", "registry_admin"]
   },
   registry_staff: {
@@ -57,6 +71,8 @@ export type DevIdentityOption = {
 const presetMeta: Record<DevIdentityPreset, { label: string; redirectTo: string }> = {
   student: { label: "Darren as Student", redirectTo: "/forms" },
   all_access: { label: "Darren Demo All Access", redirectTo: "/forms" },
+  nigel_all_access: { label: "Nigel Demo All Access", redirectTo: "/forms" },
+  kempson_all_access: { label: "Kempson Demo All Access", redirectTo: "/forms" },
   registry_staff: { label: "Registry Staff", redirectTo: "/admin/submissions" },
   registry_admin: { label: "Registry Admin", redirectTo: "/admin/dashboard" },
   system_admin: { label: "System Admin", redirectTo: "/admin/dashboard" }

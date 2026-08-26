@@ -11,9 +11,16 @@ afterEach(() => {
   delete process.env.REFERENCE_STORE_PATH;
   delete (process.env as Record<string, string | undefined>).NODE_ENV;
   delete process.env.EMAIL_DELIVERY_MODE;
+  delete process.env.SMTP_HOST;
+  delete process.env.SMTP_FROM;
   delete process.env.QUICKLAUNCH_JWT_SECRET;
   delete process.env.SSO_SHARED_SECRET;
   delete process.env.PORTAL_BASE_URL;
+  delete process.env.SAML_ENABLED;
+  delete process.env.SAML_IDP_METADATA_URL;
+  delete process.env.SAML_IDP_ENTITY_ID;
+  delete process.env.SAML_IDP_SSO_URL;
+  delete process.env.SAML_IDP_CERT;
   delete process.env.APP_VERSION;
   delete process.env.GIT_COMMIT;
 });
@@ -81,6 +88,15 @@ describe("reference data persistence", () => {
 });
 
 describe("health snapshot", () => {
+  it("reports incomplete production SAML configuration without exposing certificate material", async () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+    process.env.SAML_ENABLED = "true";
+    process.env.SAML_IDP_METADATA_URL = "https://sso.quicklaunch.io/metadata";
+    const { samlConfigurationHealth } = await import("../lib/production-readiness");
+
+    expect(samlConfigurationHealth()).toMatchObject({ state: "degraded", mode: "saml", metadataConfigured: true, entityConfigured: false, ssoConfigured: false, certificateConfigured: false });
+  });
+
   it("includes non-sensitive build metadata", async () => {
     process.env.APP_VERSION = "1.2.3";
     process.env.GIT_COMMIT = "abc123def456";
@@ -106,6 +122,38 @@ describe("health snapshot", () => {
     await expect(databaseHealth()).resolves.toMatchObject({
       configured: true,
       state: "degraded"
+    });
+  });
+
+  it("reports saved admin SMTP settings ahead of environment defaults", async () => {
+    vi.doMock("../lib/admin-settings", () => ({
+      getAdminSettings: vi.fn().mockResolvedValue({
+        system: {
+          portalBaseUrl: "http://portal.internal:5001",
+          registryNotificationEmail: "registry@costaatt.edu.tt",
+          emailDeliveryMode: "smtp",
+          smtpHost: "smtp.office365.com",
+          smtpPort: 587,
+          smtpUser: "registry@costaatt.edu.tt",
+          smtpPassword: "saved-password",
+          smtpFrom: "registry@costaatt.edu.tt",
+          smtpSecure: false,
+          uploadMaxMb: 8,
+          uploadTypes: "PDF, PNG, JPG",
+          semesters: ["Semester 1"],
+          updatedAt: "2026-06-01T00:00:00.000Z"
+        }
+      })
+    }));
+    process.env.EMAIL_DELIVERY_MODE = "log";
+    process.env.SMTP_HOST = "";
+    const { emailLogHealth } = await import("../lib/production-readiness");
+
+    await expect(emailLogHealth()).resolves.toMatchObject({
+      state: "ok",
+      mode: "smtp",
+      registryEmail: "registry@costaatt.edu.tt",
+      message: "SMTP delivery mode is enabled."
     });
   });
 });

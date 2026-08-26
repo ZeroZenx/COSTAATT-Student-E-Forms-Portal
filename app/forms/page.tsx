@@ -1,16 +1,31 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, Clock, FileCheck2, ShieldCheck } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { getAdminSettings } from "@/lib/admin-settings";
+import { listPublishedCustomForms } from "@/lib/custom-form-repository";
 import { formDefinitions } from "@/lib/forms";
 import { listStudentSubmissions } from "@/lib/repository";
+import { samlLoginUrl } from "@/lib/saml";
 
-export default async function FormsPage() {
+type PageSearchParams = Record<string, string | string[] | undefined>;
+
+export default async function FormsPage({ searchParams }: { searchParams?: PageSearchParams }) {
   const user = getCurrentUser();
+  if (!user && process.env.NODE_ENV === "production") {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(searchParams || {})) {
+      for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) query.append(key, item);
+    }
+    const target = query.toString() ? `/forms?${query.toString()}` : "/forms";
+    redirect(samlLoginUrl(target));
+  }
+
   const submissions = user ? await listStudentSubmissions(user.studentId) : [];
   const settings = user ? await getAdminSettings() : null;
+  const customForms = user ? await listPublishedCustomForms() : [];
 
   if (!user) {
     return (
@@ -87,6 +102,28 @@ export default async function FormsPage() {
             </article>
           );
         })}
+        {customForms.map((form) => (
+          <article className="service-card" key={form.id}>
+            <div className="card-icon"><FileCheck2 size={22} /></div>
+            <div>
+              <h2>{form.title}</h2>
+              <p>{form.description}</p>
+            </div>
+            <dl>
+              <div>
+                <dt><Clock size={15} /> Department</dt>
+                <dd>{form.department}</dd>
+              </div>
+              <div>
+                <dt><FileCheck2 size={15} /> Audience</dt>
+                <dd>{form.targetAudience}</dd>
+              </div>
+            </dl>
+            <Link className="card-action" href={`/custom-forms/${form.slug}`}>
+              Start request <ArrowRight size={17} />
+            </Link>
+          </article>
+        ))}
       </section>
 
       <section className="history-section">

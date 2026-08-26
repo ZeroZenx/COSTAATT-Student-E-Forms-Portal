@@ -21,7 +21,11 @@ export type UserRole =
   | "lecturer"
   | "registry_staff"
   | "registry_admin"
-  | "system_admin";
+  | "system_admin"
+  | "form_creator"
+  | "form_manager"
+  | "reviewer"
+  | "approver";
 
 export type SsoUser = {
   studentId: string;
@@ -151,4 +155,149 @@ export type AdminPatch = {
 export type ReviewerPatch = {
   action: "approve" | "decline" | "needs_information";
   comment?: string;
+};
+
+export type CustomFormStatus = "draft" | "published" | "unpublished" | "archived";
+
+export type CustomSubmissionStatus =
+  | "draft"
+  | "submitted"
+  | "in_review"
+  | "needs_information"
+  | "approved"
+  | "declined"
+  | "completed"
+  | "closed";
+
+export type CustomFieldType =
+  | "short_text"
+  | "long_text"
+  | "email"
+  | "phone"
+  | "dropdown"
+  | "multi_select"
+  | "radio"
+  | "checkbox"
+  | "date"
+  | "file_upload"
+  | "declaration_checkbox"
+  | "student_profile"
+  | "section_header"
+  | "instructions";
+
+export type CustomFormField = {
+  id: string;
+  key: string;
+  label: string;
+  type: CustomFieldType;
+  helpText?: string;
+  required: boolean;
+  sortOrder: number;
+  options?: string[];
+  profileBinding?: "studentId" | "firstName" | "lastName" | "email" | "fullName";
+};
+
+export type CustomWorkflowStep = {
+  id: string;
+  key: string;
+  label: string;
+  type: "review" | "approval" | "processing";
+  sortOrder: number;
+  assignee: {
+    name: string;
+    email: string;
+    role: "reviewer" | "approver" | "processor";
+  };
+  required: boolean;
+};
+
+export type CustomEmailEvent =
+  | "submission_confirmation"
+  | "reviewer_notification"
+  | "approved"
+  | "declined"
+  | "completed"
+  | "internal_notification";
+
+export type CustomEmailTemplate = {
+  id: string;
+  event: CustomEmailEvent;
+  enabled: boolean;
+  subject: string;
+  body: string;
+  recipientGroup: "requester" | "reviewer" | "approver" | "processor" | "internal";
+  cc?: string[];
+};
+
+export type CustomFormRecord = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  department: string;
+  targetAudience: string;
+  status: CustomFormStatus;
+  openAt?: string;
+  closeAt?: string;
+  createdBy: SsoUser;
+  fields: CustomFormField[];
+  workflowSteps: CustomWorkflowStep[];
+  emailTemplates: CustomEmailTemplate[];
+  currentVersionId?: string;
+  versionNumber: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string;
+};
+
+export type CustomFormVersion = {
+  id: string;
+  formId: string;
+  versionNumber: number;
+  definition: CustomFormRecord;
+  publishedBy: SsoUser;
+  publishedAt: string;
+  createdAt: string;
+};
+
+export type CustomFieldResponse = {
+  fieldKey: string;
+  fieldType: CustomFieldType;
+  value?: unknown;
+  attachment?: AttachmentRecord;
+};
+
+export type CustomWorkflowAssignment = {
+  id: string;
+  submissionId: string;
+  stepId: string;
+  assignedTo: CustomWorkflowStep["assignee"];
+  status: "pending" | "approved" | "declined" | "needs_information" | "completed";
+  decision?: string;
+  comment?: string;
+  actedBy?: SsoUser;
+  actedAt?: string;
+  createdAt: string;
+};
+
+export type CustomSubmissionRecord = {
+  id: string;
+  formId: string;
+  formVersionId: string;
+  formTitle: string;
+  formSlug: string;
+  student: SsoUser;
+  status: CustomSubmissionStatus;
+  responses: CustomFieldResponse[];
+  assignments: CustomWorkflowAssignment[];
+  comments: Array<{
+    id: string;
+    actor: SsoUser;
+    comment: string;
+    createdAt: string;
+  }>;
+  auditTrail: AuditEvent[];
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };

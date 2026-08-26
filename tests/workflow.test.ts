@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp } from "fs/promises";
+import os from "os";
+import path from "path";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSsoToken, verifySsoToken } from "../lib/auth";
 import { lookupCourseReferences, normalizeCourseMatch } from "../lib/reference-data";
 import { reviewerPatchSchema } from "../lib/validation";
@@ -11,6 +14,11 @@ import {
   statusForReviewerAction
 } from "../lib/workflow";
 import type { SubmissionPayload } from "../lib/types";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.resetModules();
+});
 
 describe("QuickLaunch-compatible local SSO", () => {
   it("round-trips signed mock identities and normalizes roles", () => {
@@ -46,9 +54,24 @@ describe("QuickLaunch-compatible local SSO", () => {
       email: "lsandiford@costaatt.edu.tt"
     });
 
-    expect(verifySsoToken(registryToken)?.roles).toEqual(["registry_admin", "student"]);
+    expect(verifySsoToken(registryToken)?.roles).toEqual(["registry_admin", "registry_staff", "system_admin", "student"]);
     expect(verifySsoToken(systemToken)?.roles).toEqual(["system_admin", "student"]);
     expect(verifySsoToken(leaToken)?.roles).toEqual(["registry_staff", "student"]);
+
+    for (const [email, roles] of [
+      ["kbanfield@costaatt.edu.tt", ["registry_staff", "system_admin", "student"]],
+      ["nithomas@costaatt.edu.tt", ["registry_staff", "system_admin", "student"]],
+      ["gking@costaatt.edu.tt", ["registry_admin", "registry_staff", "system_admin", "student"]],
+      ["rcumberbatch@costaatt.edu.tt", ["registry_admin", "registry_staff", "system_admin", "student"]]
+    ] as const) {
+      const bridgeToken = createSsoToken({
+        studentId: "REG-BRIDGE",
+        firstName: "Temporary",
+        lastName: "Bridge",
+        email
+      });
+      expect(verifySsoToken(bridgeToken)?.roles).toEqual(roles);
+    }
   });
 });
 
@@ -75,6 +98,8 @@ describe("development identity simulator", () => {
     expect(devPresetRedirectFor("registry_admin")).toBe("/admin/dashboard");
     expect(devPresetRedirectFor("registry_staff")).toBe("/admin/submissions");
     expect(devIdentityFromOptionId("preset:student").redirectTo).toBe("/forms");
+    expect(devIdentityFromOptionId("preset:nigel_all_access").email).toBe("NiThomas@costaatt.edu.tt");
+    expect(devIdentityFromOptionId("preset:kempson_all_access").email).toBe("KBanfield@costaatt.edu.tt");
     expect(devIdentityOptions().some((option) => option.group === "Course reviewers" && option.email.toLowerCase() === "nursingdepartment@costaatt.edu.tt")).toBe(true);
   });
 });
@@ -146,6 +171,20 @@ describe("workflow routing", () => {
         "I understand that Registry may place me in the next available CRN where applicable."
       ]
     }).success).toBe(true);
+  });
+});
+
+describe("Registry form settings", () => {
+  it("merges default academic year options into system settings", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "registry-settings-"));
+    vi.spyOn(process, "cwd").mockReturnValue(dir);
+    const { updateSystemSettings } = await import("../lib/admin-settings");
+    const settings = await updateSystemSettings({
+      academicYears: ["2026/2027", "2027/2028"],
+      semesters: ["Semester 1"]
+    });
+
+    expect(settings.academicYears).toEqual(["2026/2027", "2027/2028"]);
   });
 });
 

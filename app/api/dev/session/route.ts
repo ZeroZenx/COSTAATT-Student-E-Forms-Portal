@@ -8,12 +8,12 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  if (url.searchParams.get("clear") === "1") return clearSessionResponse(url);
+  if (url.searchParams.get("clear") === "1") return clearSessionResponse(request);
 
   const preset = url.searchParams.get("as");
   const token = createSsoToken(devPresetFor(preset));
   const redirectTo = url.searchParams.get("redirect") || devPresetRedirectFor(preset);
-  const response = NextResponse.redirect(new URL(redirectTo, request.url));
+  const response = NextResponse.redirect(localRedirectUrl(request, redirectTo));
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     ? await request.json()
     : Object.fromEntries((await request.formData()).entries());
   const action = String(input.action || "");
-  if (action === "clear") return clearSessionResponse(new URL(request.url));
+  if (action === "clear") return clearSessionResponse(request);
 
   try {
     const selection = action === "switch" ? devIdentityFromOptionId(String(input.identityId || "")) : null;
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       studentId: String(input.studentId || "")
     });
     const token = createSsoToken(user);
-    const response = NextResponse.redirect(new URL(selection?.redirectTo || String(input.redirect || "/advisor/requests"), request.url), 303);
+    const response = NextResponse.redirect(localRedirectUrl(request, selection?.redirectTo || String(input.redirect || "/advisor/requests")), 303);
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
   }
 }
 
-function clearSessionResponse(url: URL) {
-  const response = NextResponse.redirect(new URL("/dev/session", url), 303);
+function clearSessionResponse(request: Request) {
+  const response = NextResponse.redirect(localRedirectUrl(request, "/dev/session"), 303);
   response.cookies.set(COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
@@ -70,4 +70,24 @@ function clearSessionResponse(url: URL) {
     maxAge: 0
   });
   return response;
+}
+
+function localRedirectUrl(request: Request, target: string) {
+  const origin = requestOrigin(request);
+  const redirectUrl = new URL(target || "/", origin);
+
+  return redirectUrl.origin === origin ? redirectUrl : new URL("/", origin);
+}
+
+function requestOrigin(request: Request) {
+  const requestUrl = new URL(request.url);
+  const forwardedHost = firstHeaderValue(request.headers.get("x-forwarded-host"));
+  const host = forwardedHost || firstHeaderValue(request.headers.get("host")) || requestUrl.host;
+  const protocol = firstHeaderValue(request.headers.get("x-forwarded-proto")) || requestUrl.protocol.replace(/:$/, "") || "http";
+
+  return `${protocol}://${host}`;
+}
+
+function firstHeaderValue(value: string | null) {
+  return value?.split(",")[0]?.trim() || "";
 }

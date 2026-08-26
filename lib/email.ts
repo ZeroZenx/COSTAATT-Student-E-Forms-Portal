@@ -92,7 +92,7 @@ function renderEmail(
   const rows = details(submission, linkPath, config);
   const textDetails = rows.map(([label, value]) => `${label}: ${value}`).join("\n");
   const htmlDetails = rows
-    .map(([label, value]) => `<tr><th style="width:38%;padding:12px 14px;text-align:left;background:#edf4f4;border-bottom:1px solid #d8e2e3;color:#122c46;font-size:13px;">${escapeHtml(label)}</th><td style="padding:12px 14px;border-bottom:1px solid #d8e2e3;color:#102027;font-size:14px;">${escapeHtml(value)}</td></tr>`)
+    .map(([label, value]) => `<tr><th style="width:38%;padding:12px 14px;text-align:left;background:#edf4f4;border-bottom:1px solid #d8e2e3;color:#122c46;font-size:13px;">${escapeHtml(label)}</th><td style="padding:12px 14px;border-bottom:1px solid #d8e2e3;color:#102027;font-size:14px;">${renderDetailValue(label, value)}</td></tr>`)
     .join("");
 
   return {
@@ -102,6 +102,14 @@ function renderEmail(
     text: `${body}\n\n${textDetails}`,
     html: brandedEmailHtml(subject, body, htmlDetails)
   };
+}
+
+function renderDetailValue(label: string, value: string) {
+  if (label === "Direct request link") {
+    const href = escapeHtml(value);
+    return `<a href="${href}" style="color:#0f5e6b;text-decoration:underline;font-weight:700;">View request</a>`;
+  }
+  return escapeHtml(value);
 }
 
 export async function sendSubmissionCreatedEmails(submission: SubmissionRecord) {
@@ -295,17 +303,17 @@ async function sendEmailSafely(message: EmailMessage) {
 async function resolveEmailConfig(): Promise<EmailConfig> {
   const settings = await getAdminSettings().catch(() => null);
   const system = settings?.system;
-  const mode = process.env.EMAIL_DELIVERY_MODE || system?.emailDeliveryMode || "log";
+  const mode = system?.emailDeliveryMode || process.env.EMAIL_DELIVERY_MODE || "log";
   return {
     mode: mode === "smtp" ? "smtp" : "log",
-    registryEmail: process.env.REGISTRY_NOTIFICATION_EMAIL || system?.registryNotificationEmail || "registrar@costaatt.edu.tt",
-    portalBaseUrl: process.env.PORTAL_BASE_URL || system?.portalBaseUrl || "http://localhost:5001",
-    smtpHost: process.env.SMTP_HOST || system?.smtpHost || "",
-    smtpPort: Number(process.env.SMTP_PORT || system?.smtpPort || 587),
-    smtpUser: process.env.SMTP_USER || system?.smtpUser || "",
-    smtpPassword: process.env.SMTP_PASSWORD || system?.smtpPassword || "",
-    smtpFrom: process.env.SMTP_FROM || system?.smtpFrom || system?.smtpUser || "registry@costaatt.edu.tt",
-    smtpSecure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : Boolean(system?.smtpSecure)
+    registryEmail: system?.registryNotificationEmail || process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt",
+    portalBaseUrl: system?.portalBaseUrl || process.env.PORTAL_BASE_URL || "http://localhost:5001",
+    smtpHost: system?.smtpHost || process.env.SMTP_HOST || "",
+    smtpPort: Number(system?.smtpPort || process.env.SMTP_PORT || 587),
+    smtpUser: system?.smtpUser || process.env.SMTP_USER || "",
+    smtpPassword: system?.smtpPassword || process.env.SMTP_PASSWORD || "",
+    smtpFrom: system?.smtpFrom || process.env.SMTP_FROM || system?.smtpUser || process.env.SMTP_USER || "registry@costaatt.edu.tt",
+    smtpSecure: system ? Boolean(system.smtpSecure) : process.env.SMTP_SECURE === "true"
   };
 }
 

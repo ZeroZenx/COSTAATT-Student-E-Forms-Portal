@@ -46,12 +46,36 @@ async function logLines(filePath: string) {
   return (await readFile(filePath, "utf8"))
     .trim()
     .split("\n")
-    .map((line) => JSON.parse(line) as { event: string; to: string; outcome: string; subject: string; text: string; mode?: string });
+    .map((line) => JSON.parse(line) as { event: string; to: string; outcome: string; subject: string; text: string; html: string; mode?: string });
 }
 
-async function prepareLog() {
+function testSystemSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    portalBaseUrl: "http://localhost:5001",
+    registryNotificationEmail: "registrar@costaatt.edu.tt",
+    emailDeliveryMode: "log",
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPassword: "",
+    smtpFrom: "registry@costaatt.edu.tt",
+    smtpSecure: false,
+    uploadMaxMb: 8,
+    uploadTypes: "PDF, PNG, JPG",
+    semesters: ["Semester 1"],
+    updatedAt: "2026-06-01T00:00:00.000Z",
+    ...overrides
+  };
+}
+
+async function prepareLog(settingsOverrides: Record<string, unknown> = {}) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "costaatt-email-"));
   const logPath = path.join(dir, "email-log.jsonl");
+  vi.doMock("../lib/admin-settings", () => ({
+    getAdminSettings: vi.fn().mockResolvedValue({
+      system: testSystemSettings(settingsOverrides)
+    })
+  }));
   process.env.EMAIL_LOG_PATH = logPath;
   process.env.EMAIL_DELIVERY_MODE = "log";
   process.env.PORTAL_BASE_URL = "http://localhost:5001";
@@ -68,7 +92,10 @@ afterEach(() => {
   delete process.env.REGISTRY_NOTIFICATION_EMAIL;
   delete process.env.SMTP_HOST;
   delete process.env.SMTP_PORT;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASSWORD;
   delete process.env.SMTP_FROM;
+  delete process.env.SMTP_SECURE;
 });
 
 describe("email notification engine", () => {
@@ -83,6 +110,17 @@ describe("email notification engine", () => {
     expect(entries.map((entry) => entry.event)).toEqual(["student.submission_created", "reviewer.assignment_created"]);
     expect(entries[0].text).toContain("Submission ID: sub-001");
     expect(entries[1].to).toBe("alex.lecturer@costaatt.edu.tt");
+  });
+
+  it("renders direct request links as hyperlinks in HTML emails", async () => {
+    const logPath = await prepareLog();
+    const { sendSubmissionCreatedEmails } = await import("../lib/email");
+
+    await sendSubmissionCreatedEmails(baseSubmission);
+
+    const entries = await logLines(logPath);
+    expect(entries[0].html).toContain('href="http://localhost:5001/student/dashboard/sub-001"');
+    expect(entries[0].html).toContain(">View request</a>");
   });
 
   it("logs Registry triage email when no reviewer is mapped", async () => {
@@ -103,7 +141,11 @@ describe("email notification engine", () => {
         createTransport: vi.fn(() => ({ sendMail }))
       }
     }));
-    const logPath = await prepareLog();
+    const logPath = await prepareLog({
+      emailDeliveryMode: "smtp",
+      smtpHost: "smtp.example.edu",
+      smtpFrom: "registry@costaatt.edu.tt"
+    });
     process.env.EMAIL_DELIVERY_MODE = "smtp";
     process.env.SMTP_HOST = "smtp.example.edu";
     process.env.SMTP_FROM = "registry@costaatt.edu.tt";
@@ -125,7 +167,11 @@ describe("email notification engine", () => {
         }))
       }
     }));
-    const logPath = await prepareLog();
+    const logPath = await prepareLog({
+      emailDeliveryMode: "smtp",
+      smtpHost: "smtp.example.edu",
+      smtpFrom: "registry@costaatt.edu.tt"
+    });
     process.env.EMAIL_DELIVERY_MODE = "smtp";
     const { sendRegistryStatusEmail } = await import("../lib/email");
 
@@ -158,5 +204,48 @@ describe("email notification engine", () => {
     expect(entries[0].event).toBe("operations.test_email");
     expect(entries[0].to).toBe("registry@costaatt.edu.tt");
     expect(entries[0].text).toContain("Go-live check");
+  });
+
+  it("uses saved admin SMTP settings ahead of environment defaults", async () => {
+    const sendMail = vi.fn().mockResolvedValue({ messageId: "settings-smtp-1" });
+    const createTransport = vi.fn(() => ({ sendMail }));
+    vi.doMock("nodemailer", () => ({
+      default: { createTransport }
+    }));
+    const logPath = await prepareLog({
+      portalBaseUrl: "http://portal.internal:5001",
+      registryNotificationEmail: "registry@costaatt.edu.tt",
+      emailDeliveryMode: "smtp",
+      smtpHost: "smtp.office365.com",
+      smtpUser: "registry@costaatt.edu.tt",
+      smtpPassword: "saved-password",
+      smtpFrom: "registry@costaatt.edu.tt"
+    });
+    process.env.EMAIL_DELIVERY_MODE = "log";
+    process.env.SMTP_HOST = "";
+    process.env.SMTP_USER = "";
+    process.env.SMTP_PASSWORD = "";
+    process.env.SMTP_FROM = "registry@costaatt.edu.tt";
+    process.env.SMTP_SECURE = "true";
+    const { sendOperationalTestEmail } = await import("../lib/email");
+
+    const outcome = await sendOperationalTestEmail("student@costaatt.edu.tt", "Saved SMTP");
+
+    expect(outcome.outcome).toBe("sent");
+    expect(createTransport).toHaveBeenCalledWith({
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "registry@costaatt.edu.tt",
+        pass: "saved-password"
+      }
+    });
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({
+      from: "registry@costaatt.edu.tt",
+      to: "student@costaatt.edu.tt"
+    }));
+    const entries = await logLines(logPath);
+    expect(entries[0]).toMatchObject({ mode: "smtp", outcome: "sent" });
   });
 });

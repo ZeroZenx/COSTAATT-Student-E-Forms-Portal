@@ -3,6 +3,7 @@ import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { attachmentMeta, formLabel, formatDateTime, latestVisibleComment, reviewerDisplay, studentStatusLabel } from "@/lib/display";
+import { listStudentCustomSubmissions } from "@/lib/custom-form-repository";
 import { listStudentSubmissions } from "@/lib/repository";
 
 export default async function StudentDashboardPage() {
@@ -22,6 +23,7 @@ export default async function StudentDashboardPage() {
   }
 
   const submissions = await listStudentSubmissions(user.studentId);
+  const customSubmissions = await listStudentCustomSubmissions(user.studentId);
   return (
     <main className="app-shell">
       <AppHeader
@@ -38,6 +40,36 @@ export default async function StudentDashboardPage() {
         <Link className="primary-button" href="/forms">Start a new request</Link>
       </section>
       <section className="submission-list">
+        {customSubmissions.map((submission) => (
+          <article className="detail-panel request-summary-card" key={submission.id}>
+            <div className="detail-head">
+              <div>
+                <p className="eyeline">{submission.id}</p>
+                <h2>{submission.formTitle}</h2>
+              </div>
+              <span className={`status-pill status-${submission.status}`}>{submission.status.replace(/_/g, " ")}</span>
+            </div>
+            <p>Custom e-form submitted {formatDateTime(submission.createdAt)}.</p>
+            <div className="detail-grid">
+              <div>
+                <span>Assigned reviewer</span>
+                <strong>{submission.assignments[0]?.assignedTo.name || "Not assigned"}</strong>
+              </div>
+              <div>
+                <span>Responses</span>
+                <strong>{submission.responses.length}</strong>
+              </div>
+              <div>
+                <span>Latest activity</span>
+                <strong>{formatDateTime(submission.updatedAt)}</strong>
+              </div>
+              <div>
+                <span>Form</span>
+                <strong>{submission.formTitle}</strong>
+              </div>
+            </div>
+          </article>
+        ))}
         {submissions.map((submission) => (
           <Link className="detail-panel request-summary-card" href={`/student/dashboard/${submission.id}`} key={submission.id}>
             <div className="detail-head">
@@ -76,7 +108,7 @@ export default async function StudentDashboardPage() {
             </div>
           </Link>
         ))}
-        {submissions.length === 0 ? <p className="empty-state">No submissions yet.</p> : null}
+        {submissions.length === 0 && customSubmissions.length === 0 ? <p className="empty-state">No submissions yet.</p> : null}
       </section>
     </main>
   );

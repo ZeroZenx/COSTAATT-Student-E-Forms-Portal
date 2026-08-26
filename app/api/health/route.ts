@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { productionReadinessSnapshot } from "@/lib/production-readiness";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const snapshot = await productionReadinessSnapshot({ includeReferenceCounts: false });
   const status = snapshot.state === "degraded" ? 503 : 200;

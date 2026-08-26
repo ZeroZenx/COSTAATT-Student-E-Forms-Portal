@@ -1,4 +1,4 @@
-import { stat } from "fs/promises";
+import { access, stat } from "fs/promises";
 import path from "path";
 import { getAdminSettings } from "./admin-settings";
 import { databasePoolStats, hasDatabase, query } from "./db";
@@ -9,10 +9,35 @@ type CheckState = "ok" | "warning" | "degraded";
 
 
 export function ssoMode() {
+  if (process.env.SAML_ENABLED === "true") return "saml";
   if (process.env.TRUSTED_SSO_HEADER_MODE === "claims") return "trusted-headers";
   if (process.env.QUICKLAUNCH_JWT_SECRET) return "quicklaunch-jwt";
   if (process.env.SSO_SHARED_SECRET) return "signed-portal-token";
   return "not-configured";
+}
+
+export function samlConfigurationHealth() {
+  if (process.env.SAML_ENABLED !== "true") {
+    const mode = ssoMode();
+    return { state: ["quicklaunch-jwt", "trusted-headers", "signed-portal-token"].includes(mode) ? "ok" as const : "warning" as const, mode, metadataConfigured: false, entityConfigured: false, ssoConfigured: false, certificateConfigured: false, sloConfigured: false };
+  }
+
+  const metadataConfigured = Boolean(process.env.SAML_IDP_METADATA_URL);
+  const entityConfigured = Boolean(process.env.SAML_IDP_ENTITY_ID);
+  const ssoConfigured = Boolean(process.env.SAML_IDP_SSO_URL);
+  const certificateConfigured = Boolean(process.env.SAML_IDP_CERT);
+  const sloConfigured = Boolean(process.env.SAML_IDP_LOGOUT_URL);
+  const ready = metadataConfigured && entityConfigured && ssoConfigured && certificateConfigured;
+
+  return {
+    state: ready ? "ok" as const : process.env.NODE_ENV === "production" ? "degraded" as const : "warning" as const,
+    mode: "saml",
+    metadataConfigured,
+    entityConfigured,
+    ssoConfigured,
+    certificateConfigured,
+    sloConfigured
+  };
 }
 
 export function buildMetadata() {
@@ -53,12 +78,12 @@ export async function databaseHealth() {
 export async function emailLogHealth() {
   const settings = await getAdminSettings().catch(() => null);
   const system = settings?.system;
-  const mode = process.env.EMAIL_DELIVERY_MODE || system?.emailDeliveryMode || "log";
-  const registryEmail = process.env.REGISTRY_NOTIFICATION_EMAIL || system?.registryNotificationEmail || "registrar@costaatt.edu.tt";
+  const mode = system?.emailDeliveryMode || process.env.EMAIL_DELIVERY_MODE || "log";
+  const registryEmail = system?.registryNotificationEmail || process.env.REGISTRY_NOTIFICATION_EMAIL || "registrar@costaatt.edu.tt";
 
   if (mode === "smtp") {
-    const smtpHost = process.env.SMTP_HOST || system?.smtpHost || "";
-    const smtpFrom = process.env.SMTP_FROM || system?.smtpFrom || system?.smtpUser || "";
+    const smtpHost = system?.smtpHost || process.env.SMTP_HOST || "";
+    const smtpFrom = system?.smtpFrom || process.env.SMTP_FROM || system?.smtpUser || process.env.SMTP_USER || "";
     const missing = [
       !smtpHost ? "SMTP host" : "",
       !smtpFrom ? "from email" : ""
@@ -92,23 +117,50 @@ export async function emailLogHealth() {
   }
 }
 
+export async function attachmentStorageHealth() {
+  const mode = attachmentStorageMode();
+  if (mode === "s3") {
+    return {
+      configured: true,
+      state: "ok" as const,
+      message: "S3-compatible attachment storage is configured."
+    };
+  }
+
+  try {
+    await access(path.join(process.cwd(), "uploads"));
+    return {
+      configured: true,
+      state: "ok" as const,
+      message: "Local attachment storage is available; VM backup is required."
+    };
+  } catch {
+    return {
+      configured: false,
+      state: "warning" as const,
+      message: "Local attachment storage directory is not available yet."
+    };
+  }
+}
+
 export async function productionReadinessSnapshot(options: { includeReferenceCounts?: boolean } = {}) {
   const includeReferenceCounts = options.includeReferenceCounts ?? true;
-  const [database, email, referenceCounts] = await Promise.all([
+  const [database, email, storage, referenceCounts] = await Promise.all([
     databaseHealth(),
     emailLogHealth(),
+    attachmentStorageHealth(),
     includeReferenceCounts ? referenceRecordCounts().catch(() => null) : Promise.resolve(null)
   ]);
-  const uploadMode = attachmentStorageMode();
+  const sso = samlConfigurationHealth();
   const mode = process.env.NODE_ENV === "production" ? "production" : "development";
   const checks = [
     check("Build metadata", process.env.GIT_COMMIT ? "ok" : "warning", process.env.GIT_COMMIT ? "Git commit configured" : "GIT_COMMIT is not configured"),
     check("Runtime mode", mode === "production" ? "ok" : "warning", mode),
     check("Database", database.state, database.message),
     check("Reference data", referenceStorageMode() === "postgres" ? "ok" : "warning", `${referenceStorageMode()} storage`),
-    check("Uploads", uploadMode === "s3" ? "ok" : "warning", uploadMode === "s3" ? "S3-compatible storage" : "Local VM disk; backup required"),
+    check("Uploads", storage.state, storage.message),
     check("Email", email.state, email.message),
-    check("SSO", ssoMode() === "quicklaunch-jwt" ? "ok" : "warning", ssoMode()),
+    check("SSO", sso.state, sso.state === "ok" ? "SAML configuration is present." : "SAML configuration is incomplete."),
     check("Portal URL", process.env.PORTAL_BASE_URL?.startsWith("https://") ? "ok" : "warning", process.env.PORTAL_BASE_URL ? "Configured" : "Not configured"),
     check("Dev session", process.env.NODE_ENV === "production" ? "ok" : "warning", process.env.NODE_ENV === "production" ? "Disabled by production mode" : "Available in development"),
     check("SLA scheduler", process.env.SLA_ESCALATION_SECRET ? "ok" : "warning", process.env.SLA_ESCALATION_SECRET ? "Secret configured" : "SLA_ESCALATION_SECRET is not configured")
@@ -127,13 +179,12 @@ export async function productionReadinessSnapshot(options: { includeReferenceCou
     database,
     databasePool: databasePoolStats(),
     storage: {
-      attachments: uploadMode,
+      ...storage,
+      attachments: attachmentStorageMode(),
       referenceData: referenceStorageMode()
     },
     email,
-    sso: {
-      mode: ssoMode()
-    },
+    sso,
     referenceCounts,
     checks
   };

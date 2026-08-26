@@ -1,4 +1,4 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 
 let pool: Pool | null = null;
 
@@ -28,6 +28,46 @@ export function db() {
 
 export async function query<T extends QueryResultRow = QueryResultRow>(sql: string, params?: unknown[]): Promise<QueryResult<T>> {
   return db().query<T>(sql, params);
+}
+
+export async function withTransaction<T>(work: (client: PoolClient) => Promise<T>) {
+  const client = await db().connect();
+  try {
+    await client.query("begin");
+    const result = await work(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    try {
+      await client.query("rollback");
+    } catch {
+      // Preserve the original database error.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+const REFERENCE_DATA_LOCK_KEY = "734982145";
+
+export async function withReferenceDataWriteTransaction<T>(work: (client: PoolClient) => Promise<T>) {
+  return withTransaction(async (client) => {
+    await client.query("select pg_advisory_xact_lock($1::bigint)", [REFERENCE_DATA_LOCK_KEY]);
+    return work(client);
+  });
+}
+
+/**
+ * Coordinates operations that create or persist references to reference data
+ * with reference-data writes. The shared lock is held only for the database
+ * transaction, never while an administrator reviews a preview.
+ */
+export async function withReferenceDataSharedLockTransaction<T>(work: (client: PoolClient) => Promise<T>) {
+  return withTransaction(async (client) => {
+    await client.query("select pg_advisory_xact_lock_shared($1::bigint)", [REFERENCE_DATA_LOCK_KEY]);
+    return work(client);
+  });
 }
 
 export function databasePoolStats() {

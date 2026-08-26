@@ -30,6 +30,7 @@ export default async function AppHeader({
       </Link>
       <nav>
         <Link href="/forms">E-Forms</Link>
+        <Link href="/custom-forms">Custom Forms</Link>
         <Link href="/student/dashboard">My Requests</Link>
         <Link href="/student/notifications" className="notification-link">
           Notifications

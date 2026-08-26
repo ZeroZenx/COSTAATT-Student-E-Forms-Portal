@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { getAdminSettings } from "@/lib/admin-settings";
 import { formDefinitions, isFormType } from "@/lib/forms";
@@ -35,7 +36,7 @@ export default async function FormTypePage({ params, searchParams }: { params: {
           <p className="eyeline">COSTAATT Student Portal</p>
           <h1>Valid portal SSO is required.</h1>
           <p>Return to the student portal and open this form from your authenticated services page.</p>
-          <Link className="primary-button" href="/api/dev/session">Use local demo session</Link>
+          <DevelopmentSessionLink href="/api/dev/session">Use local demo session</DevelopmentSessionLink>
         </section>
       </main>
     );

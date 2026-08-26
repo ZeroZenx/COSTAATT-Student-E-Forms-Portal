@@ -56,7 +56,7 @@ export default function DevSessionControl({
           <input type="hidden" name="identityId" value={selectedIdentity?.id || ""} />
           <label className="field">
             Person
-            <select value={identityId} onChange={(event) => setIdentityId(event.target.value)} required>
+            <select data-testid="demo-identity-picker" value={identityId} onChange={(event) => setIdentityId(event.target.value)} required>
               {groupedOptions(identityOptions).map(([group, options]) => (
                 <optgroup key={group} label={group}>
                   {options.map((option) => (
@@ -78,7 +78,7 @@ export default function DevSessionControl({
           <input type="hidden" name="redirect" value="/advisor/requests" />
           <label className="field">
             Reviewer name
-            <select value={reviewerId} onChange={(event) => updateReviewer(event.target.value)} required>
+            <select data-testid="demo-reviewer-picker" value={reviewerId} onChange={(event) => updateReviewer(event.target.value)} required>
               {reviewerOptions.map((option) => (
                 <option key={option.id} value={option.id}>{option.name}</option>
               ))}
@@ -91,7 +91,7 @@ export default function DevSessionControl({
           <input name="name" type="hidden" value={selectedReviewer?.name || ""} />
           <label className="field">
             Reviewer role
-            <select name="role" value={reviewerRole} onChange={(event) => setReviewerRole(event.target.value)} required>
+            <select data-testid="demo-reviewer-role" name="role" value={reviewerRole} onChange={(event) => setReviewerRole(event.target.value)} required>
               <option value="lecturer">Lecturer</option>
               <option value="advisor">Advisor</option>
             </select>

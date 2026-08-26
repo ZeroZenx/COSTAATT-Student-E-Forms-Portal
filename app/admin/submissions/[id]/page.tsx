@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import SubmissionDetail from "@/components/submission-detail";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { getSubmission } from "@/lib/repository";
@@ -17,8 +18,8 @@ export default async function AdminSubmissionDetailPage({ params }: { params: { 
           <BrandLogo className="auth-logo" />
           <p className="eyeline">Registry services</p>
           <h1>Staff access is required.</h1>
-          <p>Open this area from the portal with a Registry or administrator role. In local development, visit /api/dev/session first.</p>
-          <Link className="primary-button" href="/api/dev/session">Use local demo session</Link>
+          <p>Open this area from the portal with a Registry or administrator role.</p>
+          <DevelopmentSessionLink href="/api/dev/session">Use local demo session</DevelopmentSessionLink>
         </section>
       </main>
     );

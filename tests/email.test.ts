@@ -77,6 +77,7 @@ async function prepareLog(settingsOverrides: Record<string, unknown> = {}) {
     })
   }));
   process.env.EMAIL_LOG_PATH = logPath;
+  process.env.EMAIL_CONFIG_SOURCE = "environment";
   process.env.EMAIL_DELIVERY_MODE = "log";
   process.env.PORTAL_BASE_URL = "http://localhost:5001";
   process.env.REGISTRY_NOTIFICATION_EMAIL = "registrar@costaatt.edu.tt";
@@ -87,6 +88,7 @@ afterEach(() => {
   vi.resetModules();
   vi.restoreAllMocks();
   delete process.env.EMAIL_LOG_PATH;
+  delete process.env.EMAIL_CONFIG_SOURCE;
   delete process.env.EMAIL_DELIVERY_MODE;
   delete process.env.PORTAL_BASE_URL;
   delete process.env.REGISTRY_NOTIFICATION_EMAIL;
@@ -107,9 +109,9 @@ describe("email notification engine", () => {
 
     const entries = await logLines(logPath);
     expect(entries).toHaveLength(2);
-    expect(entries.map((entry) => entry.event)).toEqual(["student.submission_created", "reviewer.assignment_created"]);
-    expect(entries[0].text).toContain("Submission ID: sub-001");
-    expect(entries[1].to).toBe("alex.lecturer@costaatt.edu.tt");
+    expect(entries.map((entry) => entry.event).sort()).toEqual(["reviewer.assignment_created", "student.submission_created"]);
+    expect(entries.find((entry) => entry.event === "student.submission_created")?.text).toContain("Submission ID: sub-001");
+    expect(entries.find((entry) => entry.event === "reviewer.assignment_created")?.to).toBe("alex.lecturer@costaatt.edu.tt");
   });
 
   it("renders direct request links as hyperlinks in HTML emails", async () => {
@@ -119,8 +121,9 @@ describe("email notification engine", () => {
     await sendSubmissionCreatedEmails(baseSubmission);
 
     const entries = await logLines(logPath);
-    expect(entries[0].html).toContain('href="http://localhost:5001/student/dashboard/sub-001"');
-    expect(entries[0].html).toContain(">View request</a>");
+    const studentEntry = entries.find((entry) => entry.event === "student.submission_created");
+    expect(studentEntry?.html).toContain('href="http://localhost:5001/student/dashboard/sub-001"');
+    expect(studentEntry?.html).toContain(">View request</a>");
   });
 
   it("logs Registry triage email when no reviewer is mapped", async () => {
@@ -130,8 +133,8 @@ describe("email notification engine", () => {
     await sendSubmissionCreatedEmails({ ...baseSubmission, assignedTo: undefined, routingFlags: ["no_reviewer_mapping"] });
 
     const entries = await logLines(logPath);
-    expect(entries.map((entry) => entry.event)).toEqual(["student.submission_created", "registry.triage_required"]);
-    expect(entries[1].to).toBe("registrar@costaatt.edu.tt");
+    expect(entries.map((entry) => entry.event).sort()).toEqual(["registry.triage_required", "student.submission_created"]);
+    expect(entries.find((entry) => entry.event === "registry.triage_required")?.to).toBe("registrar@costaatt.edu.tt");
   });
 
   it("sends reviewer approval emails to student and Registry", async () => {
@@ -221,6 +224,7 @@ describe("email notification engine", () => {
       smtpPassword: "saved-password",
       smtpFrom: "registry@costaatt.edu.tt"
     });
+    process.env.EMAIL_CONFIG_SOURCE = "admin";
     process.env.EMAIL_DELIVERY_MODE = "log";
     process.env.SMTP_HOST = "";
     process.env.SMTP_USER = "";
@@ -232,7 +236,7 @@ describe("email notification engine", () => {
     const outcome = await sendOperationalTestEmail("student@costaatt.edu.tt", "Saved SMTP");
 
     expect(outcome.outcome).toBe("sent");
-    expect(createTransport).toHaveBeenCalledWith({
+    expect(createTransport).toHaveBeenCalledWith(expect.objectContaining({
       host: "smtp.office365.com",
       port: 587,
       secure: false,
@@ -240,12 +244,33 @@ describe("email notification engine", () => {
         user: "registry@costaatt.edu.tt",
         pass: "saved-password"
       }
-    });
+    }));
     expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({
       from: "registry@costaatt.edu.tt",
       to: "student@costaatt.edu.tt"
     }));
     const entries = await logLines(logPath);
     expect(entries[0]).toMatchObject({ mode: "smtp", outcome: "sent" });
+  });
+
+  it("does not fall back to admin SMTP credentials when environment configuration is authoritative", async () => {
+    process.env.EMAIL_CONFIG_SOURCE = "environment";
+    process.env.EMAIL_DELIVERY_MODE = "log";
+    vi.doMock("../lib/admin-settings", () => ({
+      getAdminSettings: vi.fn().mockResolvedValue({
+        system: {
+          smtpHost: "admin-only.example.edu",
+          smtpUser: "admin@costaatt.edu.tt",
+          smtpPassword: "admin-secret"
+        }
+      })
+    }));
+    const { emailConfigurationSummary } = await import("../lib/email");
+
+    const summary = await emailConfigurationSummary();
+
+    expect(summary.source).toBe("environment");
+    expect(summary.smtpHostConfigured).toBe(false);
+    expect(summary.smtpAuthConfigured).toBe(false);
   });
 });

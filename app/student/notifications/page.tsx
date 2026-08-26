@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AppHeader from "@/components/app-header";
 import BrandLogo from "@/components/brand-logo";
+import DevelopmentSessionLink from "@/components/development-session-link";
 import StudentNotifications from "@/components/student-notifications";
 import { getCurrentUser, hasAnyRole, isStaff } from "@/lib/auth";
 import { listStudentNotifications, unreadStudentNotificationCount } from "@/lib/notifications";
@@ -15,7 +16,7 @@ export default async function StudentNotificationsPage() {
           <p className="eyeline">Student notifications</p>
           <h1>Valid portal SSO is required.</h1>
           <p>Return to the student portal and open this service from your authenticated services page.</p>
-          <Link className="primary-button" href="/api/dev/session">Use local demo session</Link>
+          <DevelopmentSessionLink href="/api/dev/session">Use local demo session</DevelopmentSessionLink>
         </section>
       </main>
     );

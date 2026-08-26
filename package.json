@@ -9,11 +9,13 @@
     "build": "node scripts/clean-next.mjs && next build",
     "start": "node scripts/start-production.mjs",
     "start:next": "next start",
+    "start:windows": "npm run validate:env -- --production && next start -H 127.0.0.1 -p 5001",
     "start:5001": "node scripts/start-production.mjs -p 5001",
     "https-proxy": "node scripts/https-proxy.mjs",
     "validate:env": "node scripts/validate-env.mjs",
     "smoke:windows": "node scripts/smoke-windows.mjs",
     "verify:ssl": "node scripts/verify-ssl.mjs",
+    "verify": "npm run validate:env && npm run typecheck && npm run lint && npm test && npm run build",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
@@ -27,6 +29,7 @@
     "pg": "^8.12.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "^0.33.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

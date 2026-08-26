@@ -161,18 +161,20 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
   const nextStatus = patch.status || existing.status;
   const registryDecision = patch.registryDecision || (patch.status ? registryDecisionForStatus(patch.status) : existing.registryDecision);
   const registryComment = sanitizeText(patch.registryComment || patch.adminComment);
+  const historyEvents = patch.status && patch.status !== existing.status
+    ? [workflowEvent(actor || existing.student, "registry.status_changed", existing.status, patch.status, registryComment)]
+    : [];
+  const nextAuditEvent = auditEvent(actor || existing.student, "submission.updated", "submission", id, ipAddress, {
+    ...patch,
+    actorRoles: actor?.roles || []
+  });
   const history = [
     ...(existing.workflowHistory || []),
-    ...(patch.status && patch.status !== existing.status
-      ? [workflowEvent(actor || existing.student, "registry.status_changed", existing.status, patch.status, registryComment)]
-      : [])
+    ...historyEvents
   ];
   const auditTrail = [
     ...(existing.auditTrail || []),
-    auditEvent(actor || existing.student, "submission.updated", "submission", id, ipAddress, {
-      ...patch,
-      actorRoles: actor?.roles || []
-    })
+    nextAuditEvent
   ];
 
   if (hasDatabase()) {
@@ -181,25 +183,27 @@ export async function updateSubmission(id: string, patch: AdminPatch, actor?: Ss
        set status = coalesce($2, status),
            admin_comment = coalesce($3, admin_comment),
            internal_notes = coalesce($4, internal_notes),
-           workflow_history = $5::jsonb,
-           audit_trail = $6::jsonb,
+           workflow_history = coalesce(workflow_history, '[]'::jsonb) || $5::jsonb,
+           audit_trail = coalesce(audit_trail, '[]'::jsonb) || $6::jsonb,
            registry_decision = coalesce($7, registry_decision),
            registry_comment = coalesce($8, registry_comment),
            updated_at = $9
-       where id = $1
+       where id = $1 and updated_at = $10
        returning ${SUBMISSION_COLUMNS}`,
       [
         id,
         nextStatus,
         sanitizeText(patch.adminComment) || null,
         sanitizeText(patch.internalNotes) || null,
-        JSON.stringify(history),
-        JSON.stringify(auditTrail),
+        JSON.stringify(historyEvents),
+        JSON.stringify([nextAuditEvent]),
         registryDecision || null,
         registryComment || null,
-        updatedAt
+        updatedAt,
+        existing.updatedAt
       ]
     );
+    if (!result.rows[0]) throw new Error("This submission changed while you were reviewing it. Refresh and try again.");
     return result.rows[0] ? rowToRecord(result.rows[0]) : null;
   }
 
@@ -231,22 +235,23 @@ export async function appendSubmissionAuditEvent(
   const updatedAt = new Date().toISOString();
   const existing = await getSubmission(id);
   if (!existing) return null;
+  const nextAuditEvent = auditEvent(actor, action, "submission", id, ipAddress, {
+    ...(metadata || {}),
+    actorRoles: actor.roles || []
+  });
   const auditTrail = [
     ...(existing.auditTrail || []),
-    auditEvent(actor, action, "submission", id, ipAddress, {
-      ...(metadata || {}),
-      actorRoles: actor.roles || []
-    })
+    nextAuditEvent
   ];
 
   if (hasDatabase()) {
     const result = await query(
       `update submissions
-       set audit_trail = $2::jsonb,
+       set audit_trail = coalesce(audit_trail, '[]'::jsonb) || $2::jsonb,
            updated_at = $3
        where id = $1
        returning ${SUBMISSION_COLUMNS}`,
-      [id, JSON.stringify(auditTrail), updatedAt]
+      [id, JSON.stringify([nextAuditEvent]), updatedAt]
     );
     return result.rows[0] ? rowToRecord(result.rows[0]) : null;
   }
@@ -273,16 +278,18 @@ export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatc
   const nextStatus = statusForReviewerAction(patch.action);
   const comment = sanitizeText(patch.comment);
   const reviewerDecision = decisionForReviewerAction(patch.action);
+  const nextWorkflowEvent = workflowEvent(actor, `reviewer.${patch.action}`, existing.status, nextStatus, comment);
+  const nextAuditEvent = auditEvent(actor, `reviewer.${patch.action}`, "submission", id, ipAddress, {
+    comment,
+    actorRoles: actor.roles || []
+  });
   const history = [
     ...(existing.workflowHistory || []),
-    workflowEvent(actor, `reviewer.${patch.action}`, existing.status, nextStatus, comment)
+    nextWorkflowEvent
   ];
   const auditTrail = [
     ...(existing.auditTrail || []),
-    auditEvent(actor, `reviewer.${patch.action}`, "submission", id, ipAddress, {
-      comment,
-      actorRoles: actor.roles || []
-    })
+    nextAuditEvent
   ];
 
   if (hasDatabase()) {
@@ -291,21 +298,23 @@ export async function updateSubmissionByReviewer(id: string, patch: ReviewerPatc
        set status = $2,
            reviewer_decision = $3,
            reviewer_comment = coalesce($4, reviewer_comment),
-           workflow_history = $5::jsonb,
-           audit_trail = $6::jsonb,
+           workflow_history = coalesce(workflow_history, '[]'::jsonb) || $5::jsonb,
+           audit_trail = coalesce(audit_trail, '[]'::jsonb) || $6::jsonb,
            updated_at = $7
-       where id = $1
+       where id = $1 and status = 'pending_advisor_review' and updated_at = $8
        returning ${SUBMISSION_COLUMNS}`,
       [
         id,
         nextStatus,
         reviewerDecision,
         comment || null,
-        JSON.stringify(history),
-        JSON.stringify(auditTrail),
-        updatedAt
+        JSON.stringify([nextWorkflowEvent]),
+        JSON.stringify([nextAuditEvent]),
+        updatedAt,
+        existing.updatedAt
       ]
     );
+    if (!result.rows[0]) throw new Error("This request was already updated. Refresh to see its current status.");
     return result.rows[0] ? rowToRecord(result.rows[0]) : null;
   }
 

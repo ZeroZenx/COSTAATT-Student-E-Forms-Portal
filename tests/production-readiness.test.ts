@@ -23,6 +23,11 @@ afterEach(() => {
   delete process.env.SAML_IDP_CERT;
   delete process.env.APP_VERSION;
   delete process.env.GIT_COMMIT;
+  delete process.env.QUICKLAUNCH_JWT_ISSUER;
+  delete process.env.QUICKLAUNCH_JWT_AUDIENCE;
+  delete process.env.TRUSTED_SSO_PROXY_SECRET;
+  delete process.env.SETTINGS_ENCRYPTION_KEY;
+  delete process.env.EMAIL_CONFIG_SOURCE;
 });
 
 describe("production readiness validation", () => {
